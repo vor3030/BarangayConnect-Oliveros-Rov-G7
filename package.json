@@ -1,0 +1,16 @@
+{
+  "name": "barangay-connect-ui",
+  "private": true,
+  "scripts": {
+    "build": "esbuild frontend/portal.js --bundle --splitting --format=esm --minify --outdir=accounts/static/accounts/ui"
+  },
+  "dependencies": {
+    "alpinejs": "3.17.5",
+    "chart.js": "4.6.1",
+    "lottie-web": "5.13.0",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

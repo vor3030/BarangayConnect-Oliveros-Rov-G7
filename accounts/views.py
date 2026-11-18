@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
+from django.db.models import Count, Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -74,10 +75,11 @@ def resident_dashboard(request):
 def admin_dashboard(request):
     if not request.user.is_staff:
         raise PermissionDenied
-    resident_count = User.objects.filter(is_staff=False, is_active=True).count()
-    return render(
-        request, "accounts/admin_dashboard.html", {"resident_count": resident_count}
+    counts = User.objects.filter(is_staff=False).aggregate(
+        active_residents=Count("pk", filter=Q(is_active=True)),
+        inactive_residents=Count("pk", filter=Q(is_active=False)),
     )
+    return render(request, "accounts/admin_dashboard.html", counts)
 
 
 @login_required

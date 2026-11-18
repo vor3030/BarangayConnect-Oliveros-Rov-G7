@@ -1,0 +1,7 @@
+{% load static %}
+{% with animation='accounts/icons/'|add:icon|add:'.json' still='accounts/icons/'|add:icon|add:'.svg' %}
+  <span class="animated-icon" aria-hidden="true">
+    <img src="{% static still %}" alt="" width="20" height="20">
+    <span data-icon-animation="{% static animation %}"></span>
+  </span>
+{% endwith %}

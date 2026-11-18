@@ -1,15 +1,33 @@
 {% extends 'accounts/base.html' %}
 {% block title %}Admin dashboard | Barangay Connect{% endblock %}
 {% block content %}
-<section class="hero">
+<section class="hero" x-data="motionScene">
+  {% include 'accounts/neighborhood.html' %}
   <p class="eyebrow">Admin dashboard</p>
   <h1>Welcome, {{ user.get_full_name }}</h1>
   <p>Barangay staff can review resident enrollment here.</p>
 </section>
 <div class="grid">
   <section class="card">
-    <h2>Active resident accounts</h2>
-    <p class="metric">{{ resident_count }}</p>
+    <h2>Resident accounts</h2>
+    <div class="account-overview">
+      {% if active_residents or inactive_residents %}
+        <div class="account-chart" hidden>
+          <canvas data-account-chart data-active="{{ active_residents }}" data-inactive="{{ inactive_residents }}" aria-hidden="true"></canvas>
+        </div>
+      {% endif %}
+      <dl class="account-counts">
+        <div class="account-count">
+          <dt>Active</dt><dd>{{ active_residents }}</dd>
+        </div>
+        <div class="account-count account-count-inactive">
+          <dt>Inactive</dt><dd>{{ inactive_residents }}</dd>
+        </div>
+      </dl>
+    </div>
+    {% if not active_residents and not inactive_residents %}
+      <p class="muted">No resident accounts yet.</p>
+    {% endif %}
     {% if user.is_superuser %}
       <a class="button" href="{% url 'admin:accounts_user_changelist' %}">Manage accounts</a>
     {% else %}

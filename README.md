@@ -25,6 +25,17 @@ Open [Barangay Connect](http://127.0.0.1:8000/). Register a Resident account at 
 
 Profiles are available at `/profile/`. Users can edit their full name, email, and contact number. A changed email becomes the sign-in credential.
 
+## Interactive frontend
+
+Build the browser assets with Node.js and npm before starting Django or running `collectstatic`.
+
+```powershell
+npm.cmd ci
+npm.cmd run build
+```
+
+The build bundles Three.js, Alpine.js, Chart.js, and Lottie locally. Navigation icons are from [useAnimations](https://useanimations.com/). The forms work with JavaScript disabled, and the scene has a static fallback for narrow screens, reduced motion, and browsers without WebGL.
+
 ## Verify
 
 ```powershell
@@ -33,3 +44,13 @@ Profiles are available at `/profile/`. Users can edit their full name, email, an
 ```
 
 Django creates a separate PostgreSQL test database. Run tests with a local development PostgreSQL login that can create databases.
+
+For the Playwright browser tests, build the frontend first, then run:
+
+```powershell
+.\venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+.\venv\Scripts\python.exe -m playwright install chromium
+.\venv\Scripts\python.exe manage.py test browser_tests.accounts_ui
+```
+
+To use an installed Microsoft Edge instead, set `$env:PLAYWRIGHT_CHANNEL = 'msedge'` and skip the Chromium installation.

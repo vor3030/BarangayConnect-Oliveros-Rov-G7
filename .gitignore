@@ -4,3 +4,5 @@ venv/
 __pycache__/
 *.py[cod]
 staticfiles/
+node_modules/
+/accounts/static/accounts/ui/
