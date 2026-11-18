@@ -1,7 +1,6 @@
 @import url("./theme.css");
 
 * { box-sizing: border-box; }
-:root { color-scheme: dark; }
 body {
   margin: 0;
   color: var(--bc-ink);
@@ -10,7 +9,7 @@ body {
 }
 
 .shell { width: min(75rem, calc(100% - 2rem)); margin-inline: auto; }
-.site-header { border-bottom: 1px solid var(--bc-border); }
+.site-header { background: var(--bc-surface); border-bottom: 1px solid var(--bc-border); }
 .header-inner, .site-nav, .actions {
   display: flex;
   flex-wrap: wrap;
@@ -25,14 +24,14 @@ body {
   gap: .45em;
   color: var(--bc-ink);
   text-decoration: none;
-  font: 900 clamp(.9rem, 3vw, 1.15rem)/1 var(--bc-display);
-  text-transform: uppercase;
+  font: 750 clamp(1rem, 3vw, 1.25rem)/1 var(--bc-display);
+  text-transform: none;
 }
 
 .brand span {
   padding: .28em .45em;
-  color: var(--bc-accent-ink);
-  background: var(--bc-accent);
+  color: var(--bc-accent);
+  background: var(--bc-inset);
   border-radius: var(--bc-control-radius);
 }
 
@@ -78,8 +77,8 @@ main { padding-block: clamp(1.75rem, 5vw, 4.5rem); }
   inset: 0;
   background:
     linear-gradient(0deg, var(--bc-inset) 5%, transparent 80%),
-    repeating-linear-gradient(0deg, transparent 0 2rem, #dcfa371e 2rem calc(2rem + 1px)),
-    repeating-linear-gradient(90deg, transparent 0 2rem, #dcfa371e 2rem calc(2rem + 1px));
+    repeating-linear-gradient(0deg, transparent 0 2rem, #09645510 2rem calc(2rem + 1px)),
+    repeating-linear-gradient(90deg, transparent 0 2rem, #09645510 2rem calc(2rem + 1px));
   content: "";
 }
 
@@ -91,9 +90,9 @@ main { padding-block: clamp(1.75rem, 5vw, 4.5rem); }
   width: min(78%, 33rem);
   aspect-ratio: 1.4;
   transform: rotate(-22deg);
-  border: 1px solid #dcfa376e;
+  border: 1px solid #09645538;
   border-radius: 32%;
-  box-shadow: 0 0 0 1rem #dcfa372b, 0 0 0 2rem #dcfa371c, 0 0 0 3rem #dcfa3710;
+  box-shadow: 0 0 0 1rem #09645517, 0 0 0 2rem #09645510, 0 0 0 3rem #09645509;
   content: "";
 }
 
@@ -104,7 +103,7 @@ main { padding-block: clamp(1.75rem, 5vw, 4.5rem); }
   color: var(--bc-accent);
   font-size: clamp(2rem, 4.8vw, 4.75rem);
   line-height: .94;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .auth-intro p { max-width: 32ch; margin-bottom: 0; }
@@ -113,14 +112,13 @@ main { padding-block: clamp(1.75rem, 5vw, 4.5rem); }
 .eyebrow {
   margin: 0 0 .75rem;
   color: var(--bc-accent);
-  font-size: .8rem;
-  font-weight: 800;
-  letter-spacing: .12em;
-  text-transform: uppercase;
+  font-size: .875rem;
+  font-weight: 750;
+  text-transform: none;
 }
 
-h1, h2 { margin: 0; font-family: var(--bc-display); font-weight: 900; line-height: 1.05; overflow-wrap: anywhere; }
-h1 { font-size: clamp(2rem, 5.5vw, 3.85rem); letter-spacing: -.045em; }
+h1, h2 { margin: 0; font-family: var(--bc-display); font-weight: 750; line-height: 1.1; overflow-wrap: anywhere; }
+h1 { font-size: clamp(2rem, 5.5vw, 3.85rem); letter-spacing: -.025em; }
 h2 { font-size: clamp(1.25rem, 3vw, 1.65rem); }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1rem; }
 .muted, .helptext { color: var(--bc-muted); }
@@ -133,9 +131,9 @@ input:not([type="hidden"]) {
   width: 100%;
   min-height: 2.75rem;
   padding: .65rem .75rem;
-  border: 1px solid #666c5c;
+  border: 1px solid var(--bc-field-border);
   border-radius: var(--bc-control-radius);
-  background: var(--bc-inset);
+  background: var(--bc-surface);
   color: var(--bc-ink);
   font: inherit;
 }

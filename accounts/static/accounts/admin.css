@@ -3,8 +3,8 @@
 :root,
 html[data-theme="light"] {
   --primary: var(--bc-accent);
-  --secondary: var(--bc-inset);
-  --accent: var(--bc-border);
+  --secondary: var(--bc-accent-hover);
+  --accent: var(--bc-inset);
   --body-fg: var(--bc-ink);
   --body-bg: var(--bc-surface);
   --body-quiet-color: var(--bc-muted);
@@ -22,14 +22,14 @@ html[data-theme="light"] {
   --hairline-color: var(--bc-border);
   --border-color: var(--bc-border);
   --darkened-bg: var(--bc-background);
-  --selected-bg: var(--bc-border);
-  --selected-row: var(--bc-border);
-  --message-success-bg: var(--bc-border);
+  --selected-bg: var(--bc-inset);
+  --selected-row: var(--bc-inset);
+  --message-success-bg: var(--bc-inset);
   --button-fg: var(--bc-accent-ink);
   --error-fg: var(--bc-error);
-  --message-error-bg: #502821;
-  --message-info-bg: #263d48;
-  --message-warning-bg: #50441f;
+  --message-error-bg: #fce9e8;
+  --message-info-bg: #e6f1fa;
+  --message-warning-bg: #fff1d3;
   --button-bg: var(--bc-accent);
   --button-hover-bg: var(--bc-accent-hover);
   --default-button-bg: var(--bc-accent);
@@ -39,14 +39,14 @@ html[data-theme="light"] {
   --font-family-primary: var(--bc-font);
   --primary-fg: var(--bc-accent-ink);
   --link-selected-fg: var(--bc-accent);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body { background: var(--bc-background); }
 #header { border-bottom: 1px solid var(--bc-border); }
 #site-name a:link,
-#site-name a:visited { color: var(--bc-ink); font: 900 1.1rem/1.2 var(--bc-display); text-transform: uppercase; }
-#site-name a span { padding: .2em .45em; border-radius: var(--bc-control-radius); background: var(--bc-accent); color: var(--bc-accent-ink); }
+#site-name a:visited { color: var(--bc-ink); font: 750 1.15rem/1.2 var(--bc-display); }
+#site-name a span { padding: .2em .45em; border-radius: var(--bc-control-radius); background: var(--bc-inset); color: var(--bc-accent); }
 
 #header #user-tools {
   display: flex;
@@ -61,7 +61,7 @@ body { background: var(--bc-background); }
 #user-tools a,
 #user-tools #logout-form button { font-weight: 650; }
 
-#content h1 { color: var(--bc-ink); font-family: var(--bc-display); font-weight: 900; }
+#content h1 { color: var(--bc-ink); font-family: var(--bc-display); font-weight: 750; }
 #content-main .module,
 #content-related,
 .submit-row,
@@ -84,3 +84,7 @@ input[type="submit"],
 .object-tools a:visited { border-radius: var(--bc-control-radius); }
 
 :focus-visible { outline: 2px solid var(--bc-accent); outline-offset: 3px; }
+
+form input:is([type="text"], [type="email"], [type="password"], [type="search"]),
+form select,
+form textarea { border-color: var(--bc-field-border); }
