@@ -3,12 +3,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_safe
 
 from .forms import LoginForm, ProfileForm, RegistrationForm
-from .models import User
+from .models import ProfilePhoto, User
 
 
 class AccountLoginView(LoginView):
@@ -27,7 +29,9 @@ def save_account_form(form):
             if account._state.adding:
                 account.save()
             else:
-                account.save(update_fields=form.changed_data)
+                account.save(
+                    update_fields=[name for name in form.changed_data if name in form.Meta.fields]
+                )
     except IntegrityError as error:
         constraint = getattr(getattr(error.__cause__, "diag", None), "constraint_name", None)
         if constraint in {"accounts_email_ci_unique", "accounts_user_email_key"}:
@@ -79,16 +83,46 @@ def admin_dashboard(request):
 @login_required
 @require_safe
 def profile(request):
-    return render(request, "accounts/profile.html")
+    return render(
+        request,
+        "accounts/profile.html",
+        {"has_profile_photo": ProfilePhoto.objects.filter(user=request.user).exists()},
+    )
+
+
+@login_required
+@require_safe
+@never_cache
+def profile_photo(request):
+    image = ProfilePhoto.objects.filter(user=request.user).values_list("image", flat=True).first()
+    if image is None:
+        raise Http404
+    return HttpResponse(bytes(image), content_type="image/jpeg")
 
 
 @login_required
 @require_http_methods(["GET", "HEAD", "POST"])
 def edit_profile(request):
     form = ProfileForm(
-        request.POST if request.method == "POST" else None, instance=request.user
+        request.POST if request.method == "POST" else None,
+        request.FILES if request.method == "POST" else None,
+        instance=request.user,
     )
-    if form.is_valid() and save_account_form(form):
-        messages.success(request, "Your profile was updated.")
-        return redirect("profile")
-    return render(request, "accounts/edit_profile.html", {"form": form})
+    if form.is_valid():
+        with transaction.atomic():
+            if save_account_form(form):
+                photo = form.cleaned_data["photo"]
+                if photo is not None:
+                    ProfilePhoto.objects.update_or_create(
+                        user=request.user, defaults={"image": photo}
+                    )
+                messages.success(request, "Your profile was updated.")
+                return redirect("profile")
+    return render(
+        request,
+        "accounts/edit_profile.html",
+        {
+            "form": form,
+            "has_profile_photo": ProfilePhoto.objects.filter(user=request.user).exists(),
+        },
+    )

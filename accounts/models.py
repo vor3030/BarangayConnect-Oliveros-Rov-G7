@@ -37,3 +37,8 @@ class User(AbstractUser):
     @property
     def role_label(self):
         return "Admin" if self.is_staff else "Resident"
+
+
+class ProfilePhoto(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    image = models.BinaryField(editable=False)

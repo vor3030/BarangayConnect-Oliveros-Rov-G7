@@ -1,6 +1,11 @@
+from io import BytesIO
+
 from django.contrib.auth import SESSION_KEY
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+
+from PIL import Image
 
 from .models import User
 
@@ -136,3 +141,48 @@ class AccountTests(TestCase):
         self.assertEqual(self.client.get(url).status_code, 403)
         self.client.force_login(superuser)
         self.assertContains(self.client.get(url), "Staff status")
+
+
+    def test_profile_photo_upload_replacement_and_access(self):
+        resident = self.make_user("maria")
+        other = self.make_user("jose")
+        profile_url = reverse("profile")
+        edit_url = reverse("edit_profile")
+        photo_url = reverse("profile_photo")
+        self.assertRedirects(self.client.get(photo_url), f"{reverse('login')}?next={photo_url}")
+        self.client.force_login(resident)
+        self.assertContains(self.client.get(profile_url), "Default avatar")
+        self.assertContains(self.client.get(edit_url), 'enctype="multipart/form-data"')
+        details = {"full_name": resident.full_name, "email": resident.email}
+        previous = None
+
+        for color in ("red", "blue"):
+            with self.subTest(color=color):
+                upload = BytesIO()
+                Image.new("RGB", (300, 200), color).save(upload, format="PNG")
+                photo = SimpleUploadedFile("photo.png", upload.getvalue(), "image/png")
+                self.assertRedirects(
+                    self.client.post(edit_url, details | {"photo": photo}),
+                    profile_url,
+                )
+                self.assertContains(self.client.get(profile_url), f'src="{photo_url}"')
+                response = self.client.get(photo_url)
+                self.assertEqual(response.headers["Content-Type"], "image/jpeg")
+                self.assertIn("private", response.headers["Cache-Control"])
+                self.assertNotEqual(response.content, previous)
+                with Image.open(BytesIO(response.content)) as image:
+                    self.assertEqual(image.size, (256, 256))
+                previous = response.content
+
+        invalid = SimpleUploadedFile("fake.png", b"invalid", "image/png")
+        response = self.client.post(edit_url, details | {"photo": invalid})
+        self.assertFormError(
+            response.context["form"], "photo", "Upload a valid JPG, PNG, or WebP image."
+        )
+        self.assertEqual(self.client.get(photo_url).content, previous)
+        self.assertRedirects(self.client.post(edit_url, details), profile_url)
+        self.assertEqual(self.client.get(photo_url).content, previous)
+
+        self.client.force_login(other)
+        self.assertEqual(self.client.get(photo_url, {"user": resident.pk}).status_code, 404)
+        self.assertContains(self.client.get(profile_url), "Default avatar")
