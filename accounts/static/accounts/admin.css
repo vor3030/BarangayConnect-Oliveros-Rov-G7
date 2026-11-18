@@ -1,3 +1,5 @@
+@import url("./theme.css");
+
 :root,
 html[data-theme="light"] {
   --primary: var(--bc-green);

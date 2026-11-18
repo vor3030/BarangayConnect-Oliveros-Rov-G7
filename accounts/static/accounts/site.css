@@ -1,3 +1,5 @@
+@import url("./theme.css");
+
 * { box-sizing: border-box; }
 :root { color-scheme: light; }
 body { margin: 0; color: var(--bc-ink); background: var(--bc-background); font: 1rem/1.55 var(--bc-font); }
