@@ -179,3 +179,40 @@ input[aria-invalid="true"] { border-color: var(--bc-error); }
   .auth-intro { min-height: 11rem; }
   .auth-intro h2 { width: auto; }
 }
+
+.profile-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.profile-avatar {
+  display: grid;
+  flex: none;
+  width: 6rem;
+  height: 6rem;
+  place-items: center;
+  border: 1px solid var(--bc-accent);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-avatar-default {
+  background: var(--bc-inset);
+  color: var(--bc-accent);
+  font: 900 2.5rem/1 var(--bc-display);
+}
+
+.form-card input[type="file"]::file-selector-button {
+  margin-inline-end: .75rem;
+  padding: .35rem .65rem;
+  border: 0;
+  border-radius: var(--bc-control-radius);
+  background: var(--bc-accent);
+  color: var(--bc-accent-ink);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}

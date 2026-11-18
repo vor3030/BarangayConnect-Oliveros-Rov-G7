@@ -1,0 +1,7 @@
+{% if has_profile_photo %}
+  <img class="profile-avatar" src="{% url 'profile_photo' %}" alt="Your profile photo" width="96" height="96">
+{% else %}
+  <span class="profile-avatar profile-avatar-default" role="img" aria-label="Default avatar">
+    {{ user.full_name|default:user.username|first|upper }}
+  </span>
+{% endif %}

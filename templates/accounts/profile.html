@@ -2,7 +2,13 @@
 {% block title %}Your profile | Barangay Connect{% endblock %}
 {% block content %}
 <section class="card form-card">
-  <h1>Your profile</h1>
+  <div class="profile-heading">
+    {% include 'accounts/profile_avatar.html' %}
+    <div>
+      <h1>Your profile</h1>
+      <a href="{% url 'edit_profile' %}#id_photo">{% if has_profile_photo %}Change photo{% else %}Add photo{% endif %}</a>
+    </div>
+  </div>
   <dl>
     <dt>Full name</dt><dd>{{ user.full_name }}</dd>
     <dt>Username</dt><dd>{{ user.username }}</dd>
