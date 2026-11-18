@@ -1,0 +1,14 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Resident dashboard | Barangay Connect{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Resident dashboard</p>
+  <h1>Welcome, {{ user.get_full_name }}</h1>
+  <p>Keep your contact details current for future barangay services.</p>
+</section>
+<section class="card">
+  <h2>Your profile</h2>
+  <p>Review your account information and update your name, email address, or contact number.</p>
+  <a class="button" href="{% url 'profile' %}">View profile</a>
+</section>
+{% endblock %}

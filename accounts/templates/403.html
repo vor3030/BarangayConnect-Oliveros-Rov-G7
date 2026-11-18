@@ -1,0 +1,9 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Access denied | Barangay Connect{% endblock %}
+{% block content %}
+<section class="card form-card">
+  <h1>Access denied</h1>
+  <p>Your account does not have access to this page.</p>
+  <a class="button" href="{% url 'dashboard' %}">Go to your dashboard</a>
+</section>
+{% endblock %}
