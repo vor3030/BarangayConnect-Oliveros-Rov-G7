@@ -1,15 +1,12 @@
-{% extends 'accounts/base.html' %}
+{% extends 'accounts/auth_layout.html' %}
 {% block title %}Sign in | Barangay Connect{% endblock %}
-{% block content %}
-<section class="card form-card">
-  <h1>Sign in</h1>
-  <p class="muted">Access your Barangay Connect account.</p>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
+{% block auth_form %}
+<h1>Sign in</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
 
-    <button class="button" type="submit">Sign in</button>
-  </form>
-  <p>New resident? <a href="{% url 'register' %}">Create an account</a></p>
-</section>
+  <button class="button" type="submit">Sign in</button>
+</form>
+<p>New resident? <a href="{% url 'register' %}">Create an account</a></p>
 {% endblock %}

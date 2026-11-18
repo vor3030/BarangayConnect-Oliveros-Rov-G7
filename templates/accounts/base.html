@@ -10,8 +10,8 @@
 <body>
   <header class="site-header">
     <div class="shell header-inner">
-      <a class="brand" href="{% url 'dashboard' %}">Barangay<span>Connect</span></a>
-      <nav aria-label="Main navigation">
+      <a class="brand" href="{% url 'dashboard' %}">Barangay <span>Connect</span></a>
+      <nav class="site-nav" aria-label="Main navigation">
         {% if user.is_authenticated %}
           <a href="{% url 'dashboard' %}">Dashboard</a>
           <a href="{% url 'profile' %}">Profile</a>
@@ -20,8 +20,8 @@
             <button class="nav-button" type="submit">Sign out</button>
           </form>
         {% else %}
-          <a href="{% url 'login' %}">Sign in</a>
-          <a href="{% url 'register' %}">Register</a>
+          <a href="{% url 'login' %}"{% if request.resolver_match.url_name == 'login' %} aria-current="page"{% endif %}>Sign in</a>
+          <a href="{% url 'register' %}"{% if request.resolver_match.url_name == 'register' %} aria-current="page"{% endif %}>Register</a>
         {% endif %}
       </nav>
     </div>

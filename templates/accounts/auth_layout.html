@@ -1,0 +1,12 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+<div class="auth-layout">
+  <section class="auth-intro" aria-labelledby="portal-title">
+    <h2 id="portal-title">Barangay services</h2>
+    <p>Use your account to access Barangay Connect.</p>
+  </section>
+  <section class="card form-card">
+    {% block auth_form %}{% endblock %}
+  </section>
+</div>
+{% endblock %}
