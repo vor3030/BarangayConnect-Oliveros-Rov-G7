@@ -1,7 +1,8 @@
 {% extends 'accounts/base.html' %}
 {% block content %}
 <div class="auth-layout">
-  <section class="auth-intro" aria-labelledby="portal-title">
+  <section class="auth-intro" aria-labelledby="portal-title" x-data="motionScene">
+    {% include 'accounts/neighborhood.html' %}
     <h2 id="portal-title">Barangay services</h2>
     <p>Use your account to access Barangay Connect.</p>
   </section>

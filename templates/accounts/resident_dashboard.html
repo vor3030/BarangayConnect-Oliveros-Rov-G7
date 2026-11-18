@@ -1,7 +1,8 @@
 {% extends 'accounts/base.html' %}
 {% block title %}Resident dashboard | Barangay Connect{% endblock %}
 {% block content %}
-<section class="hero">
+<section class="hero" x-data="motionScene">
+  {% include 'accounts/neighborhood.html' %}
   <p class="eyebrow">Resident dashboard</p>
   <h1>Welcome, {{ user.get_full_name }}</h1>
   <p>Keep your contact details current for future barangay services.</p>

@@ -70,7 +70,7 @@ main { padding-block: clamp(1.75rem, 5vw, 4.5rem); }
   background: var(--bc-inset);
 }
 
-.auth-intro { display: grid; align-content: end; min-height: clamp(19rem, 46vw, 32rem); }
+.auth-intro { display: grid; align-content: end; min-height: clamp(25rem, 46vw, 32rem); }
 .auth-intro::before, .hero::before {
   position: absolute;
   z-index: -1;
@@ -85,14 +85,9 @@ main { padding-block: clamp(1.75rem, 5vw, 4.5rem); }
 .auth-intro::after, .hero::after {
   position: absolute;
   z-index: -1;
-  top: -35%;
-  right: -9%;
-  width: min(78%, 33rem);
-  aspect-ratio: 1.4;
-  transform: rotate(-22deg);
-  border: 1px solid #09645538;
-  border-radius: 32%;
-  box-shadow: 0 0 0 1rem #09645517, 0 0 0 2rem #09645510, 0 0 0 3rem #09645509;
+  inset: .75rem 0 auto;
+  height: 51%;
+  background: url("./neighborhood-still.webp") center / contain no-repeat;
   content: "";
 }
 
@@ -165,13 +160,6 @@ input[aria-invalid="true"] { border-color: var(--bc-error); }
   background: var(--bc-surface);
 }
 
-.metric {
-  margin-block: .65rem;
-  color: var(--bc-accent);
-  font: 900 clamp(2.5rem, 6vw, 4rem)/1 var(--bc-display);
-  font-variant-numeric: tabular-nums;
-}
-
 @media (max-width: 46rem) {
   .auth-layout { grid-template-columns: minmax(0, 1fr); }
   .auth-intro { min-height: 11rem; }
@@ -213,4 +201,128 @@ input[aria-invalid="true"] { border-color: var(--bc-error); }
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+}
+
+.skip-link {
+  position: absolute;
+  z-index: 3;
+  top: .5rem;
+  left: 1rem;
+  padding: .55rem .85rem;
+  background: var(--bc-surface);
+  transform: translateY(calc(-100% - 1rem));
+}
+
+.skip-link:focus { transform: none; }
+
+.site-nav a, .nav-button, .motion-button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .4rem;
+}
+
+.animated-icon {
+  position: relative;
+  display: inline-grid;
+  flex: 0 0 1.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  place-items: center;
+}
+
+.animated-icon img, .animated-icon span { display: block; width: 100%; height: 100%; }
+.animated-icon span { position: absolute; inset: 0; }
+.animated-icon:has([data-icon-ready]) img { visibility: hidden; }
+.animated-icon svg path[stroke]:not([stroke="none"]) { stroke: currentColor; }
+
+.neighborhood-canvas {
+  position: absolute;
+  z-index: -1;
+  display: none;
+  pointer-events: none;
+}
+
+[data-scene-ready="true"] .neighborhood-canvas { display: block; }
+[data-scene-ready="true"]::after { content: none; }
+
+.auth-intro .neighborhood-canvas {
+  inset: 0 0 auto;
+  width: 100%;
+  height: 55%;
+}
+
+.hero .neighborhood-canvas {
+  inset: 0 0 0 auto;
+  width: 48%;
+  height: 100%;
+}
+
+.hero::after { inset: .75rem 1rem; height: auto; background-position: right center; background-size: min(44%, 26rem) auto; }
+.hero > :is(h1, p) { max-width: 54%; }
+
+.motion-button {
+  position: absolute;
+  z-index: 1;
+  top: .75rem;
+  right: .75rem;
+  padding-inline: .75rem;
+  border: 1px solid var(--bc-field-border);
+  border-radius: var(--bc-control-radius);
+  color: var(--bc-accent);
+  background: var(--bc-surface);
+  font-size: .875rem;
+  font-weight: 700;
+}
+
+.motion-button[hidden], .account-chart[hidden] { display: none; }
+.motion-button:hover { background: var(--bc-inset); }
+
+.account-overview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem 1.25rem;
+  margin-block: .75rem 1rem;
+}
+
+.account-chart { position: relative; width: 8.75rem; height: 8.75rem; }
+.account-counts { display: grid; gap: .45rem; margin: 0; }
+.account-count { display: flex; align-items: baseline; gap: .55rem; }
+.account-count dt { display: inline-flex; align-items: center; gap: .45rem; margin: 0; }
+.account-count dt::before {
+  width: .65rem;
+  height: .65rem;
+  border-radius: 50%;
+  background: var(--bc-accent);
+  content: "";
+}
+
+.account-count-inactive dt::before { background: var(--bc-chart-secondary); }
+.account-count dd { margin: 0; font-size: 1.25rem; font-weight: 750; }
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) {
+  .button { transition: background-color 150ms, transform 150ms; }
+  .button:hover { transform: translateY(-1px); }
+  .button:active { transform: translateY(1px); }
+}
+
+@media (max-width: 46.99rem), (prefers-reduced-motion: reduce) {
+  [data-scene-ready="true"]::after { content: ""; }
+  [data-scene-ready="true"] .neighborhood-canvas,
+  [data-scene-ready] .motion-button { display: none; }
+
+}
+
+@media (max-width: 46.99rem) {
+  .auth-intro::after, .hero::after {
+    inset: .5rem .75rem .5rem auto;
+    width: 44%;
+    height: auto;
+    background-position: right center;
+    background-size: contain;
+    opacity: .36;
+  }
+
+  .hero > :is(h1, p) { max-width: none; }
 }

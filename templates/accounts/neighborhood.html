@@ -1,0 +1,5 @@
+<canvas class="neighborhood-canvas" aria-hidden="true"></canvas>
+<button class="motion-button" type="button" hidden x-bind:hidden="!ready" x-on:click="toggle">
+  {% include 'accounts/animated_icon.html' with icon='play-pause' only %}
+  <span x-text="paused ? 'Resume motion' : 'Pause motion'">Pause motion</span>
+</button>
