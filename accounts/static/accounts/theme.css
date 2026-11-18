@@ -1,0 +1,13 @@
+:root {
+  --bc-ink: #142d26;
+  --bc-muted: #466057;
+  --bc-green: #146349;
+  --bc-forest: #164d3b;
+  --bc-mint: #dcefe3;
+  --bc-background: #f2f7f3;
+  --bc-border: #d6e4da;
+  --bc-surface: #fff;
+  --bc-control-radius: .55rem;
+  --bc-card-radius: 1.25rem;
+  --bc-font: system-ui, sans-serif;
+}

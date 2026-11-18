@@ -39,3 +39,4 @@ class AccountAdmin(UserAdmin):
 
 
 admin.site.site_header = "Barangay Connect administration"
+admin.site.index_title = "Barangay administration"

@@ -1,0 +1,75 @@
+:root,
+html[data-theme="light"] {
+  --primary: var(--bc-green);
+  --secondary: var(--bc-forest);
+  --accent: var(--bc-mint);
+  --body-fg: var(--bc-ink);
+  --body-bg: var(--bc-surface);
+  --body-quiet-color: var(--bc-muted);
+  --body-medium-color: var(--bc-muted);
+  --body-loud-color: var(--bc-ink);
+  --header-color: var(--bc-ink);
+  --header-branding-color: var(--bc-ink);
+  --header-bg: var(--bc-surface);
+  --header-link-color: var(--bc-green);
+  --breadcrumbs-fg: var(--bc-mint);
+  --breadcrumbs-link-fg: var(--bc-surface);
+  --breadcrumbs-bg: var(--bc-forest);
+  --link-fg: var(--bc-green);
+  --link-hover-color: var(--bc-forest);
+  --hairline-color: var(--bc-border);
+  --border-color: var(--bc-border);
+  --darkened-bg: var(--bc-background);
+  --selected-bg: var(--bc-mint);
+  --selected-row: var(--bc-mint);
+  --message-success-bg: var(--bc-mint);
+  --button-bg: var(--bc-green);
+  --button-hover-bg: var(--bc-forest);
+  --default-button-bg: var(--bc-forest);
+  --default-button-hover-bg: var(--bc-green);
+  --object-tools-bg: var(--bc-green);
+  --object-tools-hover-bg: var(--bc-forest);
+  --font-family-primary: var(--bc-font);
+}
+
+body { background: var(--bc-background); }
+#header { border-bottom: 1px solid var(--bc-border); }
+#site-name a { color: var(--bc-ink); font-size: 1.25rem; font-weight: 800; }
+#site-name a span { color: var(--bc-green); }
+
+#header #user-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem 1rem;
+  font-size: .875rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+#user-tools a,
+#user-tools #logout-form button { font-weight: 650; }
+
+#content h1 { color: var(--bc-ink); font-weight: 750; }
+#content-main .module,
+#content-related,
+.submit-row,
+.login #container {
+  background: var(--bc-surface);
+  border: 1px solid var(--bc-border);
+  border-radius: var(--bc-card-radius);
+}
+
+#content-main .module > h2,
+#content-main .module > table > caption {
+  border-radius: calc(var(--bc-card-radius) - 1px) calc(var(--bc-card-radius) - 1px) 0 0;
+}
+
+.login #container { overflow: hidden; }
+.button,
+input[type="submit"],
+.submit-row a.deletelink,
+.object-tools a:link,
+.object-tools a:visited { border-radius: var(--bc-control-radius); }
+
+:focus-visible { outline: 3px solid #95520b; outline-offset: 3px; }

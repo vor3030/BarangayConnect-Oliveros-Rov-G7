@@ -10,7 +10,11 @@
   <section class="card">
     <h2>Active resident accounts</h2>
     <p class="metric">{{ resident_count }}</p>
-    <a class="button" href="{% url 'admin:index' %}">Open barangay administration</a>
+    {% if user.is_superuser %}
+      <a class="button" href="{% url 'admin:accounts_user_changelist' %}">Manage accounts</a>
+    {% else %}
+      <a class="button" href="{% url 'admin:index' %}">Open barangay administration</a>
+    {% endif %}
   </section>
   <section class="card">
     <h2>Staff profile</h2>
