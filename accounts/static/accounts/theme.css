@@ -1,13 +1,16 @@
 :root {
-  --bc-ink: #142d26;
-  --bc-muted: #466057;
-  --bc-green: #146349;
-  --bc-forest: #164d3b;
-  --bc-mint: #dcefe3;
-  --bc-background: #f2f7f3;
-  --bc-border: #d6e4da;
-  --bc-surface: #fff;
-  --bc-control-radius: .55rem;
-  --bc-card-radius: 1.25rem;
+  --bc-ink: #f6f7f0;
+  --bc-muted: #b9bcb1;
+  --bc-accent: #dcfa37;
+  --bc-accent-hover: #ecff87;
+  --bc-accent-ink: #141807;
+  --bc-background: #10110e;
+  --bc-surface: #191b16;
+  --bc-inset: #131510;
+  --bc-border: #3b3f33;
+  --bc-error: #ffad9f;
+  --bc-control-radius: .25rem;
+  --bc-card-radius: .5rem;
   --bc-font: system-ui, sans-serif;
+  --bc-display: "Arial Black", "Segoe UI", system-ui, sans-serif;
 }

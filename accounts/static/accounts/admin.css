@@ -2,9 +2,9 @@
 
 :root,
 html[data-theme="light"] {
-  --primary: var(--bc-green);
-  --secondary: var(--bc-forest);
-  --accent: var(--bc-mint);
+  --primary: var(--bc-accent);
+  --secondary: var(--bc-inset);
+  --accent: var(--bc-border);
   --body-fg: var(--bc-ink);
   --body-bg: var(--bc-surface);
   --body-quiet-color: var(--bc-muted);
@@ -13,31 +13,40 @@ html[data-theme="light"] {
   --header-color: var(--bc-ink);
   --header-branding-color: var(--bc-ink);
   --header-bg: var(--bc-surface);
-  --header-link-color: var(--bc-green);
-  --breadcrumbs-fg: var(--bc-mint);
-  --breadcrumbs-link-fg: var(--bc-surface);
-  --breadcrumbs-bg: var(--bc-forest);
-  --link-fg: var(--bc-green);
-  --link-hover-color: var(--bc-forest);
+  --header-link-color: var(--bc-accent);
+  --breadcrumbs-fg: var(--bc-muted);
+  --breadcrumbs-link-fg: var(--bc-ink);
+  --breadcrumbs-bg: var(--bc-inset);
+  --link-fg: var(--bc-accent);
+  --link-hover-color: var(--bc-accent-hover);
   --hairline-color: var(--bc-border);
   --border-color: var(--bc-border);
   --darkened-bg: var(--bc-background);
-  --selected-bg: var(--bc-mint);
-  --selected-row: var(--bc-mint);
-  --message-success-bg: var(--bc-mint);
-  --button-bg: var(--bc-green);
-  --button-hover-bg: var(--bc-forest);
-  --default-button-bg: var(--bc-forest);
-  --default-button-hover-bg: var(--bc-green);
-  --object-tools-bg: var(--bc-green);
-  --object-tools-hover-bg: var(--bc-forest);
+  --selected-bg: var(--bc-border);
+  --selected-row: var(--bc-border);
+  --message-success-bg: var(--bc-border);
+  --button-fg: var(--bc-accent-ink);
+  --error-fg: var(--bc-error);
+  --message-error-bg: #502821;
+  --message-info-bg: #263d48;
+  --message-warning-bg: #50441f;
+  --button-bg: var(--bc-accent);
+  --button-hover-bg: var(--bc-accent-hover);
+  --default-button-bg: var(--bc-accent);
+  --default-button-hover-bg: var(--bc-accent-hover);
+  --object-tools-bg: var(--bc-accent);
+  --object-tools-hover-bg: var(--bc-accent-hover);
   --font-family-primary: var(--bc-font);
+  --primary-fg: var(--bc-accent-ink);
+  --link-selected-fg: var(--bc-accent);
+  color-scheme: dark;
 }
 
 body { background: var(--bc-background); }
 #header { border-bottom: 1px solid var(--bc-border); }
-#site-name a { color: var(--bc-ink); font-size: 1.25rem; font-weight: 800; }
-#site-name a span { color: var(--bc-green); }
+#site-name a:link,
+#site-name a:visited { color: var(--bc-ink); font: 900 1.1rem/1.2 var(--bc-display); text-transform: uppercase; }
+#site-name a span { padding: .2em .45em; border-radius: var(--bc-control-radius); background: var(--bc-accent); color: var(--bc-accent-ink); }
 
 #header #user-tools {
   display: flex;
@@ -52,7 +61,7 @@ body { background: var(--bc-background); }
 #user-tools a,
 #user-tools #logout-form button { font-weight: 650; }
 
-#content h1 { color: var(--bc-ink); font-weight: 750; }
+#content h1 { color: var(--bc-ink); font-family: var(--bc-display); font-weight: 900; }
 #content-main .module,
 #content-related,
 .submit-row,
@@ -74,4 +83,4 @@ input[type="submit"],
 .object-tools a:link,
 .object-tools a:visited { border-radius: var(--bc-control-radius); }
 
-:focus-visible { outline: 3px solid #95520b; outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--bc-accent); outline-offset: 3px; }
