@@ -10,6 +10,12 @@
   </div>
   {% include 'accounts/neighborhood.html' %}
 </section>
+<section class="account-stats" aria-label="Resident enrollment overview">
+  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='people' %}</span><div><p>Total residents</p><strong>{{ active_residents|add:inactive_residents }}</strong></div></article>
+  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='check' %}</span><div><p>Active accounts</p><strong>{{ active_residents }}</strong></div></article>
+  <article data-reveal><span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='user' %}</span><div><p>Inactive accounts</p><strong>{{ inactive_residents }}</strong></div></article>
+</section>
+<div class="section-heading" data-reveal><div><p class="eyebrow">Care for your community</p><h2>The people behind the numbers.</h2></div></div>
 <div class="grid">
   <section class="card" data-reveal data-tilt>
     <p class="eyebrow">Community enrollment</p>
