@@ -3,7 +3,7 @@
 {% block auth_form %}
 <p class="eyebrow">Your community account</p>
 <h1>Welcome back<span class="text-accent">.</span></h1>
-<p class="form-description">Sign in to your little corner of the community.</p>
+<p class="form-description">Use your email or username to sign in to your community.</p>
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}

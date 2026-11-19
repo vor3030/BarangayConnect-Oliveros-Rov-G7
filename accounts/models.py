@@ -1,15 +1,24 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.db.models import Q
 from django.db.models.functions import Lower
 
 
 class AccountManager(UserManager):
     def get_by_natural_key(self, username):
-        return self.get(email__iexact=username)
+        try:
+            return self.get(Q(email__iexact=username) | Q(username__iexact=username))
+        except self.model.MultipleObjectsReturned:
+            # An email can also be another account's username. Reject ambiguous
+            # identifiers rather than selecting an account or raising a server error.
+            raise self.model.DoesNotExist from None
 
     async def aget_by_natural_key(self, username):
-        return await self.aget(email__iexact=username)
+        try:
+            return await self.aget(Q(email__iexact=username) | Q(username__iexact=username))
+        except self.model.MultipleObjectsReturned:
+            raise self.model.DoesNotExist from None
 
     @classmethod
     def normalize_email(cls, email):

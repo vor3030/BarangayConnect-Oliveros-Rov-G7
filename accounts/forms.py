@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm, UserChangeForm
+from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm, UserChangeForm, UsernameField
 from django.forms import ModelForm
 from PIL import Image, ImageOps
 
@@ -29,8 +29,15 @@ class RegistrationForm(UniqueEmailMixin, BaseUserCreationForm):
 
 
 class LoginForm(AuthenticationForm):
+    username = UsernameField(
+        label="Email or username",
+        widget=forms.TextInput(attrs={
+            "autofocus": True, "autocomplete": "username", "autocapitalize": "none",
+        }),
+    )
+
     error_messages = {
-        "invalid_login": "Enter a valid email address and password.",
+        "invalid_login": "Enter a valid email address or username and password.",
         "inactive": "This account is inactive.",
     }
 

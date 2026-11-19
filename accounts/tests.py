@@ -1,6 +1,7 @@
 from io import BytesIO
 
-from django.contrib.auth import SESSION_KEY
+from asgiref.sync import async_to_sync
+from django.contrib.auth import SESSION_KEY, aauthenticate
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -83,7 +84,7 @@ class AccountTests(TestCase):
         response = self.client.post(
             reverse("login"), {"username": user.email, "password": "incorrect"}
         )
-        self.assertContains(response, "Enter a valid email address and password.")
+        self.assertContains(response, "Enter a valid email address or username and password.")
         self.assertNotIn(SESSION_KEY, self.client.session)
         self.client.force_login(user)
         self.assertEqual(self.client.get(reverse("logout")).status_code, 405)
@@ -94,6 +95,73 @@ class AccountTests(TestCase):
         for name in ("dashboard", "resident_dashboard", "admin_dashboard", "profile", "edit_profile"):
             path = reverse(name)
             self.assertRedirects(self.client.get(path), f"{reverse('login')}?next={path}")
+
+    def test_username_login_is_case_insensitive_for_both_roles(self):
+        for username, staff, dashboard in (
+            ("maria", False, "resident_dashboard"),
+            ("operator", True, "admin_dashboard"),
+        ):
+            user = self.make_user(username, staff=staff)
+            with self.subTest(role=user.role_label):
+                self.client.logout()
+                response = self.client.post(reverse("login"), {
+                    "username": f"  {username.upper()}  ", "password": self.password,
+                }, follow=True)
+                self.assertEqual(response.request["PATH_INFO"], reverse(dashboard))
+                self.assertEqual(self.client.session[SESSION_KEY], str(user.pk))
+
+    def test_async_authentication_accepts_email_and_username(self):
+        user = self.make_user("maria")
+        for identifier in (user.email.upper(), user.username.upper()):
+            with self.subTest(identifier=identifier):
+                result = async_to_sync(aauthenticate)(username=identifier, password=self.password)
+                self.assertEqual(result.pk, user.pk)
+
+    def test_login_rejects_inactive_users_and_invalid_identifiers(self):
+        user = self.make_user("maria")
+        for identifier in (user.email, user.username, "missing", "missing@example.com"):
+            with self.subTest(identifier=identifier, reason="wrong password"):
+                response = self.client.post(reverse("login"), {
+                    "username": identifier, "password": "incorrect",
+                })
+                self.assertContains(response, "Enter a valid email address or username and password.")
+                self.assertNotIn(SESSION_KEY, self.client.session)
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        for identifier in (user.email, user.username):
+            with self.subTest(identifier=identifier, reason="inactive"):
+                response = self.client.post(reverse("login"), {
+                    "username": identifier, "password": self.password,
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertNotIn(SESSION_KEY, self.client.session)
+
+    def test_ambiguous_email_and_username_fail_without_server_error(self):
+        user = self.make_user("maria")
+        User.objects.create_user(
+            username=user.email, email="other@example.com", full_name="Other Resident",
+            password=self.password,
+        )
+        response = self.client.post(reverse("login"), {
+            "username": user.email, "password": self.password,
+        })
+        self.assertContains(response, "Enter a valid email address or username and password.")
+        self.assertNotIn(SESSION_KEY, self.client.session)
+        self.assertIsNone(async_to_sync(aauthenticate)(username=user.email, password=self.password))
+        self.assertTrue(self.client.login(username=user.username, password=self.password))
+
+    def test_admin_login_accepts_username(self):
+        user = User.objects.create_superuser(
+            username="operator", email="operator@example.com", full_name="Operator",
+            password=self.password,
+        )
+        response = self.client.get(reverse("admin:login"))
+        self.assertContains(response, "Email or username")
+        response = self.client.post(reverse("admin:login"), {
+            "username": user.username, "password": self.password, "next": reverse("admin:index"),
+        })
+        self.assertRedirects(response, reverse("admin:index"))
+        self.assertEqual(self.client.session[SESSION_KEY], str(user.pk))
 
     def test_profile_is_private_and_updates_only_allowed_fields(self):
         resident = self.make_user("maria")
