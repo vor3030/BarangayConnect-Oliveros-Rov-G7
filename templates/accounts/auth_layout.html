@@ -1,14 +1,15 @@
 {% extends 'accounts/base.html' %}
 {% block content %}
+<div class="auth-welcome"><span>Life in your barangay, made a little simpler.</span><span class="welcome-chip">{% include 'accounts/ui_icon.html' with name='leaf' %}Tuloy po kayo</span></div>
 <div class="auth-layout">
   <section class="auth-intro" aria-labelledby="portal-title" x-data="motionScene">
     <div class="intro-copy" data-reveal>
       <p class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span> A more connected community</p>
       <h2 id="portal-title">Your neighborhood.<br><em>Closer together.</em></h2>
-      <p>A familiar place. A simpler way to connect.<br>Your barangay account starts here.</p>
+      <p>For the people, the families, and the place we call home. Your community account brings it all a little closer.</p>
     </div>
     {% include 'accounts/neighborhood.html' %}
-    <div class="intro-bottom"><span class="community-badge"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m10 2 6 3v5c0 4-6 7-6 7s-6-3-6-7V5l6-3Z" stroke="currentColor" stroke-width="1.4"/><path d="m7 9 2 2 4-4" stroke="currentColor" stroke-width="1.4"/></svg>One community. One connection.</span><span class="local-label">Welcome home</span></div>
+    <div class="intro-bottom"><span class="community-badge">{% include 'accounts/ui_icon.html' with name='people' %}One community. A place for everyone.</span><span class="local-label">Welcome home</span></div>
   </section>
   <section class="card form-card auth-form" data-reveal>
     {% block auth_form %}{% endblock %}

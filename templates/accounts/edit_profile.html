@@ -10,7 +10,7 @@
   <p class="muted">If you change your email, sign in with the new address or your existing username.</p>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
+    {% include 'accounts/form_fields.html' %}
     <div class="actions">
       <button class="button" type="submit">Save changes</button>
       <a href="{% url 'profile' %}">Cancel</a>

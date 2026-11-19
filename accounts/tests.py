@@ -96,6 +96,39 @@ class AccountTests(TestCase):
             path = reverse(name)
             self.assertRedirects(self.client.get(path), f"{reverse('login')}?next={path}")
 
+    def test_dashboard_profile_completion_uses_actual_details(self):
+        user = self.make_user("maria")
+        self.client.force_login(user)
+        response = self.client.get(reverse("resident_dashboard"))
+        self.assertEqual(response.context["profile_completed_fields"], 3)
+        self.assertEqual(response.context["profile_completion"], 75)
+        user.contact_number = "09123456789"
+        user.save(update_fields=["contact_number"])
+        response = self.client.get(reverse("resident_dashboard"))
+        self.assertEqual(response.context["profile_completed_fields"], 4)
+        self.assertEqual(response.context["profile_completion"], 100)
+
+    def test_showcase_is_public_and_does_not_expose_account_details(self):
+        self.assertEqual(reverse("home"), "/")
+        self.assertEqual(reverse("dashboard"), "/dashboard/")
+        home = self.client.get(reverse("home"))
+        self.assertContains(home, "Resident accounts,")
+        self.assertContains(home, 'class="brand" href="/"')
+        url = reverse("portfolio_showcase")
+        response = self.client.get(url)
+        self.assertContains(response, "Resident accounts,")
+        self.assertContains(response, "Illustrative UI only.")
+        self.assertEqual(self.client.head(url).status_code, 200)
+        self.assertEqual(self.client.post(url).status_code, 405)
+        user = self.make_user("private-resident")
+        self.client.force_login(user)
+        self.assertContains(self.client.get(reverse("home")), "data-showcase")
+        response = self.client.get(url)
+        self.assertContains(response, "data-showcase")
+        self.assertNotContains(response, user.email)
+        self.assertNotContains(response, user.full_name)
+        self.assertNotContains(response, 'class="portal-sidebar"')
+
     def test_username_login_is_case_insensitive_for_both_roles(self):
         for username, staff, dashboard in (
             ("maria", False, "resident_dashboard"),

@@ -1,22 +1,25 @@
 {% extends 'accounts/base.html' %}
 {% block title %}Your profile | Barangay Connect{% endblock %}
 {% block content %}
-<section class="card form-card" data-reveal>
+<div class="profile-layout">
+<aside class="profile-identity" data-reveal>{% include 'accounts/profile_avatar.html' %}<h2>{{ user.get_full_name }}</h2><p>@{{ user.username }}</p><span class="identity-badge">{% include 'accounts/ui_icon.html' with name='shield' %}{{ user.role_label }} account</span><div class="identity-art">{% include 'accounts/community_art.html' %}</div><p class="identity-caption">A familiar face.<br>A part of our community.</p></aside>
+<section class="card profile-details" data-reveal>
   <p class="eyebrow">Your community identity</p>
   <div class="profile-heading">
-    {% include 'accounts/profile_avatar.html' %}
     <div>
       <h1>Your profile</h1>
       <a href="{% url 'edit_profile' %}#id_photo">{% if has_profile_photo %}Change photo{% else %}Add photo{% endif %}</a>
     </div>
   </div>
-  <dl>
-    <dt>Full name</dt><dd>{{ user.full_name }}</dd>
-    <dt>Username</dt><dd>{{ user.username }}</dd>
-    <dt>Email</dt><dd>{{ user.email }}</dd>
-    <dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd>
-    <dt>Role</dt><dd>{{ user.role_label }}</dd>
+  <p class="muted">Your information, kept together. Review your details or give them a little update.</p>
+  <dl class="profile-data">
+    <div><dt>Full name</dt><dd>{{ user.full_name }}</dd></div>
+    <div><dt>Username</dt><dd>{{ user.username }}</dd></div>
+    <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+    <div><dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd></div>
+    <div><dt>Role</dt><dd>{{ user.role_label }}</dd></div>
   </dl>
   <a class="button" href="{% url 'edit_profile' %}">Edit profile</a>
 </section>
+</div>
 {% endblock %}

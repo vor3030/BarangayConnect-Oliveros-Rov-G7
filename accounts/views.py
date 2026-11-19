@@ -23,6 +23,11 @@ class AccountLoginView(LoginView):
         return reverse("dashboard")
 
 
+@require_safe
+def portfolio_showcase(request):
+    return render(request, "accounts/portfolio_showcase.html", {"is_showcase": True})
+
+
 def save_account_form(form):
     try:
         with transaction.atomic():
@@ -67,7 +72,12 @@ def dashboard(request):
 def resident_dashboard(request):
     if request.user.is_staff:
         raise PermissionDenied
-    return render(request, "accounts/resident_dashboard.html")
+    return render(request, "accounts/resident_dashboard.html", profile_overview(request.user))
+
+
+def profile_overview(user):
+    completed = sum(bool(getattr(user, field)) for field in ("full_name", "username", "email", "contact_number"))
+    return {"profile_completed_fields": completed, "profile_completion": completed * 25}
 
 
 @login_required

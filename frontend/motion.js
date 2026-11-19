@@ -5,15 +5,53 @@ import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin);
 
 export function mountMotion() {
+  // The showcase owns its transitions so its page-motion control covers every effect.
+  if (document.querySelector("[data-showcase]")) {
+    document.documentElement.dataset.motionReady = "true";
+    return () => {};
+  }
   const media = gsap.matchMedia();
   media.add("(prefers-reduced-motion: no-preference)", () => {
     const cleanups = [];
+    const progress = document.querySelector("[data-scroll-progress]");
+    if (progress) gsap.to(progress, {
+      scaleX: 1, ease: "none",
+      scrollTrigger: { start: 0, end: "max", scrub: .25 },
+    });
+    const headings = document.querySelectorAll("h1:not([data-showcase-heading])");
+    if (headings.length) gsap.from(headings, {
+      clipPath: "inset(0 0 100% 0)", y: 9, duration: .45,
+      ease: "power2.out", clearProps: "clipPath,transform",
+    });
+    const navigation = document.querySelectorAll(".sidebar-nav a");
+    if (navigation.length) gsap.from(navigation, {
+      x: -12, opacity: 0, duration: .45, stagger: .055,
+      ease: "power2.out", clearProps: "opacity,transform",
+    });
+    const notices = document.querySelectorAll(".notice");
+    if (notices.length) gsap.from(notices, {
+      y: -9, scale: .98, opacity: 0, duration: .45,
+      ease: "back.out(1.2)", clearProps: "opacity,transform",
+    });
+    document.querySelectorAll(".account-stats strong").forEach((element) => {
+      if (!/^\d+$/.test(element.textContent.trim())) return;
+      const total = Number(element.textContent.trim());
+      const counter = { value: 0 };
+      gsap.to(counter, {
+        value: total, duration: .8, ease: "power2.out",
+        scrollTrigger: { trigger: element, start: "top 95%", once: true },
+        onUpdate: () => { element.textContent = String(Math.round(counter.value)); },
+        onComplete: () => { element.textContent = String(total); },
+      });
+      cleanups.push(() => { element.textContent = String(total); });
+    });
     document.querySelectorAll("[data-reveal]").forEach((element, index) => {
       gsap.from(element, {
-        y: 22, autoAlpha: 0, duration: .85, delay: Math.min(index * .07, .28),
+        y: 14, opacity: 0, immediateRender: false, duration: .55, delay: Math.min(index * .04, .16),
         ease: "power3.out",
         scrollTrigger: { trigger: element, start: "top 96%", once: true },
         clearProps: "transform,opacity,visibility",
+        onComplete: () => { element.dataset.revealed = "true"; },
       });
     });
 
@@ -62,14 +100,27 @@ export function mountMotion() {
 
   media.add("(prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine)", () => {
     const cleanups = [];
+    document.querySelectorAll(".quick-link").forEach((card) => {
+      const highlight = (event) => {
+        const bounds = card.getBoundingClientRect();
+        card.style.setProperty("--pointer-x", `${Math.round(event.clientX - bounds.left)}px`);
+        card.style.setProperty("--pointer-y", `${Math.round(event.clientY - bounds.top)}px`);
+      };
+      card.addEventListener("pointermove", highlight);
+      cleanups.push(() => {
+        card.removeEventListener("pointermove", highlight);
+        card.style.removeProperty("--pointer-x");
+        card.style.removeProperty("--pointer-y");
+      });
+    });
     document.querySelectorAll("[data-tilt]").forEach((card) => {
       const x = gsap.quickTo(card, "rotationY", { duration: .6, ease: "power3.out" });
       const y = gsap.quickTo(card, "rotationX", { duration: .6, ease: "power3.out" });
       gsap.set(card, { transformPerspective: 1100 });
       const move = (event) => {
         const bounds = card.getBoundingClientRect();
-        x(((event.clientX - bounds.left) / bounds.width - .5) * 4);
-        y(-((event.clientY - bounds.top) / bounds.height - .5) * 4);
+        x(((event.clientX - bounds.left) / bounds.width - .5) * 2);
+        y(-((event.clientY - bounds.top) / bounds.height - .5) * 2);
       };
       const reset = () => { x(0); y(0); };
       card.addEventListener("pointermove", move);

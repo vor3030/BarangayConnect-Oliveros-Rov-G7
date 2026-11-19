@@ -1,12 +1,13 @@
 {% extends 'accounts/auth_layout.html' %}
 {% block title %}Sign in | Barangay Connect{% endblock %}
 {% block auth_form %}
+<div class="form-emblem">{% include 'accounts/ui_icon.html' with name='home' %}</div>
 <p class="eyebrow">Your community account</p>
 <h1>Welcome back<span class="text-accent">.</span></h1>
 <p class="form-description">Use your email or username to sign in to your community.</p>
 <form method="post">
   {% csrf_token %}
-  {{ form.as_p }}
+  {% include 'accounts/form_fields.html' %}
 
   <button class="button" type="submit">Sign in</button>
 </form>

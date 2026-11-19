@@ -1,4 +1,5 @@
 import Alpine from "alpinejs";
+import "./fonts.css";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -56,6 +57,8 @@ Alpine.data("motionScene", () => ({
 
 Alpine.start();
 
+import("./interactions.js").then(({ mountInteractions }) => mountInteractions()).catch(() => {});
+
 import("./motion.js").then(({ mountMotion }) => mountMotion()).catch(() => {
   // Content is visible and usable even when animation enhancements are unavailable.
 });
@@ -65,4 +68,7 @@ if (document.querySelector("[data-icon-animation]")) {
 }
 if (document.querySelector("[data-account-chart]")) {
   import("./account-chart.js").then(({ mountAccountChart }) => mountAccountChart(reducedMotion)).catch(() => {});
+}
+if (document.querySelector("[data-showcase]")) {
+  import("./showcase.js").then(({ mountShowcase }) => mountShowcase()).catch(() => {});
 }
