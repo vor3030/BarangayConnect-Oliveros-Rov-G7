@@ -2,12 +2,21 @@
 {% block content %}
 <div class="auth-layout">
   <section class="auth-intro" aria-labelledby="portal-title" x-data="motionScene">
+    <div class="intro-copy" data-reveal>
+      <p class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span> A more connected community</p>
+      <h2 id="portal-title">Your neighborhood.<br><em>Closer together.</em></h2>
+      <p>A familiar place. A simpler way to connect.<br>Your barangay account starts here.</p>
+    </div>
     {% include 'accounts/neighborhood.html' %}
-    <h2 id="portal-title">Barangay services</h2>
-    <p>Use your account to access Barangay Connect.</p>
+    <div class="intro-bottom"><span class="community-badge"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m10 2 6 3v5c0 4-6 7-6 7s-6-3-6-7V5l6-3Z" stroke="currentColor" stroke-width="1.4"/><path d="m7 9 2 2 4-4" stroke="currentColor" stroke-width="1.4"/></svg>One community. One connection.</span><span class="local-label">Welcome home</span></div>
   </section>
-  <section class="card form-card">
+  <section class="card form-card auth-form" data-reveal>
     {% block auth_form %}{% endblock %}
   </section>
 </div>
+<section class="portal-benefits" aria-label="Your community account">
+  <article data-reveal><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='user' only %}</span><div><h3>Your own space</h3><p>Your resident profile, all in one place.</p></div></article>
+  <article data-reveal><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='home' only %}</span><div><h3>Rooted in community</h3><p>A local portal for the place you call home.</p></div></article>
+  <article data-reveal><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='user-plus' only %}</span><div><h3>Ready when you are</h3><p>Register and keep your details up to date.</p></div></article>
+</section>
 {% endblock %}

@@ -1,12 +1,13 @@
 {% extends 'accounts/auth_layout.html' %}
 {% block title %}Register | Barangay Connect{% endblock %}
 {% block auth_form %}
-<h1>Create a resident account</h1>
-<p class="muted">Use your email address to sign in after registration.</p>
+<p class="eyebrow">Find your place here</p>
+<h1>Join your community<span class="text-accent">.</span></h1>
+<p class="form-description">Create a resident account. Use your email to sign in.</p>
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}
   <button class="button" type="submit">Create account</button>
 </form>
-<p>Already registered? <a href="{% url 'login' %}">Sign in</a></p>
+<p class="form-switch">Already registered? <a href="{% url 'login' %}">Sign in</a></p>
 {% endblock %}

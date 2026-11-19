@@ -1,15 +1,29 @@
 {% extends 'accounts/base.html' %}
 {% block title %}Resident dashboard | Barangay Connect{% endblock %}
 {% block content %}
-<section class="hero" x-data="motionScene">
-  {% include 'accounts/neighborhood.html' %}
+<div class="page-heading" data-reveal><p class="eyebrow">Your community, at a glance</p><h2>Home feels a little closer.</h2></div>
+<section class="hero" x-data="motionScene" data-reveal>
+  <div class="hero-copy">
   <p class="eyebrow">Resident dashboard</p>
-  <h1>Welcome, {{ user.get_full_name }}</h1>
-  <p>Keep your contact details current for future barangay services.</p>
+  <h1>Good to see you,<br>{{ user.get_full_name }}<span class="text-accent">.</span></h1>
+  <p>A place for your profile, your details, and your connection to the community.</p>
+  <a class="button" href="{% url 'profile' %}">Your resident profile</a>
+  </div>
+  {% include 'accounts/neighborhood.html' %}
 </section>
-<section class="card">
-  <h2>Your profile</h2>
-  <p>Review your account information and update your name, email address, or contact number.</p>
-  <a class="button" href="{% url 'profile' %}">View profile</a>
-</section>
+<div class="grid dashboard-grid">
+  <section class="card" data-reveal data-tilt>
+    <div class="card-kicker"><p class="eyebrow">Your resident account</p><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='user' only %}</span></div>
+    <div class="profile-snapshot"><span class="snapshot-initial" aria-hidden="true">{{ user.full_name|first|upper }}</span><div><h2>{{ user.get_full_name }}</h2><p>{{ user.email }}</p></div></div>
+    <div class="detail-row"><span>Community role</span><strong>{{ user.role_label }}</strong></div>
+    <div class="detail-row"><span>Contact number</span><strong>{{ user.contact_number|default:"Add your number" }}</strong></div>
+    <div class="card-actions"><a class="button button-secondary" href="{% url 'edit_profile' %}">Update your details</a><a class="button button-secondary" href="{% url 'profile' %}">View profile</a></div>
+  </section>
+  <section class="card community-note" data-reveal data-tilt>
+    <p class="eyebrow">Small updates, better connections</p><h2>Stay connected.<br>Stay you.</h2>
+    <p>New number or email? Keep your profile current so your barangay account always reflects you.</p>
+    <a href="{% url 'edit_profile' %}">Review your contact details</a>
+    {% include 'accounts/community_art.html' %}
+  </section>
+</div>
 {% endblock %}

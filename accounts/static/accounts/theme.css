@@ -1,19 +1,19 @@
 :root {
   color-scheme: light;
-  --bc-ink: #1c332c;
-  --bc-muted: #4d625a;
-  --bc-accent: #096455;
-  --bc-accent-hover: #074a40;
+  --bc-ink: #193c32;
+  --bc-muted: #60756d;
+  --bc-accent: #216b50;
+  --bc-accent-hover: #164e3b;
   --bc-accent-ink: #fff;
-  --bc-background: #f8f7f1;
+  --bc-background: #f4f7f4;
   --bc-surface: #fff;
-  --bc-inset: #e9f5ef;
-  --bc-border: #cfdfd7;
+  --bc-inset: #edf5ee;
+  --bc-border: #dce6de;
   --bc-field-border: #70877e;
   --bc-error: #a1282d;
   --bc-chart-secondary: #b07046;
-  --bc-control-radius: .5rem;
-  --bc-card-radius: .875rem;
-  --bc-font: system-ui, sans-serif;
+  --bc-control-radius: .75rem;
+  --bc-card-radius: 1.5rem;
+  --bc-font: "Segoe UI", system-ui, sans-serif;
   --bc-display: "Segoe UI", system-ui, sans-serif;
 }

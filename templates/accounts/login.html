@@ -1,12 +1,15 @@
 {% extends 'accounts/auth_layout.html' %}
 {% block title %}Sign in | Barangay Connect{% endblock %}
 {% block auth_form %}
-<h1>Sign in</h1>
+<p class="eyebrow">Your community account</p>
+<h1>Welcome back<span class="text-accent">.</span></h1>
+<p class="form-description">Sign in to your little corner of the community.</p>
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}
 
   <button class="button" type="submit">Sign in</button>
 </form>
-<p>New resident? <a href="{% url 'register' %}">Create an account</a></p>
+<p class="form-switch">New to the neighborhood? <a href="{% url 'register' %}">Create an account</a></p>
+<div class="form-footnote"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="8" width="12" height="9" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M7 8V5a3 3 0 0 1 6 0v3M10 11v3" stroke="currentColor" stroke-width="1.4"/></svg>Your account. Your community.</div>
 {% endblock %}

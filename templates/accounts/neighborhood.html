@@ -1,5 +1,26 @@
-<canvas class="neighborhood-canvas" aria-hidden="true"></canvas>
-<button class="motion-button" type="button" hidden x-bind:hidden="!ready" x-on:click="toggle">
-  {% include 'accounts/animated_icon.html' with icon='play-pause' only %}
-  <span x-text="paused ? 'Resume motion' : 'Pause motion'">Pause motion</span>
-</button>
+<div class="neighborhood-stage">
+  <svg class="connection-map" viewBox="0 0 640 360" fill="none" aria-hidden="true">
+    <ellipse cx="320" cy="200" rx="276" ry="125" stroke="currentColor" stroke-opacity=".16"/>
+    <ellipse cx="320" cy="200" rx="232" ry="96" stroke="currentColor" stroke-opacity=".24" stroke-dasharray="3 8"/>
+    <path class="connection-path" d="M70 220C155 315 460 338 566 207S419 66 320 90 100 131 70 220Z" stroke="currentColor" stroke-opacity=".45" stroke-dasharray="6 12"/>
+    <circle class="connection-traveler" r="4" fill="#d2f4a0"/>
+    <circle cx="94" cy="244" r="5" fill="#d2f4a0"/><circle cx="550" cy="152" r="5" fill="#d2f4a0"/>
+    <path d="M94 244h45M550 152h-35" stroke="currentColor" stroke-opacity=".4"/>
+  </svg>
+  <canvas class="neighborhood-canvas" aria-hidden="true"></canvas>
+  <span class="scene-label scene-label-hall">Barangay hall</span>
+  <span class="scene-label scene-label-home">Our neighborhood</span>
+  <div class="scene-toolbar">
+    <span class="scene-caption">A community in motion</span>
+    <div class="scene-controls" hidden x-bind:hidden="!ready">
+      <div class="view-switch" role="group" aria-label="Neighborhood view">
+        <button type="button" x-bind:aria-pressed="view === 'neighborhood'" x-on:click="setView('neighborhood')" aria-pressed="true">Explore</button>
+        <button type="button" x-bind:aria-pressed="view === 'aerial'" x-on:click="setView('aerial')" aria-pressed="false">Aerial</button>
+      </div>
+      <button class="motion-button" type="button" x-on:click="toggle" x-bind:aria-pressed="paused" aria-pressed="false">
+        {% include 'accounts/animated_icon.html' with icon='play-pause' only %}
+        <span x-text="paused ? 'Resume motion' : 'Pause motion'">Pause motion</span>
+      </button>
+    </div>
+  </div>
+</div>
