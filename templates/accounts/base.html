@@ -14,11 +14,14 @@
   <a class="skip-link" href="#main-content">Skip to content</a>
   <header class="site-header">
     <div class="shell header-inner">
-      <a class="brand" href="{% url 'dashboard' %}">Barangay <span>Connect</span></a>
+      <a class="brand" href="{% url 'dashboard' %}" aria-label="Barangay Connect home">
+        <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect width="40" height="40" rx="13" fill="currentColor"/><path d="m10 21 10-9 10 9M14 19v10h12V19M19 29v-7h4v7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="30" cy="11" r="4" fill="#c4ed98"/></svg>
+        <span class="brand-name">Barangay<strong>Connect<span class="brand-dot">.</span></strong></span>
+      </a>
       <nav class="site-nav" aria-label="Main navigation">
         {% if user.is_authenticated %}
-          <a href="{% url 'dashboard' %}">{% include 'accounts/animated_icon.html' with icon='home' only %}Dashboard</a>
-          <a href="{% url 'profile' %}">{% include 'accounts/animated_icon.html' with icon='user' only %}Profile</a>
+          <a href="{% url 'dashboard' %}"{% if 'dashboard' in request.resolver_match.url_name %} aria-current="page"{% endif %}>{% include 'accounts/animated_icon.html' with icon='home' only %}Dashboard</a>
+          <a href="{% url 'profile' %}"{% if 'profile' in request.resolver_match.url_name %} aria-current="page"{% endif %}>{% include 'accounts/animated_icon.html' with icon='user' only %}Profile</a>
           <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
             <button class="nav-button" type="submit">{% include 'accounts/animated_icon.html' with icon='log-out' only %}Sign out</button>
@@ -36,5 +39,6 @@
     {% endfor %}
     {% block content %}{% endblock %}
   </main>
+  <footer class="site-footer shell"><p>Made for our community. Built around you.</p><span>Barangay Connect <span aria-hidden="true">/</span> Resident portal</span></footer>
 </body>
 </html>

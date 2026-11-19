@@ -34,7 +34,9 @@ npm.cmd ci
 npm.cmd run build
 ```
 
-The build bundles Three.js, Alpine.js, Chart.js, and Lottie locally. Navigation icons are from [useAnimations](https://useanimations.com/). The forms work with JavaScript disabled, and the scene has a static fallback for narrow screens, reduced motion, and browsers without WebGL.
+The frontend uses Django templates and plain JavaScript, with no React. The build bundles Three.js, GSAP (ScrollTrigger and MotionPathPlugin), Alpine.js, Chart.js, and Lottie locally. Navigation icons are from [useAnimations](https://useanimations.com/).
+
+The interactive neighborhood offers Explore and Aerial camera views, pointer-based depth, and a pause control that stops both the WebGL scene and the animated SVG connection path. GSAP adds scroll reveals, vector drawing, and gentle dashboard card tilt. Continuous scene motion stops offscreen or when the tab is hidden. Reduced-motion preferences disable decorative motion; narrow screens and browsers without WebGL retain a static neighborhood illustration. Forms and navigation remain usable without JavaScript.
 
 ## Verify
 

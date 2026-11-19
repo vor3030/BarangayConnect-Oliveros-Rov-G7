@@ -3,18 +3,22 @@ import {
   DirectionalLight, Group, HemisphereLight, MathUtils, Mesh, MeshStandardMaterial,
   OrthographicCamera, Scene, SphereGeometry, Vector2, WebGLRenderer,
 } from "three";
+import { gsap } from "gsap";
 
 function makeNeighborhood() {
   const model = new Group();
   const shades = {
-    lawn: new MeshStandardMaterial({ color: 0xafd7be }),
-    street: new MeshStandardMaterial({ color: 0xdbe9e1 }),
-    walls: new MeshStandardMaterial({ color: 0xfff5d9 }),
-    roof: new MeshStandardMaterial({ color: 0x207465 }),
-    clay: new MeshStandardMaterial({ color: 0xcd8967 }),
+    lawn: new MeshStandardMaterial({ color: 0x99bf85, roughness: .85 }),
+    street: new MeshStandardMaterial({ color: 0xe3e5ca }),
+    walls: new MeshStandardMaterial({ color: 0xfff3d9 }),
+    roof: new MeshStandardMaterial({ color: 0x347964 }),
+    clay: new MeshStandardMaterial({ color: 0xcf9c75 }),
     civic: new MeshStandardMaterial({ color: 0x328374 }),
     leaves: new MeshStandardMaterial({ color: 0x73ac73 }),
     trunks: new MeshStandardMaterial({ color: 0x8a674c }),
+    base: new MeshStandardMaterial({ color: 0x315f47 }),
+    glass: new MeshStandardMaterial({ color: 0x9ed5d3, metalness: .2, roughness: .25 }),
+    flag: new MeshStandardMaterial({ color: 0xecc978 }),
   };
   const treeTop = new SphereGeometry(.33, 9, 7);
   const treeTrunk = new CylinderGeometry(.065, .09, .55, 7);
@@ -31,9 +35,13 @@ function makeNeighborhood() {
     return place(new BoxGeometry(width, height, depth), material, x, y, z);
   }
 
+  box(8.85, .22, 7.55, shades.base, 0, -.46, 0);
   box(8.7, .32, 7.4, shades.lawn, 0, -.22, 0);
   box(8.7, .015, .85, shades.street, 0, -.045, .3);
   box(.66, .015, 7.4, shades.street, -.68, -.043, 0);
+  for (let x = -3.8; x < 4; x += .65) {
+    box(.28, .02, .045, shades.walls, x, -.025, .3);
+  }
   for (const [x, z, roof] of [
     [-2.85, -1.8, shades.clay],
     [-2.65, 1.9, shades.roof],
@@ -42,6 +50,9 @@ function makeNeighborhood() {
   ]) {
     box(1.15, .82, .95, shades.walls, x, .35, z);
     box(.25, .43, .05, shades.civic, x, .17, z + .49);
+    for (const offset of [-.34, .34]) {
+      box(.2, .25, .06, shades.glass, x + offset, .44, z + .49);
+    }
     place(new ConeGeometry(.86, .48, 4), roof, x, .98, z, Math.PI / 4);
   }
 
@@ -53,6 +64,13 @@ function makeNeighborhood() {
     box(.2, .63, .2, shades.walls, x, .25, -.89);
   }
   box(1.86, .13, .38, shades.street, 1.75, .02, -.76);
+  for (const x of [1.08, 2.42]) {
+    box(.32, .28, .06, shades.glass, x, .55, -1.03);
+  }
+  box(.06, 1.8, .06, shades.walls, 3.15, .85, -1.15);
+  box(.5, .3, .045, shades.flag, 3.4, 1.52, -1.15);
+  box(1.1, .08, .3, shades.trunks, -2.7, .2, -.55);
+  for (const x of [-3.12, -2.28]) box(.08, .25, .22, shades.roof, x, .05, -.55);
 
   for (const [x, z] of [[-3.7, -2.9], [-1.6, -2.7], [-3.45, 2.9], [3.45, -2.65], [3.65, .95], [.21, 3.1]]) {
     place(treeTrunk, shades.trunks, x, .22, z);
@@ -81,6 +99,7 @@ export function mountNeighborhood(panel, reducedMotion) {
   let frame = 0;
   let elapsed = 0;
   let previousTime = 0;
+  let cameraTween;
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   model.rotation.y = -.18;
@@ -91,6 +110,7 @@ export function mountNeighborhood(panel, reducedMotion) {
   scene.add(new HemisphereLight(new Color(0xf2fffa), new Color(0xa5bdad), 2));
 
   function render() {
+    camera.lookAt(0, 0, 0);
     renderer.render(scene, camera);
   }
 
@@ -159,9 +179,22 @@ export function mountNeighborhood(panel, reducedMotion) {
   return {
     setPaused(value) {
       paused = value;
+      if (paused) cameraTween?.progress(1);
       syncMotion();
     },
+    setView(value) {
+      cameraTween?.kill();
+      cameraTween = gsap.to(camera.position, {
+        x: value === "aerial" ? .3 : 8.8,
+        y: value === "aerial" ? 19 : 10.4,
+        z: value === "aerial" ? 5 : 11,
+        duration: paused || reducedMotion.matches ? 0 : 1.1,
+        ease: "power3.inOut", onUpdate: render,
+      });
+      panel.dataset.sceneView = value;
+    },
     destroy() {
+      cameraTween?.kill();
       cancelAnimationFrame(frame);
       observer.disconnect();
       sizeObserver.disconnect();

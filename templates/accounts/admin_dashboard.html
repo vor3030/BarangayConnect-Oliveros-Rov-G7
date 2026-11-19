@@ -1,14 +1,18 @@
 {% extends 'accounts/base.html' %}
 {% block title %}Admin dashboard | Barangay Connect{% endblock %}
 {% block content %}
-<section class="hero" x-data="motionScene">
-  {% include 'accounts/neighborhood.html' %}
+<div class="page-heading" data-reveal><p class="eyebrow">Community overview</p><h2>A connected barangay starts here.</h2></div>
+<section class="hero" x-data="motionScene" data-reveal>
+  <div class="hero-copy">
   <p class="eyebrow">Admin dashboard</p>
   <h1>Welcome, {{ user.get_full_name }}</h1>
   <p>Barangay staff can review resident enrollment here.</p>
+  </div>
+  {% include 'accounts/neighborhood.html' %}
 </section>
 <div class="grid">
-  <section class="card">
+  <section class="card" data-reveal data-tilt>
+    <p class="eyebrow">Community enrollment</p>
     <h2>Resident accounts</h2>
     <div class="account-overview">
       {% if active_residents or inactive_residents %}
@@ -34,10 +38,12 @@
       <a class="button" href="{% url 'admin:index' %}">Open barangay administration</a>
     {% endif %}
   </section>
-  <section class="card">
+  <section class="card community-note" data-reveal data-tilt>
+    <p class="eyebrow">Your corner of the community</p>
     <h2>Staff profile</h2>
     <p>Keep your own account information up to date.</p>
     <a class="button" href="{% url 'profile' %}">View profile</a>
+    {% include 'accounts/community_art.html' %}
   </section>
 </div>
 {% endblock %}
