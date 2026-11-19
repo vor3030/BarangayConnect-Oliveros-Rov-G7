@@ -1,6 +1,6 @@
 # Barangay Connect
 
-Barangay Connect is a Django application for a pilot barangay. Phase 1 implements Resident registration, email sign-in, sign-out, role-specific dashboards, and profile editing. Django renders the frontend with templates and stores accounts and sessions in PostgreSQL.
+Barangay Connect is a Django application for a pilot barangay. Phase 1 implements Resident registration, email or username sign-in, sign-out, role-specific dashboards, and profile editing. Django renders the frontend with templates and stores accounts and sessions in PostgreSQL.
 
 ## Local setup
 
@@ -21,9 +21,9 @@ Paste the generated value into `DJANGO_SECRET_KEY` in `.env` and fill in the Pos
 .\venv\Scripts\python.exe manage.py runserver
 ```
 
-Open [Barangay Connect](http://127.0.0.1:8000/). Register a Resident account at `/register/`. Both roles sign in with their email at `/login/`. The superuser has the Admin role. To assign the Admin dashboard to an existing account, a superuser can enable **Staff status** for that account in Django administration at `/admin/`. Django account management is reserved for superusers.
+Open [Barangay Connect](http://127.0.0.1:8000/). Register a Resident account at `/register/`. Both roles sign in with their email or username at `/login/`; both identifiers are case-insensitive. The superuser has the Admin role. To assign the Admin dashboard to an existing account, a superuser can enable **Staff status** for that account in Django administration at `/admin/`. Django account management is reserved for superusers.
 
-Profiles are available at `/profile/`. Users can edit their full name, email, and contact number. A changed email becomes the sign-in credential.
+Profiles are available at `/profile/`. Users can edit their full name, email, and contact number. After an email change, sign in with the new email or the existing username. If an identifier matches different accounts across email and username fields, sign-in rejects it; use the account's other identifier.
 
 ## Interactive frontend
 

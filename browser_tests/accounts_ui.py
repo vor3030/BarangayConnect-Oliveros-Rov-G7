@@ -120,7 +120,7 @@ class AccountsBrowserTests(StaticLiveServerTestCase):
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(self.live_server_url + "/login/")
-        page.get_by_label("Email").fill("maria@example.com")
+        page.get_by_label("Email or username").fill("maria")
         page.get_by_label("Password").fill("Browser-test-password!")
         page.get_by_role("button", name="Sign in", exact=True).click()
         expect(page).to_have_url(self.live_server_url + "/dashboard/resident/")
@@ -154,7 +154,7 @@ class AccountsBrowserTests(StaticLiveServerTestCase):
 
         page = self.open_page(reduced_motion="reduce")
         page.goto(self.live_server_url + "/login/")
-        page.get_by_label("Email").fill("staff@example.com")
+        page.get_by_label("Email or username").fill("staff@example.com")
         page.get_by_label("Password").fill("Browser-test-password!")
         page.get_by_role("button", name="Sign in").click()
         expect(page).to_have_url(self.live_server_url + "/dashboard/admin/")

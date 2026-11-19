@@ -51,7 +51,7 @@ def register(request):
         return redirect("dashboard")
     form = RegistrationForm(request.POST if request.method == "POST" else None)
     if form.is_valid() and save_account_form(form):
-        messages.success(request, "Your account was created. Sign in with your email.")
+        messages.success(request, "Your account was created. Sign in with your email or username.")
         return redirect("login")
     return render(request, "accounts/register.html", {"form": form})
 

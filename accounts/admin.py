@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .forms import AdminUserChangeForm, RegistrationForm
+from .forms import AdminUserChangeForm, LoginForm, RegistrationForm
 from .models import User
 
 
@@ -39,4 +39,5 @@ class AccountAdmin(UserAdmin):
 
 
 admin.site.site_header = "Barangay Connect administration"
+admin.site.login_form = LoginForm
 admin.site.index_title = "Barangay administration"
