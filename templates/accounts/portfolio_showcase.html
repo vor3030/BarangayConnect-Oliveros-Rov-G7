@@ -1,76 +1,134 @@
 {% extends 'accounts/base.html' %}
 {% load static %}
-{% block title %}Interface showcase | Barangay Connect{% endblock %}
-{% block extra_head %}<meta name="description" content="A closer look at Barangay Connect: resident profiles, email-or-username sign-in, and a separate staff enrollment view."><link rel="stylesheet" href="{% static 'accounts/showcase.css' %}">{% endblock %}
+{% block title %}Barangay Connect{% endblock %}
+{% block extra_head %}<meta name="description" content="Barangay Connect — a simple, friendly portal for resident accounts and barangay staff."><link rel="stylesheet" href="{% static 'accounts/showcase.css' %}">{% endblock %}
 {% block content %}
 <div class="showcase" data-showcase>
-  <div class="project-line"><span>Barangay Connect <span aria-hidden="true">/</span> Interface showcase</span><button type="button" class="showcase-motion" data-showcase-pause hidden aria-pressed="false">Reduce page motion</button></div>
-  <section class="project-intro" aria-labelledby="showcase-title">
-    <h1 id="showcase-title">Resident accounts,<br>clearly arranged.</h1>
-    <div><p>A profile residents can keep current. An enrollment view for barangay staff. A shared sign-in that accepts an email address or username.</p><a class="button" href="{% url 'dashboard' %}">Open portal</a></div>
+
+  <!-- 1. Calm Centered Hero over the Interactive Three.js Background -->
+  <section class="hero-stage" aria-labelledby="showcase-title">
+    <h1 id="showcase-title" data-hero-item>Resident accounts,<br>clearly arranged.</h1>
+    <p class="hero-sub" data-hero-item>A simple, neighborly portal for residents and barangay staff.</p>
+    <div class="hero-actions" data-hero-item>
+      <a class="button" href="{% url 'dashboard' %}">Open portal</a>
+      <a class="hero-link" href="{% url 'register' %}">Create an account <span aria-hidden="true">→</span></a>
+    </div>
+    <a class="scroll-cue" href="#interface-lab" aria-label="Scroll to preview" data-hero-item>
+      <span class="scroll-cue-line" aria-hidden="true"></span>
+    </a>
   </section>
 
-  <section class="screen-study" id="interface-lab" aria-label="Explore the account screens">
-    <div class="preview-controls" data-showcase-controls hidden>
-      <div class="preview-tabs" role="tablist" aria-label="Screen preview">
+  <!-- 2. Focused Interactive Screen Preview -->
+  <section class="preview-section" id="interface-lab" data-scroll-section aria-labelledby="preview-title">
+    <div class="section-bar" data-scroll-reveal>
+      <h2 id="preview-title">Inside the portal.</h2>
+      <div class="preview-tabs" role="tablist" aria-label="Screen preview" data-showcase-controls hidden>
         <button id="tab-profile" role="tab" type="button" aria-selected="true" aria-controls="preview-profile" data-preview-tab="profile">My profile</button>
         <button id="tab-resident" role="tab" type="button" aria-selected="false" aria-controls="preview-resident" tabindex="-1" data-preview-tab="resident">Resident overview</button>
         <button id="tab-admin" role="tab" type="button" aria-selected="false" aria-controls="preview-admin" tabindex="-1" data-preview-tab="admin">Staff overview</button>
       </div>
-      <div class="device-switch" role="group" aria-label="Preview size"><button type="button" data-preview-device="desktop" aria-pressed="true">Desktop</button><button type="button" data-preview-device="phone" aria-pressed="false">Phone</button></div>
-      <span class="responsive-hint">Preview fits your screen</span>
     </div>
-    <p class="preview-instructions" id="preview-instructions"><strong>Illustrative UI only.</strong> The examples below are read-only; use Open portal to access your own account.</p>
-    <div class="preview-window" data-preview-window aria-describedby="preview-instructions">
+
+    <div class="preview-window" data-preview-window data-scroll-reveal>
       <section class="preview-panel" id="preview-profile" data-preview-panel="profile">
         <div class="screen-canvas">
-          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span>Overview</span><span class="sample-selected">My profile</span><span>Help</span><span class="sample-sidebar-end">Resident account</span></div>
+          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span>Overview</span><span class="sample-selected">My profile</span><span>Help</span></div>
           <div class="sample-main">
-            <div class="sample-context"><span>My profile</span><span class="sample-label">Example account</span></div>
             <div class="sample-profile">
-              <div class="sample-identity"><span class="sample-avatar" aria-hidden="true">R</span><h2>Sample resident</h2><p>@resident</p><span class="sample-role">{% include 'accounts/ui_icon.html' with name='user' %}Resident</span></div>
-              <div class="sample-record"><h3>Account details</h3><p>The details used for this resident account.</p><dl class="record-fields"><div><dt>Full name</dt><dd>Sample resident</dd></div><div><dt>Username</dt><dd>resident</dd></div><div><dt>Email address</dt><dd>resident@example.com</dd></div><div><dt>Contact number</dt><dd class="record-empty">Not added</dd></div></dl><p class="record-footnote">Name, email, contact number, and photo can be updated from Edit profile.</p></div>
+              <div class="sample-identity"><span class="sample-avatar" aria-hidden="true">R</span><h3>Sample resident</h3><p>@resident</p><span class="sample-role">{% include 'accounts/ui_icon.html' with name='user' %}Resident</span></div>
+              <div class="sample-record"><h4>Account details</h4><dl class="record-fields"><div><dt>Full name</dt><dd>Sample resident</dd></div><div><dt>Username</dt><dd>resident</dd></div><div><dt>Email</dt><dd>resident@example.com</dd></div><div><dt>Contact</dt><dd class="record-empty">Not added</dd></div></dl></div>
             </div>
           </div>
         </div>
-        <div class="screen-caption"><p><strong>The resident's own record.</strong> Name, sign-in details, and contact number stay together. Residents can update their information without opening the staff administration area.</p><a href="{% url 'profile' %}">Open your profile</a></div>
       </section>
+
       <section class="preview-panel" id="preview-resident" data-preview-panel="resident">
         <div class="screen-canvas">
-          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span class="sample-selected">Overview</span><span>My profile</span><span>Help</span><span class="sample-sidebar-end">Resident account</span></div>
+          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span class="sample-selected">Overview</span><span>My profile</span><span>Help</span></div>
           <div class="sample-main">
-            <div class="sample-context"><span>Resident overview</span><span class="sample-label">Example account</span></div>
-            <div class="sample-welcome"><h2>Good to see you,<br>Sample resident.</h2><p>Review your account details or update your profile.</p></div>
-            <div class="resident-summary"><div><h3>Your resident account</h3><dl class="record-fields"><div><dt>Full name</dt><dd>Sample resident</dd></div><div><dt>Email</dt><dd>resident@example.com</dd></div><div><dt>Contact number</dt><dd class="record-empty">Not added</dd></div></dl></div><aside class="sample-next-step">{% include 'accounts/ui_icon.html' with name='phone' %}<h3>Add a contact number</h3><p>Three of the four profile details are filled in. A contact number can be added when the resident is ready.</p><span class="sample-detail-count">3 of 4 details complete</span></aside></div>
+            <div class="sample-welcome"><h3>Good to see you, Sample resident.</h3><p>Keep your account details current anytime.</p></div>
+            <div class="resident-summary">
+              <dl class="record-fields"><div><dt>Full name</dt><dd>Sample resident</dd></div><div><dt>Email</dt><dd>resident@example.com</dd></div><div><dt>Contact</dt><dd class="record-empty">Not added</dd></div></dl>
+              <aside class="sample-next-step">{% include 'accounts/ui_icon.html' with name='phone' %}<h4>Add a contact number</h4><span class="sample-detail-count">3 of 4 complete</span></aside>
+            </div>
           </div>
         </div>
-        <div class="screen-caption"><p><strong>An overview with a useful next step.</strong> The dashboard brings profile actions together and reflects the information the resident has actually added.</p><a href="{% url 'dashboard' %}">Open portal</a></div>
       </section>
+
       <section class="preview-panel" id="preview-admin" data-preview-panel="admin">
         <div class="screen-canvas">
-          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span class="sample-selected">Overview</span><span>My profile</span><span>Residents</span><span class="sample-sidebar-end">Staff account</span></div>
+          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span class="sample-selected">Overview</span><span>My profile</span><span>Residents</span></div>
           <div class="sample-main">
-            <div class="sample-context"><span>Staff overview</span><span class="sample-label">Illustrative counts</span></div>
-            <div class="staff-heading"><h2>Resident enrollment</h2><p>Active and inactive resident accounts, shown separately.</p></div>
-            <div class="sample-enrollment"><div class="enrollment-total"><span>Total resident accounts</span><strong>3</strong><p>Example dataset for this preview.</p></div><div class="enrollment-breakdown"><div class="enrollment-bar" role="img" aria-label="Example enrollment: 2 active accounts and 1 inactive account"><span></span><span></span></div><table><caption>Example account status</caption><thead><tr><th scope="col">Status</th><th scope="col">Accounts</th></tr></thead><tbody><tr><th scope="row"><span class="status-key active-key" aria-hidden="true"></span>Active</th><td>2</td></tr><tr><th scope="row"><span class="status-key inactive-key" aria-hidden="true"></span>Inactive</th><td>1</td></tr></tbody></table></div></div>
-            <p class="staff-permission">{% include 'accounts/ui_icon.html' with name='shield' %}Account management is reserved for superusers.</p>
+            <div class="staff-heading"><h3>Resident enrollment</h3></div>
+            <div class="sample-enrollment">
+              <div class="enrollment-total"><span>Total accounts</span><strong>3</strong></div>
+              <div class="enrollment-breakdown">
+                <div class="enrollment-bar" role="img" aria-label="2 active accounts and 1 inactive account"><span></span><span></span></div>
+                <table><tbody><tr><th scope="row"><span class="status-key active-key" aria-hidden="true"></span>Active</th><td>2</td></tr><tr><th scope="row"><span class="status-key inactive-key" aria-hidden="true"></span>Inactive</th><td>1</td></tr></tbody></table>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="screen-caption"><p><strong>A separate view for barangay staff.</strong> Enrollment counts use account status. The working portal displays database totals; these three sample accounts explain the layout without showing resident records.</p><a href="{% url 'dashboard' %}">Open portal</a></div>
       </section>
+    </div>
+    <p class="preview-note">Illustrative UI only.</p>
+  </section>
+
+  <!-- 3. Interactive Three.js 3D Community Overview -->
+  <section class="chart-section" id="community-pulse" data-three-chart-section data-scroll-section aria-labelledby="community-pulse-title">
+    <div class="section-bar" data-scroll-reveal>
+      <div>
+        <h2 id="community-pulse-title">Your barangay, at a glance.</h2>
+        <p class="section-sub">Drag to turn the view, or tap any column.</p>
+      </div>
+      <div class="chart-legend" aria-hidden="true">
+        <span><i class="legend-swatch legend-forest"></i>Active</span>
+        <span><i class="legend-swatch legend-terracotta"></i>Complete</span>
+      </div>
+    </div>
+
+    <div class="chart-frame" data-scroll-reveal>
+      <div class="three-chart-stage" data-three-chart-stage>
+        <canvas class="three-chart-canvas" data-three-chart></canvas>
+        <noscript><p class="chart-fallback-note">Enable JavaScript to explore the 3D overview.</p></noscript>
+      </div>
+
+      <div class="chart-readout" data-chart-detail-card aria-live="polite">
+        <div class="readout-name">
+          <h3 data-chart-detail-title>Purok 2 — Rizal</h3>
+          <div class="chart-pills" data-chart-item-pills data-chart-controls hidden role="group" aria-label="Select a purok"></div>
+        </div>
+        <dl class="readout-numbers">
+          <div><dt data-chart-detail-primary-label>Active</dt><dd class="metric-forest" data-chart-detail-primary>58</dd></div>
+          <div><dt data-chart-detail-secondary-label>Complete</dt><dd class="metric-terracotta" data-chart-detail-secondary>49</dd></div>
+        </dl>
+      </div>
     </div>
   </section>
 
-  <section class="design-notes" aria-labelledby="decisions-title">
-    <div class="notes-intro"><h2 id="decisions-title">The decisions<br>behind the screens.</h2><p>Each view has a specific job. The resident area keeps account upkeep close; the staff area separates enrollment from personal details.</p><div class="material-note"><span class="material-colors" aria-hidden="true"><i></i><i></i><i></i></span><p>Forest green, sand beige, and terracotta.<br>Manrope for reading. Lora for headings.</p></div></div>
-    <dl class="decision-list"><div><dt>One account, two ways in</dt><dd>Email and username both work at sign-in. Changing an email address leaves the username available as a familiar way back in.</dd></div><div><dt>Details residents can maintain</dt><dd>Names, contact numbers, email addresses, and profile photos can be updated from the profile area. The page keeps labels visible and explains validation errors.</dd></div><div><dt>Access follows the account role</dt><dd>Residents and staff have separate dashboards. Staff can see enrollment totals; account management remains restricted to superusers.</dd></div></dl>
+  <!-- 4. Quiet 3-Point Value Strip with Scroll-Drawn Divider + Warm Close -->
+  <section class="highlights-section" data-scroll-section aria-label="Key benefits">
+    <svg class="scroll-rule" viewBox="0 0 1200 12" preserveAspectRatio="none" fill="none" aria-hidden="true">
+      <path data-scroll-draw d="M0 6 H1200" stroke="#244c3c" stroke-opacity="0.28" stroke-width="1.5"/>
+      <path data-scroll-draw d="M0 6 H320" stroke="#9e5037" stroke-width="2"/>
+    </svg>
+    <div class="highlights-grid">
+      <div data-scroll-reveal><h3>Email or username</h3><p>Sign in with whichever you remember.</p></div>
+      <div data-scroll-reveal><h3>Always yours to edit</h3><p>Update contact details and photo anytime.</p></div>
+      <div data-scroll-reveal><h3>Separate staff view</h3><p>Clear enrollment counts, private records.</p></div>
+    </div>
   </section>
 
-  <section class="signin-study" aria-labelledby="signin-study-title">
-    <div><h2 id="signin-study-title">A familiar way to sign in.</h2><p>The form accepts either identifier in the same field. Try the examples to see the change.</p><div class="identifier-switch" data-identifier-controls hidden role="group" aria-label="Sign-in identifier example"><button type="button" data-identifier="username" aria-pressed="true">Username example</button><button type="button" data-identifier="email" aria-pressed="false">Email example</button></div><a href="{% url 'login' %}">Open sign-in</a></div>
-    <figure class="signin-example"><div class="identifier-field"><span>Email or username</span><strong data-identifier-value aria-live="polite" aria-atomic="true">resident</strong></div><figcaption>Both <span>resident</span> and <span>resident@example.com</span> identify the same example account. No sign-in is performed here.</figcaption></figure>
+  <section class="showcase-close" data-scroll-section aria-labelledby="next-title">
+    <div data-scroll-reveal>
+      <h2 id="next-title">Ready when you are.</h2>
+      <p>Sign in with your email or username, or register in a minute.</p>
+    </div>
+    <div class="close-actions" data-scroll-reveal>
+      <a class="button" href="{% url 'dashboard' %}">Open portal</a>
+      <a class="close-secondary" href="{% url 'register' %}">Create account</a>
+    </div>
   </section>
 
-  <section class="showcase-close" aria-labelledby="next-title"><div><h2 id="next-title">Use your own account.</h2><p>Open the portal to sign in, review your profile, or update your details.</p></div><div><a class="button" href="{% url 'dashboard' %}">Open portal</a><a href="{% url 'register' %}">Create a resident account</a></div></section>
 </div>
 {% endblock %}
