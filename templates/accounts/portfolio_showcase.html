@@ -1,76 +1,453 @@
 {% extends 'accounts/base.html' %}
 {% load static %}
-{% block title %}Interface showcase | Barangay Connect{% endblock %}
-{% block extra_head %}<meta name="description" content="A closer look at Barangay Connect: resident profiles, email-or-username sign-in, and a separate staff enrollment view."><link rel="stylesheet" href="{% static 'accounts/showcase.css' %}">{% endblock %}
+{% block title %}Barangay Connect | Online Barangay Services{% endblock %}
+{% block meta_description %}Barangay Connect lets residents request clearances and certificates online, track approvals in real time, and stay connected with barangay staff.{% endblock %}
+{% block extra_head %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="Barangay Connect | Online Barangay Services">
+<meta property="og:description" content="Request official barangay clearances, indigency, and residency certificates online and track every approval step in real time.">
+<meta property="og:image" content="{% static 'accounts/hero-barangay-hall.jpg' %}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+<link rel="stylesheet" href="{% static 'accounts/showcase.css' %}?v=20261125e">
+{% endblock %}
 {% block content %}
-<div class="showcase" data-showcase>
-  <div class="project-line"><span>Barangay Connect <span aria-hidden="true">/</span> Interface showcase</span><button type="button" class="showcase-motion" data-showcase-pause hidden aria-pressed="false">Reduce page motion</button></div>
-  <section class="project-intro" aria-labelledby="showcase-title">
-    <h1 id="showcase-title">Resident accounts,<br>clearly arranged.</h1>
-    <div><p>A profile residents can keep current. An enrollment view for barangay staff. A shared sign-in that accepts an email address or username.</p><a class="button" href="{% url 'dashboard' %}">Open portal</a></div>
-  </section>
+<div class="showcase" data-showcase x-data="landingPortal">
 
-  <section class="screen-study" id="interface-lab" aria-label="Explore the account screens">
-    <div class="preview-controls" data-showcase-controls hidden>
-      <div class="preview-tabs" role="tablist" aria-label="Screen preview">
-        <button id="tab-profile" role="tab" type="button" aria-selected="true" aria-controls="preview-profile" data-preview-tab="profile">My profile</button>
-        <button id="tab-resident" role="tab" type="button" aria-selected="false" aria-controls="preview-resident" tabindex="-1" data-preview-tab="resident">Resident overview</button>
-        <button id="tab-admin" role="tab" type="button" aria-selected="false" aria-controls="preview-admin" tabindex="-1" data-preview-tab="admin">Staff overview</button>
+  <!-- 1. Full-Bleed Framed Twilight Philippine Barangay Hall Hero -->
+  <section class="sanctuary-hero-outer" x-bind:data-mood="mood" data-mood="twilight" aria-labelledby="hero-title">
+    <div class="sanctuary-backdrop" aria-hidden="true"></div>
+    <canvas class="barangay-atmosphere-canvas" data-barangay-atmosphere aria-hidden="true"></canvas>
+    <div class="sanctuary-frame">
+      <header class="sanctuary-header">
+        {% include 'accounts/brand.html' %}
+        <nav class="sanctuary-nav" aria-label="Main navigation">
+          <a href="#services">Services</a>
+          <a href="#community-pulse">Community</a>
+          <a href="{% url 'register' %}">Register</a>
+        </nav>
+        <div class="sanctuary-header-actions">
+          <a class="sanctuary-signin-link" href="{% url 'login' %}">
+            {% include 'accounts/ui_icon.html' with name='user' %}
+            <span>Sign in</span>
+          </a>
+          <a class="button button-white sanctuary-portal-btn" href="{% url 'dashboard' %}">Open portal</a>
+        </div>
+      </header>
+
+      <!-- Interactive Barangay Hall Hotspots & Lighting Mood Controls -->
+      <div class="sanctuary-scene-bar">
+        <div class="barangay-hotspot-group" role="group" aria-label="Explore barangay hall services">
+          <template x-for="spot in hotspots" x-bind:key="spot.id">
+            <button
+              type="button"
+              class="barangay-hotspot"
+              data-spring-pill
+              x-on:click="toggleHotspot(spot.id)"
+              x-bind:aria-expanded="String(activeHotspotId === spot.id)"
+            >
+              <span class="hotspot-dot" aria-hidden="true"></span>
+              <span x-text="spot.label"></span>
+            </button>
+          </template>
+        </div>
+        <div class="sanctuary-mood-group" role="group" aria-label="Barangay lighting atmosphere">
+          <button type="button" class="mood-pill" data-spring-pill x-on:click="setMood('twilight')" x-bind:aria-pressed="String(mood === 'twilight')" aria-pressed="true">Twilight</button>
+          <button type="button" class="mood-pill" data-spring-pill x-on:click="setMood('golden')" x-bind:aria-pressed="String(mood === 'golden')" aria-pressed="false">Golden dusk</button>
+          <button type="button" class="mood-pill" data-spring-pill x-on:click="setMood('night')" x-bind:aria-pressed="String(mood === 'night')" aria-pressed="false">Night watch</button>
+          <button type="button" class="mood-pill" data-spring-pill x-on:click="toggleAtmosphere()" x-bind:aria-pressed="String(atmospherePaused)" x-text="atmospherePaused ? 'Resume lanterns' : 'Pause lanterns'">Pause lanterns</button>
+        </div>
       </div>
-      <div class="device-switch" role="group" aria-label="Preview size"><button type="button" data-preview-device="desktop" aria-pressed="true">Desktop</button><button type="button" data-preview-device="phone" aria-pressed="false">Phone</button></div>
-      <span class="responsive-hint">Preview fits your screen</span>
-    </div>
-    <p class="preview-instructions" id="preview-instructions"><strong>Illustrative UI only.</strong> The examples below are read-only; use Open portal to access your own account.</p>
-    <div class="preview-window" data-preview-window aria-describedby="preview-instructions">
-      <section class="preview-panel" id="preview-profile" data-preview-panel="profile">
-        <div class="screen-canvas">
-          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span>Overview</span><span class="sample-selected">My profile</span><span>Help</span><span class="sample-sidebar-end">Resident account</span></div>
-          <div class="sample-main">
-            <div class="sample-context"><span>My profile</span><span class="sample-label">Example account</span></div>
-            <div class="sample-profile">
-              <div class="sample-identity"><span class="sample-avatar" aria-hidden="true">R</span><h2>Sample resident</h2><p>@resident</p><span class="sample-role">{% include 'accounts/ui_icon.html' with name='user' %}Resident</span></div>
-              <div class="sample-record"><h3>Account details</h3><p>The details used for this resident account.</p><dl class="record-fields"><div><dt>Full name</dt><dd>Sample resident</dd></div><div><dt>Username</dt><dd>resident</dd></div><div><dt>Email address</dt><dd>resident@example.com</dd></div><div><dt>Contact number</dt><dd class="record-empty">Not added</dd></div></dl><p class="record-footnote">Name, email, contact number, and photo can be updated from Edit profile.</p></div>
+
+      <div class="hotspot-callout" x-show="activeHotspot" x-cloak role="region" aria-live="polite" aria-label="Barangay service location details">
+        <div class="hotspot-callout-top">
+          <strong x-text="activeHotspot ? `${activeHotspot.label} — ${activeHotspot.subtitle}` : ''"></strong>
+          <button type="button" class="mood-pill" x-on:click="activeHotspotId = null" aria-label="Close location note">Close</button>
+        </div>
+        <p x-text="activeHotspot ? activeHotspot.detail : ''"></p>
+        <div class="hotspot-callout-actions">
+          <button type="button" class="button button-champagne button-sm" x-on:click="applyHotspot(activeHotspot)" x-text="activeHotspot ? activeHotspot.cta : ''"></button>
+        </div>
+      </div>
+
+      <div class="sanctuary-hero-grid">
+        <div class="sanctuary-headline-col">
+          <h1 id="hero-title" data-hero-item>
+            Your barangay,
+            <span class="line-mist">quietly</span>
+            <span class="line-bold">connected.</span>
+          </h1>
+          <p class="sanctuary-lead" data-hero-item>
+            Request barangay clearances, indigency, and residency certificates online without lining up at the hall—and follow every approval step in real time.
+          </p>
+          <div class="sanctuary-trust-row" data-hero-item>
+            <span class="sanctuary-trust-item"><span class="sanctuary-trust-dot" aria-hidden="true"></span>5 official certificates online</span>
+            <span class="sanctuary-trust-item"><span class="sanctuary-trust-dot" aria-hidden="true"></span>Live Pending to Completed tracking</span>
+            <span class="sanctuary-trust-item"><span class="sanctuary-trust-dot" aria-hidden="true"></span>Private role-protected records</span>
+          </div>
+        </div>
+
+        <!-- Floating Smoked-Glass Interactive Service Card -->
+        <aside class="smoked-service-card" aria-label="Quick certificate overview">
+          <div class="smoked-card-top">
+            <div>
+              <h2 x-text="activeService.title">Barangay Clearance</h2>
+            </div>
+            <div class="smoked-card-nav">
+              <button
+                class="smoked-card-cycle"
+                data-spring-pill
+                type="button"
+                x-on:click="prevService()"
+                aria-label="Preview previous barangay document"
+                title="Previous certificate"
+              >
+                {% include 'accounts/ui_icon.html' with name='arrow-left' %}
+              </button>
+              <button
+                class="smoked-card-cycle"
+                data-spring-pill
+                type="button"
+                x-on:click="nextService()"
+                aria-label="Preview next barangay document"
+                title="Next certificate"
+              >
+                {% include 'accounts/ui_icon.html' with name='arrow-right' %}
+              </button>
             </div>
           </div>
-        </div>
-        <div class="screen-caption"><p><strong>The resident's own record.</strong> Name, sign-in details, and contact number stay together. Residents can update their information without opening the staff administration area.</p><a href="{% url 'profile' %}">Open your profile</a></div>
-      </section>
-      <section class="preview-panel" id="preview-resident" data-preview-panel="resident">
-        <div class="screen-canvas">
-          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span class="sample-selected">Overview</span><span>My profile</span><span>Help</span><span class="sample-sidebar-end">Resident account</span></div>
-          <div class="sample-main">
-            <div class="sample-context"><span>Resident overview</span><span class="sample-label">Example account</span></div>
-            <div class="sample-welcome"><h2>Good to see you,<br>Sample resident.</h2><p>Review your account details or update your profile.</p></div>
-            <div class="resident-summary"><div><h3>Your resident account</h3><dl class="record-fields"><div><dt>Full name</dt><dd>Sample resident</dd></div><div><dt>Email</dt><dd>resident@example.com</dd></div><div><dt>Contact number</dt><dd class="record-empty">Not added</dd></div></dl></div><aside class="sample-next-step">{% include 'accounts/ui_icon.html' with name='phone' %}<h3>Add a contact number</h3><p>Three of the four profile details are filled in. A contact number can be added when the resident is ready.</p><span class="sample-detail-count">3 of 4 details complete</span></aside></div>
+          <div class="smoked-card-fields">
+            <div class="smoked-field">
+              <span>Initial status</span>
+              <strong>Pending review</strong>
+            </div>
+            <div class="smoked-field">
+              <span>Copy limit</span>
+              <strong x-text="activeService.copies">1 to 5 copies</strong>
+            </div>
+            <div class="smoked-field">
+              <span>Common use</span>
+              <strong x-text="activeService.use">Employment &amp; ID</strong>
+            </div>
+            <div class="smoked-field">
+              <span>Claiming</span>
+              <strong>Valid ID at hall</strong>
+            </div>
           </div>
-        </div>
-        <div class="screen-caption"><p><strong>An overview with a useful next step.</strong> The dashboard brings profile actions together and reflects the information the resident has actually added.</p><a href="{% url 'dashboard' %}">Open portal</a></div>
-      </section>
-      <section class="preview-panel" id="preview-admin" data-preview-panel="admin">
-        <div class="screen-canvas">
-          <div class="sample-sidebar" aria-hidden="true"><span class="sample-brand">Barangay<br><strong>Connect.</strong></span><span class="sample-selected">Overview</span><span>My profile</span><span>Residents</span><span class="sample-sidebar-end">Staff account</span></div>
-          <div class="sample-main">
-            <div class="sample-context"><span>Staff overview</span><span class="sample-label">Illustrative counts</span></div>
-            <div class="staff-heading"><h2>Resident enrollment</h2><p>Active and inactive resident accounts, shown separately.</p></div>
-            <div class="sample-enrollment"><div class="enrollment-total"><span>Total resident accounts</span><strong>3</strong><p>Example dataset for this preview.</p></div><div class="enrollment-breakdown"><div class="enrollment-bar" role="img" aria-label="Example enrollment: 2 active accounts and 1 inactive account"><span></span><span></span></div><table><caption>Example account status</caption><thead><tr><th scope="col">Status</th><th scope="col">Accounts</th></tr></thead><tbody><tr><th scope="row"><span class="status-key active-key" aria-hidden="true"></span>Active</th><td>2</td></tr><tr><th scope="row"><span class="status-key inactive-key" aria-hidden="true"></span>Inactive</th><td>1</td></tr></tbody></table></div></div>
-            <p class="staff-permission">{% include 'accounts/ui_icon.html' with name='shield' %}Account management is reserved for superusers.</p>
+          <div class="smoked-card-summary" aria-live="polite">
+            <strong x-text="activeService.badge">Most requested</strong>
+            <span x-text="`${serviceIndex + 1} of ${services.length} certificates`">1 of 5 certificates</span>
           </div>
+          <div class="smoked-card-dots" role="group" aria-label="Choose a certificate to preview">
+            <template x-for="(service, idx) in services" x-bind:key="service.title">
+              <button
+                type="button"
+                class="smoked-card-dot"
+                x-on:click="selectService(idx)"
+                x-bind:aria-pressed="String(idx === serviceIndex)"
+                x-bind:aria-label="`Preview ${service.title}`"
+              ></button>
+            </template>
+          </div>
+          <a
+            class="button button-white"
+            x-bind:href="activeServiceUrl"
+            href="{% url 'documents:create' %}?document_type=Barangay+Clearance"
+          >Request this document</a>
+        </aside>
+      </div>
+
+      <!-- Floating Crisp White Pill Service Launcher Bar -->
+      <div class="floating-launcher-wrap" data-hero-item>
+        <form class="floating-launcher" method="get" action="{% url 'documents:create' %}" aria-label="Start a barangay document request">
+          <div class="launcher-field">
+            <label for="launch-doc-type">Document type</label>
+            <select id="launch-doc-type" name="document_type" x-model="selectedType">
+              {% for value, label in document_types %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="launcher-field">
+            <label for="launch-purpose">Purpose</label>
+            <input id="launch-purpose" type="text" name="purpose" x-model="purposeInput" placeholder="e.g., Local employment application" maxlength="120">
+          </div>
+          <div class="launcher-field">
+            <label for="launch-copies">Copies</label>
+            <select id="launch-copies" name="copies">
+              <option value="1">1 copy</option>
+              <option value="2">2 copies</option>
+              <option value="3">3 copies</option>
+              <option value="4">4 copies</option>
+              <option value="5">5 copies</option>
+            </select>
+          </div>
+          <button class="button button-champagne launcher-submit" type="submit">
+            <span>Start request</span>
+            {% include 'accounts/ui_icon.html' with name='arrow-right' %}
+          </button>
+        </form>
+        <div class="launcher-quick-row" role="group" aria-label="Quick-fill common request purposes">
+          <span class="launcher-quick-label">Quick fill:</span>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(0)" x-bind:aria-pressed="String(serviceIndex === 0 && purposeInput === services[0].samplePurpose)">Local employment</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(1)" x-bind:aria-pressed="String(serviceIndex === 1 && purposeInput === services[1].samplePurpose)">Medical assistance</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(2)" x-bind:aria-pressed="String(serviceIndex === 2 && purposeInput === services[2].samplePurpose)">Bank &amp; school proof</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(3)" x-bind:aria-pressed="String(serviceIndex === 3 && purposeInput === services[3].samplePurpose)">Business renewal</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(4)" x-bind:aria-pressed="String(serviceIndex === 4 && purposeInput === services[4].samplePurpose)">First-time jobseeker</button>
         </div>
-        <div class="screen-caption"><p><strong>A separate view for barangay staff.</strong> Enrollment counts use account status. The working portal displays database totals; these three sample accounts explain the layout without showing resident records.</p><a href="{% url 'dashboard' %}">Open portal</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Scroll-Driven Barangay Document Journey (GSAP ScrollTrigger + SVG Draw + Framer Motion) -->
+  <section class="journey-band" data-journey-band aria-labelledby="journey-title">
+    <div class="landing-shell">
+      <div class="journey-head">
+        <div>
+          <h2 id="journey-title">Three calm steps from home to Window 2.</h2>
+          <p>Scroll through how every online barangay request moves from submission to verified release with zero manual logbooks.</p>
+        </div>
+      </div>
+      <div class="journey-track-wrap">
+        <svg class="journey-svg" viewBox="0 0 1200 72" fill="none" aria-hidden="true">
+          <path d="M40 36 C 260 6, 400 66, 600 36 S 940 6, 1160 36" stroke="rgba(235, 244, 246, 0.14)" stroke-width="2" stroke-dasharray="6 8"/>
+          <path data-journey-line d="M40 36 C 260 6, 400 66, 600 36 S 940 6, 1160 36" stroke="#e7d4b5" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="40" cy="36" r="7" fill="#e59a3c"/>
+          <circle cx="600" cy="36" r="7" fill="#7cc9b6"/>
+          <circle cx="1160" cy="36" r="7" fill="#e7d4b5"/>
+        </svg>
+        <div class="journey-grid">
+          <article class="journey-card" data-journey-step data-spotlight-card data-spring-card>
+            <span class="journey-step-num">01 &middot; Online filing</span>
+            <h3>Pick your certificate &amp; purpose</h3>
+            <p>Choose from five official barangay documents, state your purpose and copies, and get an instant tracking code from phone or desktop.</p>
+          </article>
+          <article class="journey-card" data-journey-step data-spotlight-card data-spring-card>
+            <span class="journey-step-num">02 &middot; Live verification</span>
+            <h3>Barangay staff verify in order</h3>
+            <p>Officials review oldest Pending requests first, record pickup window instructions, and log every status change straight to your timeline.</p>
+          </article>
+          <article class="journey-card" data-journey-step data-spotlight-card data-spring-card>
+            <span class="journey-step-num">03 &middot; Ready for pickup</span>
+            <h3>Walk in once with your valid ID</h3>
+            <p>Arrive only when your tracker reads Approved. Claim your signed barangay certificate at Window 2 without repeat trips or waiting lines.</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Interactive Service Workflow Section -->
+  <section class="landing-band-light" id="services" aria-labelledby="services-title">
+    <div class="landing-shell">
+      <div class="section-bar">
+        <div>
+          <h2 id="services-title">Built for both residents and barangay staff.</h2>
+          <p class="section-sub">Switch between workflows and click through live certificate requirements, tracking stages, and queue previews.</p>
+        </div>
+        <div class="preview-tabs" role="tablist" aria-label="Portal workflow views" data-showcase-controls hidden>
+          <button id="tab-request" role="tab" type="button" aria-selected="true" aria-controls="preview-request" data-preview-tab="request">Online filing</button>
+          <button id="tab-tracking" role="tab" type="button" aria-selected="false" aria-controls="preview-tracking" tabindex="-1" data-preview-tab="tracking">Real-time tracking</button>
+          <button id="tab-staff" role="tab" type="button" aria-selected="false" aria-controls="preview-staff" tabindex="-1" data-preview-tab="staff">Staff queue</button>
+        </div>
+      </div>
+
+      <div class="workflow-panel-shell" data-preview-window data-gsap-lift data-spotlight-card>
+        <section class="workflow-panel" id="preview-request" data-preview-panel="request">
+          <div class="workflow-panel-copy">
+            <h3>Submit verified requests in minutes</h3>
+            <p>Residents sign in with their email or username, pick any of the five standard barangay documents, and submit details from phone or desktop—no manual logbooks or return trips.</p>
+            <ul class="workflow-checklist">
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Automatic duplicate-pending guard per document type</li>
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Edit or cancel freely while status remains Pending</li>
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Instant reference number generated on submission</li>
+            </ul>
+            <a class="button" href="{% url 'register' %}">Create resident account</a>
+          </div>
+          <div class="workflow-visual-card">
+            <h4>Select a certificate to inspect requirements</h4>
+            <template x-for="(service, idx) in services" x-bind:key="service.title">
+              <button
+                type="button"
+                class="workflow-visual-row"
+                x-on:click="selectService(idx)"
+                x-bind:aria-pressed="String(idx === serviceIndex)"
+              >
+                <span x-text="service.title"></span>
+                <span class="workflow-pill-ready" x-text="service.badge"></span>
+              </button>
+            </template>
+            <noscript>
+              <div class="workflow-visual-row"><span>Barangay Clearance</span><span class="workflow-pill-ready">1–5 copies</span></div>
+              <div class="workflow-visual-row"><span>Certificate of Indigency</span><span class="workflow-pill-ready">1–5 copies</span></div>
+              <div class="workflow-visual-row"><span>Certificate of Residency</span><span class="workflow-pill-ready">1–5 copies</span></div>
+              <div class="workflow-visual-row"><span>Barangay Business Clearance</span><span class="workflow-pill-ready">1–5 copies</span></div>
+              <div class="workflow-visual-row"><span>First-Time Jobseeker Certificate</span><span class="workflow-pill-ready">1–5 copies</span></div>
+            </noscript>
+            <div class="workflow-interactive-detail" aria-live="polite" x-cloak>
+              <p><strong x-text="activeService.title"></strong> — <span x-text="activeService.requirement"></span></p>
+              <a class="button button-champagne button-sm" x-bind:href="activeServiceUrl">
+                <span x-text="`Request ${activeService.title}`"></span>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section class="workflow-panel" id="preview-tracking" data-preview-panel="tracking">
+          <div class="workflow-panel-copy">
+            <h3>Follow every step from Pending to Completed</h3>
+            <p>Every request displays a clear progress stepper, staff pickup instructions or rejection notes, and a timestamped activity log—strictly private to the resident who submitted it.</p>
+            <ul class="workflow-checklist">
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Visual stepper across Pending, Approved, Completed, or Rejected</li>
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Direct pickup window instructions from barangay staff</li>
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Filter own requests by status, purpose, or REQ ID</li>
+            </ul>
+            <a class="button" href="{% url 'dashboard' %}">Check your requests</a>
+          </div>
+          <div class="workflow-visual-card">
+            <h4>Interactive status tracker preview</h4>
+            <div class="workflow-sim-controls" role="group" aria-label="Preview processing stage">
+              <template x-for="(stage, idx) in trackingStages" x-bind:key="stage.key">
+                <button
+                  type="button"
+                  class="workflow-sim-btn"
+                  x-on:click="trackingIndex = idx"
+                  x-bind:aria-pressed="String(idx === trackingIndex)"
+                  x-text="`${idx + 1}. ${stage.label}`"
+                ></button>
+              </template>
+            </div>
+            <div class="workflow-sim-progress" aria-hidden="true">
+              <span x-bind:style="`transform: scaleX(${activeTrackingStage.progress})`"></span>
+            </div>
+            <div class="workflow-visual-row">
+              <span x-text="activeTrackingStage.headline">Verified — ready for pickup at Window 2</span>
+              <span
+                x-bind:class="activeTrackingStage.key === 'pending' ? 'workflow-pill-amber' : 'workflow-pill-ready'"
+                x-text="activeTrackingStage.label"
+              >Approved</span>
+            </div>
+            <div class="workflow-interactive-detail" aria-live="polite">
+              <p><strong x-text="activeTrackingStage.actor">Reviewed by Barangay Secretary</strong>: <span x-text="activeTrackingStage.remark"></span></p>
+              <button type="button" class="workflow-sim-btn" x-on:click="nextTrackingStage()">Advance to next stage &rarr;</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="workflow-panel" id="preview-staff" data-preview-panel="staff">
+          <div class="workflow-panel-copy">
+            <h3>One orderly review queue for barangay officials</h3>
+            <p>Barangay staff sign in to a dedicated role-protected dashboard with oldest-first pending queues, document-type filtering, resident search, and structured status updates.</p>
+            <ul class="workflow-checklist">
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Dedicated staff workspace with strict role access controls</li>
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Mandatory explanation remarks when returning a request</li>
+              <li>{% include 'accounts/ui_icon.html' with name='check' %}Approved and completed records protected for audit integrity</li>
+            </ul>
+            <a class="button" href="{% url 'login' %}">Staff sign in</a>
+          </div>
+          <div class="workflow-visual-card">
+            <h4>Interactive queue filter preview</h4>
+            <div class="workflow-sim-controls" role="group" aria-label="Filter queue preview">
+              <button type="button" class="workflow-sim-btn" x-on:click="staffFilter = 'all'" x-bind:aria-pressed="String(staffFilter === 'all')">All (3)</button>
+              <button type="button" class="workflow-sim-btn" x-on:click="staffFilter = 'pending'" x-bind:aria-pressed="String(staffFilter === 'pending')">Pending (2)</button>
+              <button type="button" class="workflow-sim-btn" x-on:click="staffFilter = 'approved'" x-bind:aria-pressed="String(staffFilter === 'approved')">Approved (1)</button>
+            </div>
+            <template x-for="sample in filteredStaffSamples" x-bind:key="sample.ref">
+              <div class="workflow-visual-row">
+                <span><strong x-text="sample.doc"></strong> &middot; <span x-text="`${sample.resident} (${sample.copies})`"></span></span>
+                <span x-bind:class="sample.status === 'pending' ? 'workflow-pill-amber' : 'workflow-pill-ready'" x-text="sample.status === 'pending' ? 'Pending' : 'Approved'"></span>
+              </div>
+            </template>
+            <noscript>
+              <div class="workflow-visual-row"><span>Status transition guard</span><strong>Step-by-step approval</strong></div>
+              <div class="workflow-visual-row"><span>Staff-only status updates</span><strong>Official-verified</strong></div>
+              <div class="workflow-visual-row"><span>Activity history log</span><strong>Every change saved</strong></div>
+            </noscript>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Interactive Three.js 3D Purok Community Overview -->
+  <section class="landing-band-dark" id="community-pulse" data-three-chart-section aria-labelledby="community-pulse-title">
+    <div class="landing-shell">
+      <div class="section-bar">
+        <div>
+          <h2 id="community-pulse-title">Pilot barangay coverage at a glance.</h2>
+          <p class="section-sub">Pilot baseline overview across five puroks. Drag to rotate the 3D view or select any purok below to inspect neighborhood readiness.</p>
+        </div>
+        <div class="chart-legend" aria-hidden="true">
+          <span><i class="legend-swatch legend-forest"></i>Active accounts</span>
+          <span><i class="legend-swatch legend-terracotta"></i>Complete profiles</span>
+        </div>
+      </div>
+
+      <div class="chart-frame" data-gsap-lift data-spotlight-card>
+        <div class="three-chart-stage" data-three-chart-stage>
+          <canvas class="three-chart-canvas" data-three-chart></canvas>
+          <noscript><p class="chart-fallback-note">Enable JavaScript to explore the interactive 3D purok overview.</p></noscript>
+        </div>
+
+        <div class="chart-readout" data-chart-detail-card aria-live="polite">
+          <div class="readout-name">
+            <h3 data-chart-detail-title>Purok 2 — Rizal</h3>
+            <p class="chart-note" data-chart-detail-note>Highest active participation — residents keep their details current from mobile.</p>
+            <div class="chart-pills" data-chart-controls hidden>
+              <div class="chart-pills" data-chart-item-pills role="group" aria-label="Select a purok"></div>
+              <button type="button" class="chart-motion-btn" data-chart-motion-toggle aria-pressed="false">Pause 3D drift</button>
+            </div>
+          </div>
+          <dl class="readout-numbers">
+            <div><dt data-chart-detail-primary-label>Active accounts</dt><dd class="metric-forest" data-chart-detail-primary>58</dd></div>
+            <div><dt data-chart-detail-secondary-label>Complete profiles</dt><dd class="metric-terracotta" data-chart-detail-secondary>49</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <section class="sanctuary-close" aria-labelledby="close-title">
+        <div>
+          <h2 id="close-title">Ready to submit your next request?</h2>
+          <p>Sign in with your email or username, or register your resident account in under a minute.</p>
+        </div>
+        <div class="close-actions">
+          <a class="button button-champagne" href="{% url 'dashboard' %}">Open portal</a>
+          <a class="button button-white" href="{% url 'register' %}">Create account</a>
+        </div>
       </section>
     </div>
   </section>
 
-  <section class="design-notes" aria-labelledby="decisions-title">
-    <div class="notes-intro"><h2 id="decisions-title">The decisions<br>behind the screens.</h2><p>Each view has a specific job. The resident area keeps account upkeep close; the staff area separates enrollment from personal details.</p><div class="material-note"><span class="material-colors" aria-hidden="true"><i></i><i></i><i></i></span><p>Forest green, sand beige, and terracotta.<br>Manrope for reading. Lora for headings.</p></div></div>
-    <dl class="decision-list"><div><dt>One account, two ways in</dt><dd>Email and username both work at sign-in. Changing an email address leaves the username available as a familiar way back in.</dd></div><div><dt>Details residents can maintain</dt><dd>Names, contact numbers, email addresses, and profile photos can be updated from the profile area. The page keeps labels visible and explains validation errors.</dd></div><div><dt>Access follows the account role</dt><dd>Residents and staff have separate dashboards. Staff can see enrollment totals; account management remains restricted to superusers.</dd></div></dl>
-  </section>
+  <!-- Floating Bottom-Right Barangay Help Desk Pill -->
+  <div class="help-desk-widget" x-on:keydown.escape.window="closeHelp(true)" x-on:click.outside="closeHelp(false)">
+    <div class="help-desk-popover" id="landing-help-popover" role="region" aria-label="Barangay help desk" x-show="helpOpen" x-cloak>
+      <div class="help-desk-popover-head">
+        <h3>Barangay help desk</h3>
+        <button class="help-desk-close" type="button" x-ref="helpClose" x-on:click="closeHelp(true)" aria-label="Close help desk">&times;</button>
+      </div>
+      <p class="help-desk-intro">Need help getting started? Choose a quick link below or sign in to view your active document requests.</p>
+      <div class="help-desk-links">
+        <a href="{% url 'documents:create' %}"><span>Request a barangay document</span><span aria-hidden="true">+</span></a>
+        <a href="{% url 'login' %}"><span>Sign in with email or username</span><span aria-hidden="true">+</span></a>
+        <a href="{% url 'register' %}"><span>Register a new resident account</span><span aria-hidden="true">+</span></a>
+      </div>
+    </div>
+    <button
+      class="help-desk-trigger"
+      type="button"
+      x-ref="helpTrigger"
+      x-on:click="toggleHelp()"
+      x-bind:aria-expanded="String(helpOpen)"
+      aria-controls="landing-help-popover"
+      aria-label="Barangay help desk"
+    >
+      <span class="help-desk-avatar" aria-hidden="true">{% include 'accounts/ui_icon.html' with name='help' %}</span>
+      <span class="help-desk-copy">
+        <strong>Barangay help desk</strong>
+        <span>How can we help?</span>
+      </span>
+    </button>
+  </div>
 
-  <section class="signin-study" aria-labelledby="signin-study-title">
-    <div><h2 id="signin-study-title">A familiar way to sign in.</h2><p>The form accepts either identifier in the same field. Try the examples to see the change.</p><div class="identifier-switch" data-identifier-controls hidden role="group" aria-label="Sign-in identifier example"><button type="button" data-identifier="username" aria-pressed="true">Username example</button><button type="button" data-identifier="email" aria-pressed="false">Email example</button></div><a href="{% url 'login' %}">Open sign-in</a></div>
-    <figure class="signin-example"><div class="identifier-field"><span>Email or username</span><strong data-identifier-value aria-live="polite" aria-atomic="true">resident</strong></div><figcaption>Both <span>resident</span> and <span>resident@example.com</span> identify the same example account. No sign-in is performed here.</figcaption></figure>
-  </section>
-
-  <section class="showcase-close" aria-labelledby="next-title"><div><h2 id="next-title">Use your own account.</h2><p>Open the portal to sign in, review your profile, or update your details.</p></div><div><a class="button" href="{% url 'dashboard' %}">Open portal</a><a href="{% url 'register' %}">Create a resident account</a></div></section>
 </div>
 {% endblock %}

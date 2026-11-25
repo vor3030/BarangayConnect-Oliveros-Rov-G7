@@ -1,28 +1,71 @@
 :root {
   color-scheme: light;
-  --bc-ink: #203c32;
-  --bc-muted: #686b5e;
-  --bc-accent: #244c3c;
-  --bc-accent-hover: #18392c;
-  --bc-accent-ink: #fff;
-  --bc-background: #f6f3ec;
-  --bc-surface: #fffdf8;
-  --bc-inset: #eae6da;
-  --bc-border: #deded1;
-  --bc-sand: #e7dcc8;
-  --bc-sand-light: #f1eade;
-  --bc-forest: #244c3c;
-  --bc-forest-deep: #193b2d;
-  --bc-on-forest: #fbf5e8;
-  --bc-on-forest-muted: #d5decb;
-  --bc-terracotta: #9e5037;
-  --bc-terracotta-light: #f4e5db;
-  --bc-field-border: #70877e;
-  --bc-error: #a1282d;
-  --bc-chart-secondary: #b77758;
-  --bc-control-radius: .75rem;
-  --bc-card-radius: 1.5rem;
-  --bc-font: "Manrope Variable", "Segoe UI", system-ui, sans-serif;
-  --bc-display: "Manrope Variable", "Segoe UI", system-ui, sans-serif;
-  --bc-editorial: "Lora Variable", Georgia, serif;
+  /* Twilight atmospheric palette (inspired by nocturnal evergreen, misty fjord, and warm lantern light) */
+  --bc-night: #0d1518;
+  --bc-sidebar: #101b1f;
+  --bc-fjord: #182930;
+  --bc-pine: #173832;
+  --bc-mist: #4d6f7d;
+  --bc-glass-dark: rgba(11, 20, 24, 0.78);
+  --bc-glass-dark-strong: rgba(11, 20, 24, 0.88);
+  --bc-glass-field: rgba(255, 255, 255, 0.08);
+  --bc-glass-border: rgba(235, 244, 246, 0.16);
+  --bc-glass-rim: rgba(235, 244, 246, 0.28);
+  --bc-on-dark: #f5f8f8;
+  --bc-on-dark-muted: #bdd0d6;
+
+  /* Warm lantern & champagne sand accents */
+  --bc-champagne: #e7d4b5;
+  --bc-champagne-hover: #f2e4cb;
+  --bc-champagne-ink: #111c20;
+  --bc-amber: #e59a3c;
+  --bc-amber-soft: rgba(229, 154, 60, 0.16);
+  --bc-amber-ink: #7d4908;
+
+  /* Crisp daylight operational surfaces */
+  --bc-ink: #111e22;
+  --bc-muted: #4b5f66;
+  --bc-accent: #173b35;
+  --bc-accent-hover: #0f2a26;
+  --bc-accent-ink: #ffffff;
+  --bc-background: #f2f5f4;
+  --bc-surface: #ffffff;
+  --bc-inset: #e6eeec;
+  --bc-border: #d5e0de;
+  --bc-control-border: #8da1a6;
+  --bc-field-border: #687e84;
+  --bc-error: #a3262a;
+  --bc-error-bg: #fdf1f1;
+  --bc-error-border: #e1b5b7;
+  --bc-success-bg: #e7f3ee;
+  --bc-success-border: #b3d5c7;
+  --bc-chart-secondary: #d4a66a;
+
+  /* Legacy alias variables preserved for script/theme compatibility */
+  --bc-sand: var(--bc-champagne);
+  --bc-sand-light: #edf2f1;
+  --bc-forest: var(--bc-fjord);
+  --bc-forest-deep: var(--bc-night);
+  --bc-on-forest: var(--bc-on-dark);
+  --bc-on-forest-muted: var(--bc-on-dark-muted);
+  --bc-terracotta: var(--bc-amber-ink);
+  --bc-terracotta-light: #fbf1e2;
+
+  /* Geometry & typography */
+  --bc-control-radius: 0.75rem;
+  --bc-pill-radius: 999px;
+  --bc-card-radius: 1.35rem;
+  --bc-frame-radius: 1.75rem;
+  --bc-font: "Manrope Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --bc-display: "Manrope Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --bc-editorial: "Manrope Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Fixed z-index scale */
+  --z-base: 1;
+  --z-sticky: 20;
+  --z-sidebar: 30;
+  --z-nav-mobile: 40;
+  --z-popover: 50;
+  --z-progress: 60;
+  --z-skip: 100;
 }

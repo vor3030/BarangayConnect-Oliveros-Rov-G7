@@ -28,7 +28,14 @@ class AccountLoginView(LoginView):
 
 @require_safe
 def portfolio_showcase(request):
-    return render(request, "accounts/portfolio_showcase.html", {"is_showcase": True})
+    return render(
+        request,
+        "accounts/portfolio_showcase.html",
+        {
+            "is_showcase": True,
+            "document_types": DocumentRequest.DocumentType.choices,
+        },
+    )
 
 
 def save_account_form(form):

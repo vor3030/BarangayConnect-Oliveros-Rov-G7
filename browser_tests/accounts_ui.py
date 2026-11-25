@@ -115,48 +115,47 @@ class AccountsBrowserTests(StaticLiveServerTestCase):
         expect(page.get_by_role("button", name="Sign in", exact=True)).to_be_enabled()
 
     def test_showcase_previews_keyboard_device_and_pause_controls(self):
-        page = self.open_page(viewport={"width": 1440, "height": 1000})
+        page = self.open_page(viewport={"width": 1440, "height": 900})
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(self.live_server_url + "/")
         showcase = page.locator("[data-showcase]")
         expect(showcase).to_have_attribute("data-showcase-ready", "true")
-        expect(page.get_by_role("heading", name="Resident accounts, clearly arranged.")).to_be_visible()
-        expect(page.locator("#preview-profile")).to_be_visible()
-        expect(page.locator(".preview-window")).to_be_in_viewport()
-        pause = page.get_by_role("button", name="Reduce page motion")
-        pause.click()
-        expect(showcase).to_have_attribute("data-showcase-paused", "true")
-        expect(page.locator("html")).to_have_attribute("data-page-motion", "reduced")
         expect(showcase).to_have_attribute("data-showcase-settled", "true")
-        self.capture(page, "showcase-desktop")
-        profile = page.get_by_role("tab", name="My profile", exact=True)
-        profile.focus()
+        expect(page.get_by_role("heading", name="Your barangay, quietly connected.")).to_be_visible()
+        self.assertEqual(page.get_by_text("Interface showcase").count(), 0)
+        self.capture(page, "landing-desktop")
+
+        # Interactive smoked-glass service card cycles documents cleanly
+        page.get_by_role("button", name="Preview next barangay document").click()
+        expect(page.locator(".smoked-service-card h2")).to_have_text("Certificate of Indigency")
+
+        # Floating Help Desk popover opens and closes on Escape
+        page.get_by_role("button", name="Barangay help desk").click()
+        expect(page.locator("#landing-help-popover")).to_be_visible()
+        page.keyboard.press("Escape")
+        expect(page.locator("#landing-help-popover")).not_to_be_visible()
+
+        # Workflow tabs support ArrowRight, End, and click
+        req_tab = page.get_by_role("tab", name="Online filing", exact=True)
+        req_tab.scroll_into_view_if_needed()
+        expect(page.locator("#preview-request")).to_be_visible()
+        req_tab.focus()
         page.keyboard.press("ArrowRight")
-        resident = page.get_by_role("tab", name="Resident overview", exact=True)
-        expect(resident).to_be_focused()
-        expect(resident).to_have_attribute("aria-selected", "true")
+        track_tab = page.get_by_role("tab", name="Real-time tracking", exact=True)
+        expect(track_tab).to_be_focused()
+        expect(track_tab).to_have_attribute("aria-selected", "true")
         page.keyboard.press("End")
-        expect(page.get_by_role("tab", name="Staff overview", exact=True)).to_have_attribute("aria-selected", "true")
-        expect(page.locator("#preview-admin")).to_be_visible()
-        expect(page.locator("#preview-profile")).not_to_be_visible()
-        profile.click()
-        page.get_by_role("button", name="Phone", exact=True).click()
-        expect(page.locator("[data-preview-window]")).to_have_attribute("data-device", "phone")
-        expect(page.locator("#preview-profile")).to_be_visible()
+        expect(page.get_by_role("tab", name="Staff queue", exact=True)).to_have_attribute("aria-selected", "true")
+        expect(page.locator("#preview-staff")).to_be_visible()
+        expect(page.locator("#preview-request")).not_to_be_visible()
+        req_tab.click()
+        expect(page.locator("#preview-request")).to_be_visible()
+
         for width, height in ((375, 812), (768, 1024), (1024, 768)):
             page.set_viewport_size({"width": width, "height": height})
             self.assertFalse(page.evaluate("document.documentElement.scrollWidth > window.innerWidth"))
-            if width < 752:
-                expect(page.get_by_role("group", name="Preview size")).not_to_be_visible()
-                expect(page.locator("[data-preview-window]")).to_have_attribute("data-device", "responsive")
-        self.capture(page, "showcase-profile-tablet")
-        page.get_by_role("button", name="Email example", exact=True).click()
-        expect(page.locator("[data-identifier-value]")).to_have_text("resident@example.com")
-        page.get_by_role("button", name="Username example", exact=True).click()
-        expect(page.locator("[data-identifier-value]")).to_have_text("resident")
-        page.get_by_role("button", name="Enable page motion").click()
-        expect(showcase).to_have_attribute("data-showcase-paused", "false")
+        self.capture(page, "landing-tablet")
         self.assertEqual(errors, [])
 
     def test_showcase_reduced_motion_and_no_javascript(self):
@@ -167,18 +166,16 @@ class AccountsBrowserTests(StaticLiveServerTestCase):
                     java_script_enabled=javascript, reduced_motion=motion,
                 )
                 page.goto(self.live_server_url + "/portfolio-showcase/")
-                expect(page.get_by_role("heading", name="Resident accounts, clearly arranged.")).to_be_visible()
+                expect(page.get_by_role("heading", name="Your barangay, quietly connected.")).to_be_visible()
                 if javascript:
-                    expect(page.get_by_role("button", name="Reduced motion enabled")).to_be_disabled()
-                    expect(page.locator("[data-showcase]")).to_have_attribute("data-showcase-paused", "true")
-                    page.get_by_role("tab", name="Staff overview", exact=True).click()
-                    expect(page.locator("#preview-admin")).to_be_visible()
+                    page.get_by_role("tab", name="Staff queue", exact=True).click()
+                    expect(page.locator("#preview-staff")).to_be_visible()
                 else:
                     expect(page.locator("[data-showcase-controls]")).not_to_be_visible()
-                    for name in ("resident", "admin", "profile"):
+                    for name in ("request", "tracking", "staff"):
                         expect(page.locator(f"#preview-{name}")).to_be_visible()
                 self.assertFalse(page.evaluate("document.documentElement.scrollWidth > window.innerWidth"))
-                self.capture(page, f"showcase-mobile-{javascript}")
+                self.capture(page, f"landing-mobile-{javascript}")
 
     def test_resident_dashboard_and_profile_navigation(self):
         get_user_model().objects.create_user(
@@ -218,7 +215,7 @@ class AccountsBrowserTests(StaticLiveServerTestCase):
         page.get_by_role("link", name="Barangay Connect home").filter(visible=True).click()
         expect(page).to_have_url(self.live_server_url + "/")
         expect(page.locator("[data-showcase]")).to_be_visible()
-        page.get_by_role("navigation", name="Main navigation").get_by_role("link", name="Open portal").click()
+        page.get_by_role("link", name="Open portal").filter(visible=True).first.click()
         expect(page).to_have_url(self.live_server_url + "/dashboard/resident/")
         self.assertEqual(errors, [])
 
