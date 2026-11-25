@@ -1,39 +1,78 @@
 {% extends 'accounts/base.html' %}
 {% block title %}Admin dashboard | Barangay Connect{% endblock %}
 {% block content %}
-<div class="page-heading" data-reveal><p class="eyebrow">Community overview</p><h2>A connected barangay starts here.</h2></div>
-<section class="hero" x-data="motionScene" data-reveal>
+<section class="hero">
+  <canvas class="barangay-atmosphere-canvas" data-barangay-atmosphere aria-hidden="true"></canvas>
   <div class="hero-copy">
-  <p class="eyebrow">Admin dashboard</p>
-  <h1>Welcome, {{ user.get_full_name }}</h1>
-  <p>Review incoming resident document requests and monitor barangay enrollment from one workspace.</p>
-  <div class="hero-actions">
-    <a class="button" href="{% url 'documents:manage_list' %}">Review document requests</a>
-    <a class="button button-ghost" href="{% url 'documents:manage_list' %}?status=Pending">Pending queue ({{ request_counts.pending_requests }})</a>
+    <span class="hero-status-pill"><span class="hero-status-dot" aria-hidden="true"></span>Admin dashboard</span>
+    <h1>Welcome, <strong>{{ user.get_full_name }}</strong></h1>
+    <p>Review incoming resident document requests, verify purposes, and monitor barangay enrollment from one workspace.</p>
+    <div class="hero-actions">
+      <a class="button button-champagne" href="{% url 'documents:manage_list' %}?status=Pending">Pending queue ({{ request_counts.pending_requests }})</a>
+      <a class="button button-ghost" href="{% url 'documents:manage_list' %}">All requests</a>
+    </div>
   </div>
-  </div>
-  {% include 'accounts/neighborhood.html' %}
+  <aside class="hero-glass-panel" aria-label="Live request queue overview">
+    <div class="hero-glass-header">
+      <h2>Live queue pulse</h2>
+      <span>{{ request_counts.total_requests }} total</span>
+    </div>
+    <div class="hero-glass-grid">
+      <div class="hero-glass-metric">
+        <span>Pending review</span>
+        <strong data-count-up="{{ request_counts.pending_requests }}">{{ request_counts.pending_requests }}</strong>
+      </div>
+      <div class="hero-glass-metric">
+        <span>Approved</span>
+        <strong data-count-up="{{ request_counts.approved_requests }}">{{ request_counts.approved_requests }}</strong>
+      </div>
+      <div class="hero-glass-metric">
+        <span>Completed</span>
+        <strong data-count-up="{{ request_counts.completed_requests }}">{{ request_counts.completed_requests }}</strong>
+      </div>
+      <div class="hero-glass-metric">
+        <span>Active residents</span>
+        <strong data-count-up="{{ active_residents }}">{{ active_residents }}</strong>
+      </div>
+    </div>
+    <a class="button button-white" href="{% url 'documents:manage_list' %}">Open full request queue</a>
+  </aside>
 </section>
-<section class="account-stats" aria-label="Resident enrollment overview">
-  <article data-reveal><span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='clock' %}</span><div><p>Pending requests</p><strong>{{ request_counts.pending_requests }} <small>of {{ request_counts.total_requests }} total</small></strong></div></article>
-  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='check' %}</span><div><p>Approved &amp; completed</p><strong>{{ request_counts.approved_requests|add:request_counts.completed_requests }}</strong></div></article>
-  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='people' %}</span><div><p>Total residents</p><strong>{{ active_residents|add:inactive_residents }}</strong></div></article>
-</section>
-<section class="card doc-dashboard-card" data-reveal>
+
+<section class="card doc-dashboard-card" x-data="dashboardFilter">
   <div class="doc-dashboard-header">
     <div>
       <h2>Pending document requests</h2>
-      <p class="muted" style="margin: .3rem 0 0;">Oldest pending submissions first so barangay staff can verify and release them promptly.</p>
+      <p class="muted">Oldest pending submissions appear first so staff can process applications in order.</p>
     </div>
-    <a class="button button-sm" href="{% url 'documents:manage_list' %}">Open full request queue</a>
+    <a class="button button-sm" href="{% url 'documents:manage_list' %}">Manage all requests</a>
   </div>
   {% if pending_queue %}
+    <div class="doc-dashboard-controls">
+      <div class="doc-filter-pills" role="group" aria-label="Filter pending queue by document type">
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'all'" x-on:click="docType = 'all'" aria-pressed="true">All types</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'Barangay Clearance'" x-on:click="docType = 'Barangay Clearance'" aria-pressed="false">Clearance</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'Certificate of Indigency'" x-on:click="docType = 'Certificate of Indigency'" aria-pressed="false">Indigency</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'Certificate of Residency'" x-on:click="docType = 'Certificate of Residency'" aria-pressed="false">Residency</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'Barangay Business Clearance'" x-on:click="docType = 'Barangay Business Clearance'" aria-pressed="false">Business</button>
+      </div>
+      <label class="sr-only" for="admin-pending-filter">Filter pending queue</label>
+      <input id="admin-pending-filter" type="search" x-model="query" placeholder="Search resident, document, or REQ ID">
+    </div>
+    <p class="doc-dashboard-count" x-text="(query.trim() || docType !== 'all') ? `Showing ${visibleCount} matching pending ${visibleCount === 1 ? 'request' : 'requests'}` : 'Showing {{ pending_queue|length }} oldest pending submission{% if pending_queue|length != 1 %}s{% endif %}'">Showing {{ pending_queue|length }} oldest pending submission{% if pending_queue|length != 1 %}s{% endif %}</p>
     <ul class="doc-mini-list">
       {% for item in pending_queue %}
-        <li class="doc-mini-item">
+        <li
+          class="doc-mini-item"
+          data-filter-item
+          data-filter-status="pending"
+          data-filter-type="{{ item.document_type }}"
+          data-filter-search="{{ item.reference_code }} {{ item.document_type }} {{ item.user.get_full_name }} {{ item.purpose }}"
+          x-show="matches('pending', '{{ item.reference_code|escapejs }} {{ item.document_type|escapejs }} {{ item.user.get_full_name|escapejs }} {{ item.purpose|escapejs }}', '{{ item.document_type|escapejs }}')"
+        >
           <div class="doc-mini-info">
             <a href="{% url 'documents:review' item.pk %}">{{ item.document_type }} — {{ item.user.get_full_name }}</a>
-            <span class="doc-mini-meta">{{ item.reference_code }} · {{ item.copies }} {% if item.copies == 1 %}copy{% else %}copies{% endif %} · {{ item.purpose|truncatechars:65 }} · {{ item.created_at|date:"M j, Y" }}</span>
+            <span class="doc-mini-meta">{{ item.reference_code }} — {{ item.copies }} {% if item.copies == 1 %}copy{% else %}copies{% endif %}, {{ item.purpose|truncatechars:65 }} ({{ item.created_at|date:"M j, Y" }})</span>
           </div>
           <div class="doc-mini-right">
             <span class="status-badge status-{{ item.status_slug }}">{{ item.status }}</span>
@@ -42,14 +81,17 @@
         </li>
       {% endfor %}
     </ul>
+    <div class="doc-filter-empty" x-show="visibleCount === 0" x-cloak role="status" aria-live="polite">
+      <p>No pending requests match your search.</p>
+      <button type="button" class="button button-secondary button-sm" x-on:click="reset()">Clear search</button>
+    </div>
   {% else %}
-    <p class="muted" style="margin: .75rem 0 0;">All caught up — there are currently no pending document requests waiting for review.</p>
+    <p class="muted">All caught up — there are currently no pending document requests waiting for review.</p>
   {% endif %}
 </section>
-<div class="section-heading" data-reveal><div><p class="eyebrow">Care for your community</p><h2>The people behind the numbers.</h2></div></div>
-<div class="grid">
-  <section class="card" data-reveal data-tilt>
-    <p class="eyebrow">Community enrollment</p>
+
+<div class="grid dashboard-grid">
+  <section class="card">
     <h2>Resident accounts</h2>
     <div class="account-overview">
       {% if active_residents or inactive_residents %}
@@ -67,20 +109,22 @@
       </dl>
     </div>
     {% if not active_residents and not inactive_residents %}
-      <p class="muted">No resident accounts yet.</p>
+      <p class="muted">No resident accounts registered yet.</p>
     {% endif %}
     {% if user.is_superuser %}
-      <a class="button" href="{% url 'admin:accounts_user_changelist' %}">Manage accounts</a>
+      <a class="button button-sm" href="{% url 'admin:accounts_user_changelist' %}">Manage accounts</a>
     {% else %}
-      <a class="button" href="{% url 'admin:index' %}">Open barangay administration</a>
+      <a class="button button-sm" href="{% url 'documents:manage_list' %}">View full request queue</a>
     {% endif %}
   </section>
-  <section class="card community-note" data-reveal data-tilt>
-    <p class="eyebrow">Your corner of the community</p>
-    <h2>Staff profile</h2>
-    <p>Keep your own account information up to date.</p>
-    <a class="button" href="{% url 'profile' %}">View profile</a>
-    {% include 'accounts/community_art.html' %}
+
+  <section class="card community-note">
+    <h2>Staff account &amp; profile</h2>
+    <p>Keep your barangay official profile details current so residents know who verified and processed their document requests.</p>
+    <div class="card-actions">
+      <a class="button button-sm" href="{% url 'profile' %}">View profile</a>
+      <a class="button button-ghost button-sm" href="{% url 'edit_profile' %}">Edit profile</a>
+    </div>
   </section>
 </div>
 {% endblock %}

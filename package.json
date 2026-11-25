@@ -2,7 +2,7 @@
   "name": "barangay-connect-ui",
   "private": true,
   "scripts": {
-    "build": "esbuild frontend/portal.js --bundle --splitting --format=esm --minify --loader:.woff2=file --asset-names=fonts/[name]-[hash] --outdir=accounts/static/accounts/ui"
+    "build": "node -e \"require('fs').rmSync('accounts/static/accounts/ui', {recursive: true, force: true})\" && esbuild frontend/portal.js --bundle --splitting --format=esm --minify --loader:.woff2=file --asset-names=fonts/[name]-[hash] --outdir=accounts/static/accounts/ui"
   },
   "dependencies": {
     "@fontsource-variable/lora": "5.3.0",

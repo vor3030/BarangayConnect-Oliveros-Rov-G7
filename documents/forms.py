@@ -45,11 +45,13 @@ class DocumentRequestForm(forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         self.user = user
+        kwargs.setdefault("label_suffix", "")
         super().__init__(*args, **kwargs)
         self.fields["document_type"].choices = [
             ("", "Select a barangay document"),
             *DocumentRequest.DocumentType.choices,
         ]
+        self.fields["copies"].widget.attrs.update({"min": "1", "max": "5", "class": "doc-copies-input"})
 
     def clean_purpose(self):
         purpose = " ".join(self.cleaned_data["purpose"].split())
@@ -118,12 +120,15 @@ class DocumentRequestReviewForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label_suffix", "")
         super().__init__(*args, **kwargs)
         allowed = self.instance.allowed_next_statuses if self.instance and self.instance.pk else ()
         self.fields["status"].choices = [
             ("", "Select next status"),
             *[(value, value) for value in allowed],
         ]
+        if not self.is_bound and self.instance and self.instance.pk:
+            self.initial["staff_remarks"] = ""
 
     def clean_staff_remarks(self):
         return self.cleaned_data["staff_remarks"].strip()

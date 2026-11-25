@@ -1,25 +1,36 @@
-@view-transition { navigation: auto; }
-::view-transition-old(root) { animation: page-out .16s ease both; }
-::view-transition-new(root) { animation: page-in .24s ease both; }
-@keyframes page-out { to { opacity: 0; } }
-@keyframes page-in { from { opacity: 0; } to { opacity: 1; } }
-.page-scroll-progress { position: fixed; z-index: 30; inset: 0 0 auto; height: 3px; pointer-events: none; }
-.page-scroll-progress span { display: block; width: 100%; height: 100%; background: var(--bc-terracotta); transform: scaleX(0); transform-origin: left; }
-.quick-link { isolation: isolate; overflow: hidden; }
-.quick-link::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; opacity: 0; background: radial-gradient(180px circle at var(--pointer-x, 50%) var(--pointer-y, 50%), #e7dcc890, transparent 80%); transition: opacity .25s; pointer-events: none; }
-.quick-link:hover::before, .quick-link:focus-visible::before { opacity: 1; }
-.form-field label { transition: color .2s; }
-.form-field:focus-within label { color: var(--bc-terracotta); }
-.button { position: relative; isolation: isolate; overflow: hidden; }
-.button::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(110deg, transparent 25%, #fff2 50%, transparent 75%); transform: translateX(-110%); pointer-events: none; }
-@media (prefers-reduced-motion: no-preference) and (hover: hover) {
-  .button:hover::after { animation: button-light .65s ease-out both; }
-  @keyframes button-light { to { transform: translateX(110%); } }
-  .sidebar-nav a, .site-nav a, .benefit-icon { transition: background-color .2s, color .2s, box-shadow .2s; }
+/* Restrained, compositor-only motion (transform and opacity only) */
+
+@keyframes bc-scroll-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
+
+.page-scroll-progress {
+  position: fixed;
+  z-index: var(--z-progress);
+  inset: 0 0 auto;
+  height: 3px;
+  pointer-events: none;
+}
+
+.page-scroll-progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--bc-champagne) 0%, var(--bc-amber) 100%);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+@supports (animation-timeline: scroll()) {
+  .page-scroll-progress span {
+    animation: bc-scroll-progress linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
-  .page-scroll-progress { display: none; }
-  .quick-link::before, .form-field label { transition: none; }
-  .button::after { display: none; }
+  html:not([data-motion-override="full"]) .page-scroll-progress {
+    display: none;
+  }
 }

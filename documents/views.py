@@ -32,11 +32,13 @@ def build_status_steps(doc_request):
                 "label": "Submitted",
                 "detail": "Received and logged as Pending.",
                 "state": "done",
+                "tone": "done",
             },
             {
                 "label": "Rejected",
                 "detail": doc_request.staff_remarks or "Returned by barangay staff.",
                 "state": "rejected",
+                "tone": "rejected",
             },
         ]
 
@@ -45,6 +47,7 @@ def build_status_steps(doc_request):
             "label": "Pending review",
             "detail": "Waiting for barangay staff verification.",
             "state": "current" if status == DocumentRequest.Status.PENDING else "done",
+            "tone": "pending" if status == DocumentRequest.Status.PENDING else "done",
         },
         {
             "label": "Approved",
@@ -54,11 +57,17 @@ def build_status_steps(doc_request):
                 if status == DocumentRequest.Status.APPROVED
                 else ("done" if status == DocumentRequest.Status.COMPLETED else "upcoming")
             ),
+            "tone": (
+                "approved"
+                if status == DocumentRequest.Status.APPROVED
+                else ("done" if status == DocumentRequest.Status.COMPLETED else "upcoming")
+            ),
         },
         {
             "label": "Completed",
             "detail": "Document issued and transaction closed.",
             "state": "done" if status == DocumentRequest.Status.COMPLETED else "upcoming",
+            "tone": "completed" if status == DocumentRequest.Status.COMPLETED else "upcoming",
         },
     ]
 
@@ -167,8 +176,21 @@ def request_create(request):
     if request.user.is_staff:
         raise PermissionDenied
 
+    initial = {}
+    if request.method != "POST":
+        prefill_type = request.GET.get("document_type", "").strip()
+        if prefill_type in VALID_DOCUMENT_TYPES:
+            initial["document_type"] = prefill_type
+        prefill_purpose = " ".join(request.GET.get("purpose", "").split())[:255]
+        if prefill_purpose:
+            initial["purpose"] = prefill_purpose
+        prefill_copies = request.GET.get("copies", "").strip()
+        if prefill_copies.isdigit() and 1 <= int(prefill_copies) <= 5:
+            initial["copies"] = int(prefill_copies)
+
     form = DocumentRequestForm(
         request.POST if request.method == "POST" else None,
+        initial=initial,
         user=request.user,
     )
     if form.is_valid():

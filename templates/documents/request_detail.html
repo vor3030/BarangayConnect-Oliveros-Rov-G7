@@ -7,7 +7,7 @@
   {% if user.is_staff %}Back to request queue{% else %}Back to document requests{% endif %}
 </a>
 
-<div class="doc-page-header" data-reveal>
+<div class="doc-page-header">
   <div>
     <h1>{{ doc_request.document_type }}</h1>
     <p>Reference <strong>{{ doc_request.reference_code }}</strong> · Submitted {{ doc_request.created_at|date:"M j, Y · g:i A" }}</p>
@@ -23,14 +23,15 @@
   </div>
 </div>
 
-<section class="card doc-tracker-card" aria-label="Real-time processing tracker" data-reveal>
+<section class="card doc-tracker-card" aria-label="Real-time processing tracker">
   <div class="doc-tracker-header">
     <h2>Real-time processing status</h2>
     <span class="doc-meta-date">Last updated {{ doc_request.updated_at|date:"M j, Y · g:i A" }}</span>
   </div>
   <ol class="doc-stepper">
     {% for step in status_steps %}
-      <li class="doc-step doc-step-{{ step.state }}">
+      <li class="doc-step doc-step-{{ step.state }} doc-step-tone-{{ step.tone }}"{% if step.state == 'current' %} aria-current="step"{% endif %}>
+        <span class="sr-only">{% if step.state == 'done' %}Completed: {% elif step.state == 'current' %}Current step: {% elif step.state == 'rejected' %}Rejected: {% else %}Upcoming: {% endif %}</span>
         <span class="doc-step-label">
           <span class="doc-step-dot" aria-hidden="true"></span>
           {{ step.label }}
@@ -42,7 +43,7 @@
 </section>
 
 <div class="doc-split-layout">
-  <section class="card" data-reveal>
+  <section class="card">
     <h2>Request information</h2>
     <div class="detail-row"><span>Reference code</span><strong class="doc-ref">{{ doc_request.reference_code }}</strong></div>
     <div class="detail-row"><span>Document type</span><strong>{{ doc_request.document_type }}</strong></div>
@@ -66,11 +67,11 @@
         <p>{{ doc_request.staff_remarks }}</p>
       </div>
     {% elif not user.is_staff and not doc_request.is_editable_by_resident %}
-      <p class="muted" style="margin-top: 1.25rem;">This request has been processed and can no longer be modified or cancelled.</p>
+      <p class="muted doc-lock-note">This request has been processed and can no longer be modified or cancelled.</p>
     {% endif %}
   </section>
 
-  <section class="card" data-reveal>
+  <section class="card">
     <h2>Activity history</h2>
     {% if status_logs %}
       <ol class="doc-timeline">

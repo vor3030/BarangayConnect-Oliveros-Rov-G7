@@ -1,23 +1,45 @@
 {% extends 'accounts/base.html' %}
+{% block body_class %} is-auth-page{% endblock %}
+{% block main_class %}{% endblock %}
+{% block notice_wrap_class %}shell{% endblock %}
 {% block content %}
-<div class="auth-welcome"><span>Life in your barangay, made a little simpler.</span><span class="welcome-chip">{% include 'accounts/ui_icon.html' with name='leaf' %}Tuloy po kayo</span></div>
-<div class="auth-layout">
-  <section class="auth-intro" aria-labelledby="portal-title" x-data="motionScene">
-    <div class="intro-copy" data-reveal>
-      <p class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span> A more connected community</p>
-      <h2 id="portal-title">Your neighborhood.<br><em>Closer together.</em></h2>
-      <p>For the people, the families, and the place we call home. Your community account brings it all a little closer.</p>
+<div class="auth-stage" x-data="authMood" x-bind:data-mood="mood" data-mood="twilight" data-atmosphere-host>
+  <div class="auth-bg-layer" aria-hidden="true"></div>
+  <canvas class="barangay-atmosphere-canvas" data-barangay-atmosphere aria-hidden="true"></canvas>
+
+  <div class="shell auth-stage-inner">
+    <div class="auth-mood-bar">
+      <span class="auth-mood-hint">Move across the twilight barangay sky or click to send a lantern pulse</span>
+      <div class="auth-mood-pills" role="group" aria-label="Barangay backdrop atmosphere">
+        <button type="button" class="auth-mood-btn" data-spring-pill x-on:click="setMood('twilight')" x-bind:aria-pressed="String(mood === 'twilight')" aria-pressed="true">Twilight</button>
+        <button type="button" class="auth-mood-btn" data-spring-pill x-on:click="setMood('golden')" x-bind:aria-pressed="String(mood === 'golden')" aria-pressed="false">Golden dusk</button>
+        <button type="button" class="auth-mood-btn" data-spring-pill x-on:click="setMood('night')" x-bind:aria-pressed="String(mood === 'night')" aria-pressed="false">Night watch</button>
+      </div>
     </div>
-    {% include 'accounts/neighborhood.html' %}
-    <div class="intro-bottom"><span class="community-badge">{% include 'accounts/ui_icon.html' with name='people' %}One community. A place for everyone.</span><span class="local-label">Welcome home</span></div>
-  </section>
-  <section class="card form-card auth-form" data-reveal>
-    {% block auth_form %}{% endblock %}
-  </section>
+
+    <div class="auth-layout" data-spotlight-card>
+      <section class="auth-intro" aria-labelledby="portal-title" x-data="motionScene">
+        <div class="intro-copy">
+          <h2 id="portal-title">Your neighborhood. <strong>Closer together.</strong></h2>
+          <p>Request clearances online, track real-time barangay approvals, and keep your household profile current from one calm portal.</p>
+        </div>
+        {% include 'accounts/neighborhood.html' %}
+        <div class="intro-bottom">
+          <span class="community-badge">{% include 'accounts/ui_icon.html' with name='people' %}Pilot Barangay Service Portal</span>
+          <span>Private &amp; role-protected</span>
+        </div>
+      </section>
+      <section class="card form-card auth-form">
+        {% block auth_form %}{% endblock %}
+      </section>
+    </div>
+
+    <section class="portal-benefits" aria-labelledby="portal-benefits-title">
+      <h2 id="portal-benefits-title" class="sr-only">Portal features</h2>
+      <article data-spotlight-card data-spring-card><span class="benefit-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><h3>Online document requests</h3><p>Apply for clearances, indigency, and residency certificates without hall lines.</p></div></article>
+      <article data-spotlight-card data-spring-card><span class="benefit-icon">{% include 'accounts/ui_icon.html' with name='clock' %}</span><div><h3>Real-time status tracking</h3><p>Follow Pending, Approved, and Completed updates with direct staff remarks.</p></div></article>
+      <article data-spotlight-card data-spring-card><span class="benefit-icon">{% include 'accounts/ui_icon.html' with name='shield' %}</span><div><h3>Private community records</h3><p>Your requests and profile details stay tied strictly to your resident account.</p></div></article>
+    </section>
+  </div>
 </div>
-<section class="portal-benefits" aria-label="Your community account">
-  <article data-reveal><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='user' only %}</span><div><h3>Your own space</h3><p>Your resident profile, all in one place.</p></div></article>
-  <article data-reveal><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='home' only %}</span><div><h3>Rooted in community</h3><p>A local portal for the place you call home.</p></div></article>
-  <article data-reveal><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='user-plus' only %}</span><div><h3>Ready when you are</h3><p>Register and keep your details up to date.</p></div></article>
-</section>
 {% endblock %}
