@@ -9,13 +9,14 @@
 <meta property="og:image" content="{% static 'accounts/hero-sanctuary.jpg' %}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="{{ request.build_absolute_uri }}">
-<link rel="stylesheet" href="{% static 'accounts/showcase.css' %}">
+<link rel="stylesheet" href="{% static 'accounts/showcase.css' %}?v=20261125c">
 {% endblock %}
 {% block content %}
 <div class="showcase" data-showcase x-data="landingPortal">
 
   <!-- 1. Full-Bleed Framed Twilight Sanctuary Hero -->
   <section class="sanctuary-hero-outer" aria-labelledby="hero-title">
+    <div class="sanctuary-backdrop" aria-hidden="true"></div>
     <div class="sanctuary-frame">
       <header class="sanctuary-header">
         {% include 'accounts/brand.html' %}
@@ -56,15 +57,26 @@
             <div>
               <h2 x-text="activeService.title">Barangay Clearance</h2>
             </div>
-            <button
-              class="smoked-card-cycle"
-              type="button"
-              x-on:click="nextService()"
-              aria-label="Preview next barangay document"
-              title="Next certificate"
-            >
-              {% include 'accounts/ui_icon.html' with name='arrow-right' %}
-            </button>
+            <div class="smoked-card-nav">
+              <button
+                class="smoked-card-cycle"
+                type="button"
+                x-on:click="prevService()"
+                aria-label="Preview previous barangay document"
+                title="Previous certificate"
+              >
+                {% include 'accounts/ui_icon.html' with name='arrow-left' %}
+              </button>
+              <button
+                class="smoked-card-cycle"
+                type="button"
+                x-on:click="nextService()"
+                aria-label="Preview next barangay document"
+                title="Next certificate"
+              >
+                {% include 'accounts/ui_icon.html' with name='arrow-right' %}
+              </button>
+            </div>
           </div>
           <div class="smoked-card-fields">
             <div class="smoked-field">
@@ -120,7 +132,7 @@
           </div>
           <div class="launcher-field">
             <label for="launch-purpose">Purpose</label>
-            <input id="launch-purpose" type="text" name="purpose" placeholder="e.g., Local employment application" maxlength="120">
+            <input id="launch-purpose" type="text" name="purpose" x-model="purposeInput" placeholder="e.g., Local employment application" maxlength="120">
           </div>
           <div class="launcher-field">
             <label for="launch-copies">Copies</label>
@@ -137,6 +149,14 @@
             {% include 'accounts/ui_icon.html' with name='arrow-right' %}
           </button>
         </form>
+        <div class="launcher-quick-row" role="group" aria-label="Quick-fill common request purposes">
+          <span class="launcher-quick-label">Quick fill:</span>
+          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(0)" x-bind:aria-pressed="String(serviceIndex === 0 && purposeInput === services[0].samplePurpose)">Local employment</button>
+          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(1)" x-bind:aria-pressed="String(serviceIndex === 1 && purposeInput === services[1].samplePurpose)">Medical assistance</button>
+          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(2)" x-bind:aria-pressed="String(serviceIndex === 2 && purposeInput === services[2].samplePurpose)">Bank &amp; school proof</button>
+          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(3)" x-bind:aria-pressed="String(serviceIndex === 3 && purposeInput === services[3].samplePurpose)">Business renewal</button>
+          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(4)" x-bind:aria-pressed="String(serviceIndex === 4 && purposeInput === services[4].samplePurpose)">First-time jobseeker</button>
+        </div>
       </div>
     </div>
   </section>
@@ -147,7 +167,7 @@
       <div class="section-bar">
         <div>
           <h2 id="services-title">Built for both residents and barangay staff.</h2>
-          <p class="section-sub">Switch between workflows to see how online filing, real-time tracking, and staff processing work together.</p>
+          <p class="section-sub">Switch between workflows and click through live certificate requirements, tracking stages, and queue previews.</p>
         </div>
         <div class="preview-tabs" role="tablist" aria-label="Portal workflow views" data-showcase-controls hidden>
           <button id="tab-request" role="tab" type="button" aria-selected="true" aria-controls="preview-request" data-preview-tab="request">Online filing</button>
@@ -169,12 +189,31 @@
             <a class="button" href="{% url 'register' %}">Create resident account</a>
           </div>
           <div class="workflow-visual-card">
-            <h4>Available online certificates</h4>
-            <div class="workflow-visual-row"><span>Barangay Clearance</span><span class="workflow-pill-ready">1–5 copies</span></div>
-            <div class="workflow-visual-row"><span>Certificate of Indigency</span><span class="workflow-pill-ready">1–5 copies</span></div>
-            <div class="workflow-visual-row"><span>Certificate of Residency</span><span class="workflow-pill-ready">1–5 copies</span></div>
-            <div class="workflow-visual-row"><span>Barangay Business Clearance</span><span class="workflow-pill-ready">1–5 copies</span></div>
-            <div class="workflow-visual-row"><span>First-Time Jobseeker Certificate</span><span class="workflow-pill-ready">1–5 copies</span></div>
+            <h4>Select a certificate to inspect requirements</h4>
+            <template x-for="(service, idx) in services" x-bind:key="service.title">
+              <button
+                type="button"
+                class="workflow-visual-row"
+                x-on:click="selectService(idx)"
+                x-bind:aria-pressed="String(idx === serviceIndex)"
+              >
+                <span x-text="service.title"></span>
+                <span class="workflow-pill-ready" x-text="service.badge"></span>
+              </button>
+            </template>
+            <noscript>
+              <div class="workflow-visual-row"><span>Barangay Clearance</span><span class="workflow-pill-ready">1–5 copies</span></div>
+              <div class="workflow-visual-row"><span>Certificate of Indigency</span><span class="workflow-pill-ready">1–5 copies</span></div>
+              <div class="workflow-visual-row"><span>Certificate of Residency</span><span class="workflow-pill-ready">1–5 copies</span></div>
+              <div class="workflow-visual-row"><span>Barangay Business Clearance</span><span class="workflow-pill-ready">1–5 copies</span></div>
+              <div class="workflow-visual-row"><span>First-Time Jobseeker Certificate</span><span class="workflow-pill-ready">1–5 copies</span></div>
+            </noscript>
+            <div class="workflow-interactive-detail" aria-live="polite" x-cloak>
+              <p><strong x-text="activeService.title"></strong> — <span x-text="activeService.requirement"></span></p>
+              <a class="button button-champagne button-sm" x-bind:href="activeServiceUrl">
+                <span x-text="`Request ${activeService.title}`"></span>
+              </a>
+            </div>
           </div>
         </section>
 
@@ -190,10 +229,32 @@
             <a class="button" href="{% url 'dashboard' %}">Check your requests</a>
           </div>
           <div class="workflow-visual-card">
-            <h4>Live processing stages</h4>
-            <div class="workflow-visual-row"><span>1. Submitted online</span><span class="workflow-pill-amber">Pending</span></div>
-            <div class="workflow-visual-row"><span>2. Verified by barangay staff</span><span class="workflow-pill-ready">Approved</span></div>
-            <div class="workflow-visual-row"><span>3. Released at barangay hall</span><strong>Completed</strong></div>
+            <h4>Interactive status tracker preview</h4>
+            <div class="workflow-sim-controls" role="group" aria-label="Preview processing stage">
+              <template x-for="(stage, idx) in trackingStages" x-bind:key="stage.key">
+                <button
+                  type="button"
+                  class="workflow-sim-btn"
+                  x-on:click="trackingIndex = idx"
+                  x-bind:aria-pressed="String(idx === trackingIndex)"
+                  x-text="`${idx + 1}. ${stage.label}`"
+                ></button>
+              </template>
+            </div>
+            <div class="workflow-sim-progress" aria-hidden="true">
+              <span x-bind:style="`transform: scaleX(${activeTrackingStage.progress})`"></span>
+            </div>
+            <div class="workflow-visual-row">
+              <span x-text="activeTrackingStage.headline">Verified — ready for pickup at Window 2</span>
+              <span
+                x-bind:class="activeTrackingStage.key === 'pending' ? 'workflow-pill-amber' : 'workflow-pill-ready'"
+                x-text="activeTrackingStage.label"
+              >Approved</span>
+            </div>
+            <div class="workflow-interactive-detail" aria-live="polite">
+              <p><strong x-text="activeTrackingStage.actor">Reviewed by Barangay Secretary</strong>: <span x-text="activeTrackingStage.remark"></span></p>
+              <button type="button" class="workflow-sim-btn" x-on:click="nextTrackingStage()">Advance to next stage &rarr;</button>
+            </div>
           </div>
         </section>
 
@@ -209,10 +270,23 @@
             <a class="button" href="{% url 'login' %}">Staff sign in</a>
           </div>
           <div class="workflow-visual-card">
-            <h4>Accountability built in</h4>
-            <div class="workflow-visual-row"><span>Status transition guard</span><strong>Step-by-step approval</strong></div>
-            <div class="workflow-visual-row"><span>Staff-only status updates</span><strong>Official-verified</strong></div>
-            <div class="workflow-visual-row"><span>Activity history log</span><strong>Every change saved</strong></div>
+            <h4>Interactive queue filter preview</h4>
+            <div class="workflow-sim-controls" role="group" aria-label="Filter queue preview">
+              <button type="button" class="workflow-sim-btn" x-on:click="staffFilter = 'all'" x-bind:aria-pressed="String(staffFilter === 'all')">All (3)</button>
+              <button type="button" class="workflow-sim-btn" x-on:click="staffFilter = 'pending'" x-bind:aria-pressed="String(staffFilter === 'pending')">Pending (2)</button>
+              <button type="button" class="workflow-sim-btn" x-on:click="staffFilter = 'approved'" x-bind:aria-pressed="String(staffFilter === 'approved')">Approved (1)</button>
+            </div>
+            <template x-for="sample in filteredStaffSamples" x-bind:key="sample.ref">
+              <div class="workflow-visual-row">
+                <span><strong x-text="sample.doc"></strong> &middot; <span x-text="`${sample.resident} (${sample.copies})`"></span></span>
+                <span x-bind:class="sample.status === 'pending' ? 'workflow-pill-amber' : 'workflow-pill-ready'" x-text="sample.status === 'pending' ? 'Pending' : 'Approved'"></span>
+              </div>
+            </template>
+            <noscript>
+              <div class="workflow-visual-row"><span>Status transition guard</span><strong>Step-by-step approval</strong></div>
+              <div class="workflow-visual-row"><span>Staff-only status updates</span><strong>Official-verified</strong></div>
+              <div class="workflow-visual-row"><span>Activity history log</span><strong>Every change saved</strong></div>
+            </noscript>
           </div>
         </section>
       </div>

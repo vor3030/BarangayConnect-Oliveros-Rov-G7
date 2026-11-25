@@ -48,18 +48,26 @@
   </div>
   {% if pending_queue %}
     <div class="doc-dashboard-controls">
-      <span class="doc-dashboard-count" x-text="query.trim() ? `Showing ${visibleCount} matching pending ${visibleCount === 1 ? 'request' : 'requests'}` : 'Showing {{ pending_queue|length }} oldest pending submission{% if pending_queue|length != 1 %}s{% endif %}'">Showing {{ pending_queue|length }} oldest pending submission{% if pending_queue|length != 1 %}s{% endif %}</span>
+      <div class="doc-filter-pills" role="group" aria-label="Filter pending queue by document type">
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'all'" x-on:click="docType = 'all'" aria-pressed="true">All types</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'Barangay Clearance'" x-on:click="docType = 'Barangay Clearance'" aria-pressed="false">Clearance</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'Certificate of Indigency'" x-on:click="docType = 'Certificate of Indigency'" aria-pressed="false">Indigency</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'Certificate of Residency'" x-on:click="docType = 'Certificate of Residency'" aria-pressed="false">Residency</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="docType === 'Barangay Business Clearance'" x-on:click="docType = 'Barangay Business Clearance'" aria-pressed="false">Business</button>
+      </div>
       <label class="sr-only" for="admin-pending-filter">Filter pending queue</label>
       <input id="admin-pending-filter" type="search" x-model="query" placeholder="Search resident, document, or REQ ID">
     </div>
+    <p class="doc-dashboard-count" x-text="(query.trim() || docType !== 'all') ? `Showing ${visibleCount} matching pending ${visibleCount === 1 ? 'request' : 'requests'}` : 'Showing {{ pending_queue|length }} oldest pending submission{% if pending_queue|length != 1 %}s{% endif %}'">Showing {{ pending_queue|length }} oldest pending submission{% if pending_queue|length != 1 %}s{% endif %}</p>
     <ul class="doc-mini-list">
       {% for item in pending_queue %}
         <li
           class="doc-mini-item"
           data-filter-item
           data-filter-status="pending"
+          data-filter-type="{{ item.document_type }}"
           data-filter-search="{{ item.reference_code }} {{ item.document_type }} {{ item.user.get_full_name }} {{ item.purpose }}"
-          x-show="matches('pending', '{{ item.reference_code|escapejs }} {{ item.document_type|escapejs }} {{ item.user.get_full_name|escapejs }} {{ item.purpose|escapejs }}')"
+          x-show="matches('pending', '{{ item.reference_code|escapejs }} {{ item.document_type|escapejs }} {{ item.user.get_full_name|escapejs }} {{ item.purpose|escapejs }}', '{{ item.document_type|escapejs }}')"
         >
           <div class="doc-mini-info">
             <a href="{% url 'documents:review' item.pk %}">{{ item.document_type }} — {{ item.user.get_full_name }}</a>

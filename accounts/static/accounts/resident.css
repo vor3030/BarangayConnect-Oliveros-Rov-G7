@@ -228,17 +228,20 @@
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.98fr);
   align-items: stretch;
   gap: 1.5rem;
   padding: clamp(1.75rem, 3vw, 2.5rem);
   margin-bottom: 1.5rem;
-  border-radius: var(--bc-frame-radius);
-  background:
-    linear-gradient(108deg, rgba(11, 20, 24, 0.88) 0%, rgba(15, 29, 34, 0.68) 54%, rgba(16, 30, 36, 0.42) 100%),
-    url("./hero-dashboard-mist.jpg") center / cover no-repeat,
-    var(--bc-night);
-  color: var(--bc-on-dark);
+  border-radius: var(--bc-frame-radius, 1.75rem);
+  background-color: var(--bc-night, #0d1518);
+  background-image:
+    linear-gradient(108deg, rgba(11, 20, 24, 0.78) 0%, rgba(15, 29, 34, 0.44) 55%, rgba(16, 30, 36, 0.3) 100%),
+    url("./hero-dashboard-mist.jpg?v=2");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: var(--bc-on-dark, #f5f8f8);
   overflow: hidden;
   border: 1px solid rgba(13, 21, 24, 0.25);
   box-shadow: 0 22px 48px rgba(13, 21, 24, 0.14);
@@ -520,8 +523,59 @@
 
 /* Dashboard lower split grid */
 .dashboard-grid {
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.35rem;
+  align-items: stretch;
+}
+.dashboard-grid > .card {
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-grid > .card > .button {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.dashboard-grid > .card .card-actions {
+  margin-top: auto;
+  padding-top: 1.25rem;
+}
+.quick-doc-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: 1.35rem;
+  padding: .75rem 1rem;
+  border-radius: var(--bc-card-radius);
+  border: 1px solid var(--bc-border);
+  background: var(--bc-surface);
+}
+.quick-doc-label {
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--bc-muted);
+  margin-right: .35rem;
+}
+.quick-doc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .38rem;
+  min-height: 2.75rem;
+  padding: .4rem .9rem;
+  border-radius: var(--bc-pill-radius);
+  border: 1px solid var(--bc-control-border);
+  background: var(--bc-background);
+  color: var(--bc-ink);
+  font-size: .82rem;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background-color .16s ease-out, border-color .16s ease-out, transform .16s ease-out, color .16s ease-out;
+}
+.quick-doc-chip:hover {
+  background: var(--bc-sidebar);
+  border-color: var(--bc-sidebar);
+  color: var(--bc-champagne);
+  transform: translateY(-1px);
 }
 .profile-snapshot {
   display: flex;
@@ -690,11 +744,14 @@
   align-items: center;
   text-align: center;
   padding: 2.25rem 1.5rem 1.75rem;
-  border-radius: var(--bc-frame-radius);
-  background:
-    linear-gradient(180deg, rgba(13, 21, 24, 0.72) 0%, rgba(16, 27, 31, 0.92) 100%),
-    url("./hero-dashboard-mist.jpg") center / cover no-repeat,
-    var(--bc-sidebar);
+  border-radius: var(--bc-frame-radius, 1.75rem);
+  background-color: var(--bc-sidebar, #101b1f);
+  background-image:
+    linear-gradient(180deg, rgba(13, 21, 24, 0.52) 0%, rgba(16, 27, 31, 0.84) 100%),
+    url("./hero-dashboard-mist.jpg?v=2");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   border: 1px solid rgba(13, 21, 24, 0.2);
   color: var(--bc-on-dark);
   overflow: hidden;
@@ -815,12 +872,15 @@
   padding: 2.25rem 2.25rem 1.35rem;
   min-height: 43rem;
   overflow: hidden;
-  border-radius: calc(var(--bc-frame-radius) - .4rem);
-  background:
-    linear-gradient(155deg, rgba(11, 20, 24, 0.86) 0%, rgba(16, 30, 36, 0.64) 55%, rgba(11, 20, 24, 0.88) 100%),
-    url("./hero-sanctuary.jpg") center / cover no-repeat,
-    var(--bc-night);
-  color: var(--bc-on-dark);
+  border-radius: calc(var(--bc-frame-radius, 1.75rem) - .4rem);
+  background-color: var(--bc-night, #0d1518);
+  background-image:
+    linear-gradient(155deg, rgba(11, 20, 24, 0.74) 0%, rgba(16, 30, 36, 0.45) 55%, rgba(11, 20, 24, 0.78) 100%),
+    url("./hero-sanctuary.jpg?v=2");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: var(--bc-on-dark, #f5f8f8);
 }
 .auth-intro::after {
   content: "";

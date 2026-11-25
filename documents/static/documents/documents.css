@@ -599,6 +599,7 @@
   border: 1px solid var(--bc-border);
 }
 .doc-dashboard-count {
+  margin: 0 0 .65rem;
   font-size: .85rem;
   font-weight: 600;
   color: var(--bc-muted);

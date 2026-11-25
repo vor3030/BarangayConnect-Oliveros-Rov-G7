@@ -31,6 +31,15 @@
   </div>
 </section>
 
+<nav class="quick-doc-strip" aria-label="Quick certificate shortcuts">
+  <span class="quick-doc-label">Quick request:</span>
+  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=Barangay+Clearance">Barangay Clearance</a>
+  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=Certificate+of+Indigency">Indigency</a>
+  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=Certificate+of+Residency">Residency</a>
+  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=Barangay+Business+Clearance">Business Clearance</a>
+  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=First-Time+Jobseeker+Certificate">First-Time Jobseeker</a>
+</nav>
+
 <section class="card doc-dashboard-card" x-data="dashboardFilter">
   <div class="doc-dashboard-header">
     <div>

@@ -149,6 +149,45 @@ export function mountShowcase() {
     root.dataset.showcaseSettled = "true";
   }
 
+  // Subtle compositor-only mouse parallax on the twilight hero photograph
+  const heroOuter = root.querySelector(".sanctuary-hero-outer");
+  const heroBackdrop = root.querySelector(".sanctuary-backdrop");
+  let heroRect = heroOuter ? heroOuter.getBoundingClientRect() : null;
+  let parallaxRaf = 0;
+  let targetPx = 0;
+  let targetPy = 0;
+  let currentPx = 0;
+  let currentPy = 0;
+
+  function tickParallax() {
+    parallaxRaf = 0;
+    if (!heroBackdrop || reducedMotion.matches) return;
+    currentPx += (targetPx - currentPx) * 0.1;
+    currentPy += (targetPy - currentPy) * 0.1;
+    heroBackdrop.style.setProperty("--hero-px", `${currentPx.toFixed(2)}px`);
+    heroBackdrop.style.setProperty("--hero-py", `${currentPy.toFixed(2)}px`);
+    if (Math.abs(targetPx - currentPx) > 0.08 || Math.abs(targetPy - currentPy) > 0.08) {
+      parallaxRaf = requestAnimationFrame(tickParallax);
+    }
+  }
+
+  if (heroOuter && heroBackdrop) {
+    listen(heroOuter, "pointermove", (event) => {
+      if (reducedMotion.matches || !heroRect || !heroRect.width || !heroRect.height) return;
+      targetPx = -((event.clientX - heroRect.left) / heroRect.width - 0.5) * 18;
+      targetPy = -((event.clientY - heroRect.top) / heroRect.height - 0.5) * 12;
+      if (!parallaxRaf) parallaxRaf = requestAnimationFrame(tickParallax);
+    });
+    listen(heroOuter, "pointerleave", () => {
+      targetPx = 0;
+      targetPy = 0;
+      if (!parallaxRaf && !reducedMotion.matches) parallaxRaf = requestAnimationFrame(tickParallax);
+    });
+    listen(window, "resize", () => {
+      heroRect = heroOuter.getBoundingClientRect();
+    }, { passive: true });
+  }
+
   const chartSection = root.querySelector("[data-three-chart-section]");
   if (chartSection) {
     import("./three-chart.js")
@@ -162,6 +201,7 @@ export function mountShowcase() {
   }
 
   return () => {
+    cancelAnimationFrame(parallaxRaf);
     bodyResizeObserver.disconnect();
     activeAnims.forEach((anim) => anim.pause?.());
     activeAnims.clear();

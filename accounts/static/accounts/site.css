@@ -1,4 +1,4 @@
-@import url("./theme.css");
+/* Base layout & components (tokens loaded via theme.css in base.html) */
 
 * { box-sizing: border-box; }
 html {
