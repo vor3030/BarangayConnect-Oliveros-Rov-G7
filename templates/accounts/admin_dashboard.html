@@ -6,14 +6,45 @@
   <div class="hero-copy">
   <p class="eyebrow">Admin dashboard</p>
   <h1>Welcome, {{ user.get_full_name }}</h1>
-  <p>Barangay staff can review resident enrollment here.</p>
+  <p>Review incoming resident document requests and monitor barangay enrollment from one workspace.</p>
+  <div class="hero-actions">
+    <a class="button" href="{% url 'documents:manage_list' %}">Review document requests</a>
+    <a class="button button-ghost" href="{% url 'documents:manage_list' %}?status=Pending">Pending queue ({{ request_counts.pending_requests }})</a>
+  </div>
   </div>
   {% include 'accounts/neighborhood.html' %}
 </section>
 <section class="account-stats" aria-label="Resident enrollment overview">
+  <article data-reveal><span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='clock' %}</span><div><p>Pending requests</p><strong>{{ request_counts.pending_requests }} <small>of {{ request_counts.total_requests }} total</small></strong></div></article>
+  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='check' %}</span><div><p>Approved &amp; completed</p><strong>{{ request_counts.approved_requests|add:request_counts.completed_requests }}</strong></div></article>
   <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='people' %}</span><div><p>Total residents</p><strong>{{ active_residents|add:inactive_residents }}</strong></div></article>
-  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='check' %}</span><div><p>Active accounts</p><strong>{{ active_residents }}</strong></div></article>
-  <article data-reveal><span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='user' %}</span><div><p>Inactive accounts</p><strong>{{ inactive_residents }}</strong></div></article>
+</section>
+<section class="card doc-dashboard-card" data-reveal>
+  <div class="doc-dashboard-header">
+    <div>
+      <h2>Pending document requests</h2>
+      <p class="muted" style="margin: .3rem 0 0;">Oldest pending submissions first so barangay staff can verify and release them promptly.</p>
+    </div>
+    <a class="button button-sm" href="{% url 'documents:manage_list' %}">Open full request queue</a>
+  </div>
+  {% if pending_queue %}
+    <ul class="doc-mini-list">
+      {% for item in pending_queue %}
+        <li class="doc-mini-item">
+          <div class="doc-mini-info">
+            <a href="{% url 'documents:review' item.pk %}">{{ item.document_type }} — {{ item.user.get_full_name }}</a>
+            <span class="doc-mini-meta">{{ item.reference_code }} · {{ item.copies }} {% if item.copies == 1 %}copy{% else %}copies{% endif %} · {{ item.purpose|truncatechars:65 }} · {{ item.created_at|date:"M j, Y" }}</span>
+          </div>
+          <div class="doc-mini-right">
+            <span class="status-badge status-{{ item.status_slug }}">{{ item.status }}</span>
+            <a class="button button-secondary button-sm" href="{% url 'documents:review' item.pk %}">Review</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted" style="margin: .75rem 0 0;">All caught up — there are currently no pending document requests waiting for review.</p>
+  {% endif %}
 </section>
 <div class="section-heading" data-reveal><div><p class="eyebrow">Care for your community</p><h2>The people behind the numbers.</h2></div></div>
 <div class="grid">
