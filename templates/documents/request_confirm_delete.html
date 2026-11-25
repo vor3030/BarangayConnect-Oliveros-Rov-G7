@@ -1,0 +1,33 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Cancel {{ doc_request.reference_code }} | Barangay Connect{% endblock %}
+{% block breadcrumb %}Cancel {{ doc_request.reference_code }}{% endblock %}
+{% block content %}
+<a class="doc-back-link" href="{% url 'documents:detail' doc_request.pk %}">
+  {% include 'accounts/ui_icon.html' with name='arrow-left' %}
+  Back to request {{ doc_request.reference_code }}
+</a>
+
+<section class="card doc-confirm-card" data-reveal>
+  <h1>Cancel this document request?</h1>
+  <p class="muted">Cancelling permanently removes this pending request from your records. You can submit a new request anytime later.</p>
+
+  <div class="doc-confirm-summary">
+    <div class="detail-row"><span>Reference code</span><strong class="doc-ref">{{ doc_request.reference_code }}</strong></div>
+    <div class="detail-row"><span>Document type</span><strong>{{ doc_request.document_type }}</strong></div>
+    <div class="detail-row"><span>Purpose</span><strong>{{ doc_request.purpose }}</strong></div>
+    <div class="detail-row"><span>Copies</span><strong>{{ doc_request.copies }}</strong></div>
+    <div class="detail-row"><span>Submitted</span><strong>{{ doc_request.created_at|date:"M j, Y · g:i A" }}</strong></div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="actions">
+      <button class="button button-danger-solid" type="submit">
+        {% include 'accounts/ui_icon.html' with name='trash' %}
+        Yes, cancel request
+      </button>
+      <a class="button button-secondary" href="{% url 'documents:detail' doc_request.pk %}">Keep request</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
