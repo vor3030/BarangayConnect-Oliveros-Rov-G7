@@ -1,10 +1,45 @@
 # Barangay Connect
 
-Barangay Connect is a Django application for a pilot barangay. Phase 1 implements Resident registration, email or username sign-in, sign-out, role-specific dashboards, and profile editing. Django renders the frontend with templates and stores accounts and sessions in PostgreSQL.
+Barangay Connect is a Django web platform for a pilot barangay that moves essential barangay services online.
 
-## Local setup
+- **Project Development 1 (Standard Features):** Resident registration, case-insensitive email or username sign-in, sign-out, role-specific dashboards (Resident and Admin/Staff), and user profile viewing, editing, and profile photo upload.
+- **Project Development 2 (Core Feature – Vertical Slice):** **Online Document & Service Requests** with real-time status tracking, activity history logs, resident CRUD, and Admin/Staff review queue management backed by PostgreSQL/Supabase.
 
-Use Python 3.12 or newer and a PostgreSQL database. Create a database and login role for Barangay Connect, or use the direct connection details from a Supabase PostgreSQL project.
+See the [Project Development 2 Completion Report](docs/BarangayConnect-Oliveros-Rov-G7-PD2.pdf) for full architecture notes, branch/PR history, screenshots, and evaluator test accounts.
+
+## Core Feature: Online Document & Service Requests
+
+Residents can request standard barangay documents online without waiting in line at the barangay hall, while barangay officials/staff process incoming applications through a dedicated review queue.
+
+### Supported Document Types
+- Barangay Clearance
+- Certificate of Indigency
+- Certificate of Residency
+- Barangay Business Clearance
+- First-Time Jobseeker Certificate
+
+### Role-Based Capabilities & Routes
+
+| Role | Route | Capabilities |
+|---|---|---|
+| Resident | `/dashboard/resident/` | View request summary counts, recent submissions, and quick actions alongside profile details |
+| Resident | `/requests/` | View own requests only (BR-05), filter by status, and search by document type, purpose, or reference code (`REQ-YYYY-NNNN`) |
+| Resident | `/requests/new/` | Submit a new document request (defaults to `Pending`, BR-01 & BR-03) with validation for required fields, purpose length, 1–5 copies, and no duplicate active `Pending` request of the same type |
+| Resident / Staff | `/requests/<id>/` | View full request details, real-time processing stepper (`Pending` → `Approved` → `Completed`, or `Rejected`), staff remarks, and chronological `DocumentRequestLog` timeline |
+| Resident | `/requests/<id>/edit/` | Edit own request details while status is still `Pending` |
+| Resident | `/requests/<id>/delete/` | Cancel and permanently delete own `Pending` request via confirmation page |
+| Admin / Staff | `/dashboard/admin/` | View live pending queue counts, oldest pending requests, and resident account enrollment chart |
+| Admin / Staff | `/requests/manage/` | View all residents' requests (BR-04), filter by status or document type, and search by resident name, email, username, purpose, or reference code |
+| Admin / Staff | `/requests/<id>/review/` | Update request status following BR-03 transitions (`Pending` → `Approved` / `Rejected` / `Completed`; `Approved` → `Completed` / `Rejected`) with staff remarks (required when rejecting) and automatic audit logging |
+| Admin / Staff | `/requests/<id>/remove/` | Permanently remove `Rejected` records via confirmation page while preserving `Approved` and `Completed` records for audit integrity |
+
+### Database Models
+- **`documents.DocumentRequest`**: Stores `user` (`ForeignKey` → `accounts.User`), `document_type`, `purpose`, `copies` (DB `CheckConstraint` 1–5), `notes`, `status` (default `'Pending'`), `reviewed_by` (`ForeignKey` → `accounts.User`, nullable), `staff_remarks`, `created_at`, `updated_at`, and `processed_at`, plus a PostgreSQL partial `UniqueConstraint` preventing duplicate `Pending` requests per `(user, document_type)`.
+- **`documents.DocumentRequestLog`**: Stores `request` (`ForeignKey` → `DocumentRequest`), `changed_by` (`ForeignKey` → `accounts.User`), `previous_status`, `new_status`, `note`, and `changed_at` for real-time tracking history.
+
+## Local Setup
+
+Use Python 3.12 or newer, Node.js, and a PostgreSQL database (local PostgreSQL or a Supabase PostgreSQL project).
 
 ```powershell
 python -m venv venv
@@ -13,7 +48,16 @@ Copy-Item .env.example .env
 .\venv\Scripts\python.exe -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-Paste the generated value into `DJANGO_SECRET_KEY` in `.env` and fill in the PostgreSQL connection settings. For Supabase use its database password and set `POSTGRES_SSLMODE=require`. Keep `DJANGO_DEBUG=True` for local HTTP development.
+Paste the generated secret key into `DJANGO_SECRET_KEY` in `.env` and fill in your PostgreSQL/Supabase connection settings (`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`). For Supabase, set `POSTGRES_SSLMODE=require`. Keep `DJANGO_DEBUG=True` for local HTTP development. Never commit `.env` (it is listed in `.gitignore`).
+
+Build the frontend bundle (self-hosted fonts and interactive scripts):
+
+```powershell
+npm.cmd ci
+npm.cmd run build
+```
+
+Apply database migrations, create an Admin superuser, and start the development server:
 
 ```powershell
 .\venv\Scripts\python.exe manage.py migrate
@@ -21,44 +65,34 @@ Paste the generated value into `DJANGO_SECRET_KEY` in `.env` and fill in the Pos
 .\venv\Scripts\python.exe manage.py runserver
 ```
 
-Open [Barangay Connect](http://127.0.0.1:8000/) for the landing page. The logo returns home from any page; Open portal takes you to `/dashboard/` and the appropriate account dashboard after sign-in. Register a Resident account at `/register/`. Both roles sign in with their email or username at `/login/`; both identifiers are case-insensitive. The superuser has the Admin role. To assign the Admin dashboard to an existing account, a superuser can enable **Staff status** for that account in Django administration at `/admin/`. Django account management is reserved for superusers.
+### Using the Application
+- Open [Barangay Connect](http://127.0.0.1:8000/) for the public showcase home page.
+- Register a Resident account at `/register/` or sign in with email or username (case-insensitive) at `/login/`.
+- Residents are routed to `/dashboard/resident/` and can submit/track document requests at `/requests/`.
+- Superusers and accounts with **Staff status** enabled in Django administration (`/admin/`) are routed to `/dashboard/admin/` and manage incoming requests at `/requests/manage/`.
+- Profiles are available at `/profile/` and editable at `/profile/edit/` (including profile photos up to 5 MB).
 
-Profiles are available at `/profile/`. Users can edit their full name, email, and contact number. After an email change, sign in with the new email or the existing username. If an identifier matches different accounts across email and username fields, sign-in rejects it; use the account's other identifier.
+## Interactive Frontend
 
-## Interactive frontend
+The frontend uses Django templates and plain JavaScript (no React), styled with a forest green, sand beige, and muted terracotta design system (see [docs/design-system.md](docs/design-system.md)). The build bundles Three.js, GSAP, Motion, Alpine.js, Chart.js, Lottie, and locally hosted Manrope and Lora fonts. Forms, navigation, status filters, and document workflows remain fully usable without JavaScript and respect reduced-motion preferences.
 
-Build the browser assets with Node.js and npm before starting Django or running `collectstatic`.
+## Verification & Tests
 
-```powershell
-npm.cmd ci
-npm.cmd run build
-```
-
-The frontend uses Django templates and plain JavaScript, with no React. The build bundles Three.js, GSAP (ScrollTrigger and MotionPathPlugin), Motion's JavaScript gesture API, Alpine.js, Chart.js, and Lottie locally. Manrope and Lora fonts are self-hosted through the build. Navigation icons are from [useAnimations](https://useanimations.com/).
-
-The interactive neighborhood offers Explore and Aerial camera views, pointer-based depth, and a pause control that stops both the WebGL scene and the animated SVG connection path. GSAP adds scroll reveals, vector drawing, and gentle dashboard card tilt. Continuous scene motion stops offscreen or when the tab is hidden. Reduced-motion preferences disable decorative motion; narrow screens and browsers without WebGL retain a static neighborhood illustration. Forms and navigation remain usable without JavaScript.
-
-The forest green, sand beige, and terracotta design includes desktop sidebar/mobile bottom navigation, real account summaries, working quick actions, expandable help, and progressively enhanced password visibility. See [the design notes](docs/design-system.md) for tokens and references.
-
-The public home page at `/` (also available at `/portfolio-showcase/`) leads with readable profile, resident, and staff screen examples. Keyboard-accessible tabs switch the screens; desktop/phone sizing is offered only on wider displays, while phone screens use the responsive layout. Examples are labeled as read-only and contain no live resident data. Short annotations explain account maintenance, role access, and email-or-username sign-in. A working identifier example demonstrates the two sign-in options without authenticating.
-
-Showcase motion is limited to the opening screen reveal, screen/device changes, identifier feedback, and button interactions. Reduce page motion stops current effects and suppresses later ones; system reduced-motion preferences take precedence. The rest of the portal retains scroll progress, heading masks, staggered navigation, hover highlights, button feedback, count-up enrollment statistics, and the neighborhood scene. Showcase examples remain readable without JavaScript.
-
-## Verify
+Run Django system checks and the full unit/integration test suite (covers `accounts` and `documents` CRUD, validation, business rules, and role-based access control):
 
 ```powershell
 .\venv\Scripts\python.exe manage.py check
-.\venv\Scripts\python.exe manage.py test
+.\venv\Scripts\python.exe manage.py test accounts documents
 ```
 
-Django creates a separate PostgreSQL test database. Run tests with a local development PostgreSQL login that can create databases.
+Django creates a separate PostgreSQL test database (`test_<POSTGRES_DB>`).
 
-For the Playwright browser tests, build the frontend first, then run:
+For end-to-end Playwright browser tests (build the frontend assets first):
 
 ```powershell
 .\venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\venv\Scripts\python.exe -m playwright install chromium
-.\venv\Scripts\python.exe manage.py test browser_tests.accounts_ui
+.\venv\Scripts\python.exe manage.py test browser_tests.accounts_ui browser_tests.documents_ui
 ```
 
-To use an installed Microsoft Edge instead, set `$env:PLAYWRIGHT_CHANNEL = 'msedge'` and skip the Chromium installation.
+To use an installed Microsoft Edge instead of downloading Chromium, set `$env:PLAYWRIGHT_CHANNEL = 'msedge'`.
