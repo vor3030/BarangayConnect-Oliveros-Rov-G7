@@ -16,6 +16,12 @@
   <script type="module" src="{% static 'accounts/ui/portal.js' %}"></script>
 </head>
 <body class="{% if user.is_authenticated and not is_showcase %}is-portal{% else %}is-public{% endif %}{% if is_showcase %} is-showcase{% endif %}">
+  {% if is_showcase %}
+  <div class="showcase-backdrop" data-showcase-bg aria-hidden="true">
+    <canvas class="showcase-bg-canvas" data-showcase-bg-canvas></canvas>
+    <div class="showcase-bg-wash"></div>
+  </div>
+  {% endif %}
   <div class="page-scroll-progress" aria-hidden="true"><span data-scroll-progress></span></div>
   <a class="skip-link" href="#main-content">Skip to content</a>
   {% if user.is_authenticated and not is_showcase %}
@@ -45,7 +51,7 @@
       {% if user.is_authenticated and not is_showcase %}<div class="portal-breadcrumb">Your barangay <span>/</span> {% block breadcrumb %}{% if 'profile' in request.resolver_match.url_name %}My profile{% elif request.resolver_match.app_name == 'documents' %}Document requests{% else %}Overview{% endif %}{% endblock %}</div><div class="header-date"><time datetime="{% now 'Y-m-d' %}">{% now "D, M j, Y" %}</time><span class="account-role">{% include 'accounts/ui_icon.html' with name='shield' %}{{ user.role_label }} portal</span></div>{% elif not is_showcase %}<span class="header-tagline">A little closer. A lot more connected.</span>{% endif %}
       <nav class="site-nav" aria-label="Main navigation">
         {% if is_showcase %}
-          <a href="#interface-lab">Interface</a><a href="{% url 'dashboard' %}">Open portal</a>
+          <a href="#interface-lab">Preview</a><a href="#community-pulse">Overview</a><a href="{% url 'login' %}">Sign in</a><a href="{% url 'dashboard' %}">Open portal</a>
         {% elif user.is_authenticated %}
           <a href="{% url 'dashboard' %}"{% if 'dashboard' in request.resolver_match.url_name %} aria-current="page"{% endif %}>{% include 'accounts/animated_icon.html' with icon='home' only %}Dashboard</a>
           {% if user.is_staff %}
