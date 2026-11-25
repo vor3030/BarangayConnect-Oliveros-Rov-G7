@@ -1,0 +1,131 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Document requests | Barangay Connect{% endblock %}
+{% block breadcrumb %}Document requests{% endblock %}
+{% block content %}
+<div class="doc-page-header" data-reveal>
+  <div>
+    <h1>Document requests</h1>
+    <p>Request barangay clearances and certificates online, edit pending details, and follow your processing status in real time.</p>
+  </div>
+  <a class="button" href="{% url 'documents:create' %}">
+    {% include 'accounts/ui_icon.html' with name='plus' %}
+    New document request
+  </a>
+</div>
+
+<section class="doc-summary-strip" aria-label="Your document request summary" data-reveal>
+  <article class="doc-summary-item">
+    <span class="stat-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span>
+    <div>
+      <p>Total requests</p>
+      <strong>{{ counts.total_requests }}</strong>
+    </div>
+  </article>
+  <article class="doc-summary-item">
+    <span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='clock' %}</span>
+    <div>
+      <p>Pending review</p>
+      <strong>{{ counts.pending_requests }}</strong>
+    </div>
+  </article>
+  <article class="doc-summary-item">
+    <span class="stat-icon">{% include 'accounts/ui_icon.html' with name='check' %}</span>
+    <div>
+      <p>Approved</p>
+      <strong>{{ counts.approved_requests }}</strong>
+    </div>
+  </article>
+  <article class="doc-summary-item">
+    <span class="stat-icon">{% include 'accounts/ui_icon.html' with name='shield' %}</span>
+    <div>
+      <p>Completed</p>
+      <strong>{{ counts.completed_requests }}</strong>
+    </div>
+  </article>
+</section>
+
+<section class="doc-toolbar" aria-label="Filter and search document requests" data-reveal>
+  <div class="doc-filter-pills" role="navigation" aria-label="Filter by status">
+    <a class="doc-filter-pill" href="{% url 'documents:list' %}{% if search_query %}?q={{ search_query|urlencode }}{% endif %}"{% if not selected_status %} aria-current="true"{% endif %}>
+      All <span>({{ counts.total_requests }})</span>
+    </a>
+    <a class="doc-filter-pill" href="{% url 'documents:list' %}?status=Pending{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Pending' %} aria-current="true"{% endif %}>
+      Pending <span>({{ counts.pending_requests }})</span>
+    </a>
+    <a class="doc-filter-pill" href="{% url 'documents:list' %}?status=Approved{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Approved' %} aria-current="true"{% endif %}>
+      Approved <span>({{ counts.approved_requests }})</span>
+    </a>
+    <a class="doc-filter-pill" href="{% url 'documents:list' %}?status=Completed{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Completed' %} aria-current="true"{% endif %}>
+      Completed <span>({{ counts.completed_requests }})</span>
+    </a>
+    <a class="doc-filter-pill" href="{% url 'documents:list' %}?status=Rejected{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Rejected' %} aria-current="true"{% endif %}>
+      Rejected <span>({{ counts.rejected_requests }})</span>
+    </a>
+  </div>
+  <form class="doc-search-form" method="get" action="{% url 'documents:list' %}">
+    {% if selected_status %}<input type="hidden" name="status" value="{{ selected_status }}">{% endif %}
+    <label class="skip-link" for="doc-search">Search requests</label>
+    <input id="doc-search" type="search" name="q" value="{{ search_query }}" placeholder="Search by document, purpose, or REQ ID">
+    <button class="button button-secondary button-sm" type="submit">Search</button>
+    {% if selected_status or search_query %}
+      <a class="button button-secondary button-sm" href="{% url 'documents:list' %}">Reset</a>
+    {% endif %}
+  </form>
+</section>
+
+<section class="card doc-table-card" data-reveal>
+  {% if requests %}
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th scope="col">Reference</th>
+          <th scope="col">Document &amp; purpose</th>
+          <th scope="col">Copies</th>
+          <th scope="col">Status</th>
+          <th scope="col">Submitted</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in requests %}
+          <tr>
+            <td class="doc-ref" data-label="Reference">{{ item.reference_code }}</td>
+            <td class="doc-title-cell">
+              <strong>{{ item.document_type }}</strong>
+              <span>{{ item.purpose }}</span>
+            </td>
+            <td data-label="Copies">{{ item.copies }}</td>
+            <td data-label="Status">
+              <span class="status-badge status-{{ item.status_slug }}">{{ item.status }}</span>
+            </td>
+            <td class="doc-meta-date" data-label="Submitted">{{ item.created_at|date:"M j, Y · g:i A" }}</td>
+            <td>
+              <div class="doc-row-actions">
+                <a class="button button-secondary button-sm" href="{% url 'documents:detail' item.pk %}">Track</a>
+                {% if item.is_editable_by_resident %}
+                  <a class="button button-secondary button-sm" href="{% url 'documents:update' item.pk %}">Edit</a>
+                  <a class="button button-danger button-sm" href="{% url 'documents:delete' item.pk %}">Cancel</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% elif selected_status or search_query %}
+    <div class="doc-empty-state">
+      <span class="doc-empty-icon">{% include 'accounts/ui_icon.html' with name='search' %}</span>
+      <h2>No matching requests</h2>
+      <p>No document requests match your current filter or search term. Clear the filters to see all of your submissions.</p>
+      <a class="button button-secondary" href="{% url 'documents:list' %}">Show all requests</a>
+    </div>
+  {% else %}
+    <div class="doc-empty-state">
+      <span class="doc-empty-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span>
+      <h2>No document requests yet</h2>
+      <p>Skip the line at the barangay hall. Submit a request for a Barangay Clearance, Certificate of Indigency, or Residency certificate online.</p>
+      <a class="button" href="{% url 'documents:create' %}">Submit your first request</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

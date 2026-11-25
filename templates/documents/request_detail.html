@@ -1,0 +1,93 @@
+{% extends 'accounts/base.html' %}
+{% block title %}{{ doc_request.reference_code }} | Barangay Connect{% endblock %}
+{% block breadcrumb %}{{ doc_request.reference_code }}{% endblock %}
+{% block content %}
+<a class="doc-back-link" href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'documents:list' %}{% endif %}">
+  {% include 'accounts/ui_icon.html' with name='arrow-left' %}
+  {% if user.is_staff %}Back to admin dashboard{% else %}Back to document requests{% endif %}
+</a>
+
+<div class="doc-page-header" data-reveal>
+  <div>
+    <h1>{{ doc_request.document_type }}</h1>
+    <p>Reference <strong>{{ doc_request.reference_code }}</strong> · Submitted {{ doc_request.created_at|date:"M j, Y · g:i A" }}</p>
+  </div>
+  <div class="actions">
+    <span class="status-badge status-{{ doc_request.status_slug }}">{{ doc_request.status }}</span>
+    {% if not user.is_staff and doc_request.is_editable_by_resident %}
+      <a class="button button-secondary button-sm" href="{% url 'documents:update' doc_request.pk %}">Edit request</a>
+      <a class="button button-danger button-sm" href="{% url 'documents:delete' doc_request.pk %}">Cancel request</a>
+    {% endif %}
+  </div>
+</div>
+
+<section class="card doc-tracker-card" aria-label="Real-time processing tracker" data-reveal>
+  <div class="doc-tracker-header">
+    <h2>Real-time processing status</h2>
+    <span class="doc-meta-date">Last updated {{ doc_request.updated_at|date:"M j, Y · g:i A" }}</span>
+  </div>
+  <ol class="doc-stepper">
+    {% for step in status_steps %}
+      <li class="doc-step doc-step-{{ step.state }}">
+        <span class="doc-step-label">
+          <span class="doc-step-dot" aria-hidden="true"></span>
+          {{ step.label }}
+        </span>
+        <p>{{ step.detail }}</p>
+      </li>
+    {% endfor %}
+  </ol>
+</section>
+
+<div class="doc-split-layout">
+  <section class="card" data-reveal>
+    <h2>Request information</h2>
+    <div class="detail-row"><span>Reference code</span><strong class="doc-ref">{{ doc_request.reference_code }}</strong></div>
+    <div class="detail-row"><span>Document type</span><strong>{{ doc_request.document_type }}</strong></div>
+    <div class="detail-row"><span>Status</span><strong>{{ doc_request.status }}</strong></div>
+    <div class="detail-row"><span>Requested by</span><strong>{{ doc_request.user.get_full_name }} ({{ doc_request.user.email }})</strong></div>
+    <div class="detail-row"><span>Number of copies</span><strong>{{ doc_request.copies }}</strong></div>
+    <div class="detail-row"><span>Purpose</span><strong>{{ doc_request.purpose }}</strong></div>
+    {% if doc_request.notes %}
+      <div class="detail-row"><span>Additional details</span><strong>{{ doc_request.notes }}</strong></div>
+    {% endif %}
+    {% if doc_request.reviewed_by %}
+      <div class="detail-row"><span>Reviewed by</span><strong>{{ doc_request.reviewed_by.get_full_name }}</strong></div>
+    {% endif %}
+    {% if doc_request.processed_at %}
+      <div class="detail-row"><span>Processed at</span><strong>{{ doc_request.processed_at|date:"M j, Y · g:i A" }}</strong></div>
+    {% endif %}
+
+    {% if doc_request.staff_remarks %}
+      <div class="doc-remarks-box{% if doc_request.status == 'Rejected' %} is-rejected{% endif %}">
+        <h3>Barangay staff remarks</h3>
+        <p>{{ doc_request.staff_remarks }}</p>
+      </div>
+    {% elif not user.is_staff and not doc_request.is_editable_by_resident %}
+      <p class="muted" style="margin-top: 1.25rem;">This request has been processed and can no longer be modified or cancelled.</p>
+    {% endif %}
+  </section>
+
+  <section class="card" data-reveal>
+    <h2>Activity history</h2>
+    {% if status_logs %}
+      <ol class="doc-timeline">
+        {% for entry in status_logs %}
+          <li>
+            <div class="doc-timeline-top">
+              <span class="status-badge status-{{ entry.new_status|lower }}">{{ entry.new_status }}</span>
+              <time datetime="{{ entry.changed_at|date:'c' }}">{{ entry.changed_at|date:"M j, Y · g:i A" }}</time>
+            </div>
+            {% if entry.note %}<p>{{ entry.note }}</p>{% endif %}
+            {% if entry.changed_by %}
+              <div class="doc-timeline-actor">{{ entry.changed_by.get_full_name }} · {{ entry.changed_by.role_label }}</div>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="muted">No status updates recorded yet.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

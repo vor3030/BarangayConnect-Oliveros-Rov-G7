@@ -1,0 +1,47 @@
+{% extends 'accounts/base.html' %}
+{% block title %}{% if is_edit %}Edit {{ doc_request.reference_code }}{% else %}New document request{% endif %} | Barangay Connect{% endblock %}
+{% block breadcrumb %}{% if is_edit %}Edit {{ doc_request.reference_code }}{% else %}New document request{% endif %}{% endblock %}
+{% block content %}
+<a class="doc-back-link" href="{% if is_edit %}{% url 'documents:detail' doc_request.pk %}{% else %}{% url 'documents:list' %}{% endif %}">
+  {% include 'accounts/ui_icon.html' with name='arrow-left' %}
+  {% if is_edit %}Back to request {{ doc_request.reference_code }}{% else %}Back to document requests{% endif %}
+</a>
+
+<div class="doc-page-header" data-reveal>
+  <div>
+    <h1>{% if is_edit %}Edit request {{ doc_request.reference_code }}{% else %}Request a barangay document{% endif %}</h1>
+    <p>{% if is_edit %}Update your details while this request is still Pending review.{% else %}Fill out the form below to submit an online request. New requests start as Pending and are reviewed by barangay staff.{% endif %}</p>
+  </div>
+</div>
+
+<div class="doc-split-layout">
+  <section class="card" data-reveal>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include 'accounts/form_fields.html' %}
+      <div class="actions">
+        <button class="button" type="submit">{% if is_edit %}Save changes{% else %}Submit request{% endif %}</button>
+        <a class="button button-secondary" href="{% if is_edit %}{% url 'documents:detail' doc_request.pk %}{% else %}{% url 'documents:list' %}{% endif %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+
+  <aside class="card doc-guide-card" data-reveal>
+    <h2>Before you submit</h2>
+    <ul class="doc-guide-list">
+      <li>All new requests start in <strong>Pending</strong> status until verified by barangay staff.</li>
+      <li>Only one active Pending request per document type is allowed at a time.</li>
+      <li>You can edit or cancel a request while it is still <strong>Pending</strong>. Once Approved, Completed, or Rejected, details are locked.</li>
+      <li>Bring a valid ID when claiming approved certificates at the barangay hall.</li>
+    </ul>
+    <hr class="doc-guide-divider">
+    <h2>Requester details on file</h2>
+    <div class="detail-row"><span>Full name</span><strong>{{ user.get_full_name }}</strong></div>
+    <div class="detail-row"><span>Email</span><strong>{{ user.email }}</strong></div>
+    <div class="detail-row"><span>Contact number</span><strong>{{ user.contact_number|default:"Not provided yet" }}</strong></div>
+    <div class="card-actions">
+      <a class="button button-secondary button-sm" href="{% url 'edit_profile' %}">Update profile details</a>
+    </div>
+  </aside>
+</div>
+{% endblock %}

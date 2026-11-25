@@ -6,22 +6,55 @@
   <div class="hero-copy">
   <p class="eyebrow">Resident dashboard</p>
   <h1>Good to see you,<br>{{ user.get_full_name }}<span class="text-accent">.</span></h1>
-  <p>A place for your profile, your details, and your connection to the community.</p>
-  <a class="button" href="{% url 'profile' %}">Your resident profile</a>
+  <p>Request barangay clearances online, track processing updates, and keep your community profile current.</p>
+  <div class="hero-actions">
+    <a class="button" href="{% url 'documents:create' %}">Request a document</a>
+    <a class="button button-ghost" href="{% url 'profile' %}">Your resident profile</a>
+  </div>
   </div>
   {% include 'accounts/neighborhood.html' %}
 </section>
 <section class="account-stats" aria-label="Your account overview">
+  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><p>Document requests</p><strong>{{ request_counts.total_requests }} <small>({{ request_counts.pending_requests }} pending)</small></strong></div></article>
   <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='user' %}</span><div><p>Profile details</p><strong>{{ profile_completed_fields }} <small>of 4 complete</small></strong></div></article>
-  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='shield' %}</span><div><p>Your community role</p><strong>Resident</strong></div></article>
   <article data-reveal><span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='phone' %}</span><div><p>Contact number</p><strong class="stat-label">{% if user.contact_number %}Added to your profile{% else %}Ready to add{% endif %}</strong></div></article>
 </section>
 <div class="section-heading" data-reveal><div><p class="eyebrow">A good place to start</p><h2>What would you like to do?</h2></div><span>Small steps. Better connections.</span></div>
 <div class="quick-links">
-  <a class="quick-link" href="{% url 'profile' %}"><span class="quick-icon">{% include 'accounts/ui_icon.html' with name='user' %}</span><div><h3>My resident profile</h3><p>Your details, in one familiar place.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
-  <a class="quick-link" href="{% url 'edit_profile' %}"><span class="quick-icon clay">{% include 'accounts/ui_icon.html' with name='edit' %}</span><div><h3>Keep my details current</h3><p>A new email or number? Update it here.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
-  <a class="quick-link" href="{% url 'edit_profile' %}#id_photo"><span class="quick-icon sand">{% include 'accounts/ui_icon.html' with name='photo' %}</span><div><h3>Add a familiar face</h3><p>Make your profile feel more like you.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+  <a class="quick-link" href="{% url 'documents:create' %}"><span class="quick-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><h3>Request a barangay document</h3><p>Submit a clearance, indigency, or residency request online.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+  <a class="quick-link" href="{% url 'documents:list' %}"><span class="quick-icon clay">{% include 'accounts/ui_icon.html' with name='clock' %}</span><div><h3>Track my requests</h3><p>Check live statuses, edit pending details, or view history.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+  <a class="quick-link" href="{% url 'edit_profile' %}"><span class="quick-icon sand">{% include 'accounts/ui_icon.html' with name='edit' %}</span><div><h3>Keep my details current</h3><p>A new email, number, or photo? Update it here.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
 </div>
+<section class="card doc-dashboard-card" data-reveal>
+  <div class="doc-dashboard-header">
+    <div>
+      <h2>Recent document requests</h2>
+      <p class="muted" style="margin: .3rem 0 0;">Live status updates for your latest barangay certificate submissions.</p>
+    </div>
+    <div class="actions">
+      <a class="button button-secondary button-sm" href="{% url 'documents:list' %}">View all requests</a>
+      <a class="button button-sm" href="{% url 'documents:create' %}">New request</a>
+    </div>
+  </div>
+  {% if recent_requests %}
+    <ul class="doc-mini-list">
+      {% for item in recent_requests %}
+        <li class="doc-mini-item">
+          <div class="doc-mini-info">
+            <a href="{% url 'documents:detail' item.pk %}">{{ item.document_type }}</a>
+            <span class="doc-mini-meta">{{ item.reference_code }} · {{ item.purpose|truncatechars:70 }} · {{ item.created_at|date:"M j, Y" }}</span>
+          </div>
+          <div class="doc-mini-right">
+            <span class="status-badge status-{{ item.status_slug }}">{{ item.status }}</span>
+            <a class="button button-secondary button-sm" href="{% url 'documents:detail' item.pk %}">Track</a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted" style="margin: .75rem 0 0;">You have not submitted any document requests yet. Select <strong>New request</strong> to get started.</p>
+  {% endif %}
+</section>
 <div class="grid dashboard-grid">
   <section class="card" data-reveal data-tilt>
     <div class="card-kicker"><p class="eyebrow">Your resident account</p><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='user' only %}</span></div>

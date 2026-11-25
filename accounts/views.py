@@ -10,6 +10,9 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_safe
 
+from documents.models import DocumentRequest
+from documents.views import summarize_requests
+
 from .forms import LoginForm, ProfileForm, RegistrationForm
 from .models import ProfilePhoto, User
 
@@ -72,7 +75,13 @@ def dashboard(request):
 def resident_dashboard(request):
     if request.user.is_staff:
         raise PermissionDenied
-    return render(request, "accounts/resident_dashboard.html", profile_overview(request.user))
+    resident_requests = DocumentRequest.objects.filter(user=request.user)
+    context = {
+        **profile_overview(request.user),
+        "request_counts": summarize_requests(resident_requests),
+        "recent_requests": resident_requests[:4],
+    }
+    return render(request, "accounts/resident_dashboard.html", context)
 
 
 def profile_overview(user):
