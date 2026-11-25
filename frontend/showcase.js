@@ -1,4 +1,9 @@
 import { animate, stagger } from "animejs";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { animate as motionAnimate } from "motion";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export function mountShowcase() {
   const root = document.querySelector("[data-showcase]");
@@ -13,6 +18,7 @@ export function mountShowcase() {
   const activeAnims = new Set();
   let panelAnim;
   let chartController = null;
+  let atmosphereController = null;
   let maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
 
   function listen(target, event, callback, options) {
@@ -50,9 +56,9 @@ export function mountShowcase() {
       if (selected && shouldAnimate && !reducedMotion.matches) {
         panelAnim = track(
           animate(panel, {
-            opacity: [0.72, 1],
-            translateY: [5, 0],
-            duration: 180,
+            opacity: [0.76, 1],
+            translateY: [6, 0],
+            duration: 200,
             ease: "outCubic",
             onComplete: () => {
               clearInlineVisualProps(panel);
@@ -129,15 +135,15 @@ export function mountShowcase() {
   updateScrollProgress();
   root.dataset.showcaseReady = "true";
 
-  // Single calm hero entrance on load (compositor-only, never animates backdrop-filter surfaces)
+  // 1. Anime.js staggered hero entrance on load
   const heroItems = [...root.querySelectorAll("[data-hero-item]")];
   if (heroItems.length && !reducedMotion.matches) {
     track(
       animate(heroItems, {
-        opacity: [0.86, 1],
-        translateY: [8, 0],
-        duration: 280,
-        delay: stagger(40),
+        opacity: [0.85, 1],
+        translateY: [10, 0],
+        duration: 320,
+        delay: stagger(45),
         ease: "outCubic",
         onComplete: () => {
           heroItems.forEach(clearInlineVisualProps);
@@ -149,9 +155,75 @@ export function mountShowcase() {
     root.dataset.showcaseSettled = "true";
   }
 
-  // Subtle compositor-only mouse parallax on the twilight hero photograph
+  // 2. Anime.js + Framer Motion feedback when switching certificates or lighting moods
+  listen(window, "barangay:service-change", () => {
+    if (reducedMotion.matches) return;
+    const fields = [...root.querySelectorAll(".smoked-field")];
+    if (fields.length) {
+      track(
+        animate(fields, {
+          opacity: [0.72, 1],
+          translateY: [4, 0],
+          duration: 210,
+          delay: stagger(25),
+          ease: "outCubic",
+          onComplete: () => fields.forEach(clearInlineVisualProps),
+        })
+      );
+    }
+    const launcher = root.querySelector(".floating-launcher");
+    if (launcher) {
+      motionAnimate(launcher, { scale: [1, 1.01, 1] }, { duration: 0.24 });
+    }
+  });
+
+  listen(window, "barangay:mood-change", (event) => {
+    const mood = event.detail?.mood || "twilight";
+    atmosphereController?.setMood(mood);
+    atmosphereController?.pulseCenter();
+  });
+
+  listen(window, "barangay:atmosphere-toggle", (event) => {
+    atmosphereController?.setPaused(Boolean(event.detail?.paused));
+  });
+
+  // 3. GSAP ScrollTrigger scrubbed depth parallax on the barangay hall hero backdrop
   const heroOuter = root.querySelector(".sanctuary-hero-outer");
   const heroBackdrop = root.querySelector(".sanctuary-backdrop");
+  const gsapCtx = gsap.context(() => {
+    if (reducedMotion.matches) return;
+    if (heroOuter && heroBackdrop) {
+      gsap.to(heroBackdrop, {
+        yPercent: 9,
+        ease: "none",
+        scrollTrigger: {
+          trigger: heroOuter,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    }
+    root.querySelectorAll("[data-gsap-lift]").forEach((section) => {
+      gsap.fromTo(
+        section,
+        { y: 16 },
+        {
+          y: 0,
+          duration: 0.45,
+          ease: "power2.out",
+          clearProps: "transform",
+          scrollTrigger: {
+            trigger: section,
+            start: "top 88%",
+            once: true,
+          },
+        }
+      );
+    });
+  }, root);
+
+  // 4. Compositor-only mouse-reactive depth on the barangay hall photography
   let heroRect = heroOuter ? heroOuter.getBoundingClientRect() : null;
   let parallaxRaf = 0;
   let targetPx = 0;
@@ -162,8 +234,8 @@ export function mountShowcase() {
   function tickParallax() {
     parallaxRaf = 0;
     if (!heroBackdrop || reducedMotion.matches) return;
-    currentPx += (targetPx - currentPx) * 0.1;
-    currentPy += (targetPy - currentPy) * 0.1;
+    currentPx += (targetPx - currentPx) * 0.09;
+    currentPy += (targetPy - currentPy) * 0.09;
     heroBackdrop.style.setProperty("--hero-px", `${currentPx.toFixed(2)}px`);
     heroBackdrop.style.setProperty("--hero-py", `${currentPy.toFixed(2)}px`);
     if (Math.abs(targetPx - currentPx) > 0.08 || Math.abs(targetPy - currentPy) > 0.08) {
@@ -174,8 +246,8 @@ export function mountShowcase() {
   if (heroOuter && heroBackdrop) {
     listen(heroOuter, "pointermove", (event) => {
       if (reducedMotion.matches || !heroRect || !heroRect.width || !heroRect.height) return;
-      targetPx = -((event.clientX - heroRect.left) / heroRect.width - 0.5) * 18;
-      targetPy = -((event.clientY - heroRect.top) / heroRect.height - 0.5) * 12;
+      targetPx = -((event.clientX - heroRect.left) / heroRect.width - 0.5) * 22;
+      targetPy = -((event.clientY - heroRect.top) / heroRect.height - 0.5) * 14;
       if (!parallaxRaf) parallaxRaf = requestAnimationFrame(tickParallax);
     });
     listen(heroOuter, "pointerleave", () => {
@@ -188,6 +260,19 @@ export function mountShowcase() {
     }, { passive: true });
   }
 
+  // 5. Three.js Interactive Barangay Twilight Lantern Particle Atmosphere
+  if (heroOuter && heroOuter.querySelector("[data-barangay-atmosphere]")) {
+    import("./barangay-atmosphere.js")
+      .then(({ mountBarangayAtmosphere }) => {
+        if (!root.isConnected) return;
+        atmosphereController = mountBarangayAtmosphere(heroOuter, { density: 56 });
+      })
+      .catch(() => {
+        // Photography remains crisp even when WebGL is unavailable.
+      });
+  }
+
+  // 6. Three.js Interactive 3D Purok Coverage Chart
   const chartSection = root.querySelector("[data-three-chart-section]");
   if (chartSection) {
     import("./three-chart.js")
@@ -202,10 +287,12 @@ export function mountShowcase() {
 
   return () => {
     cancelAnimationFrame(parallaxRaf);
+    gsapCtx.revert();
     bodyResizeObserver.disconnect();
     activeAnims.forEach((anim) => anim.pause?.());
     activeAnims.clear();
     listeners.forEach((remove) => remove());
+    atmosphereController?.destroy();
     chartController?.destroy();
   };
 }

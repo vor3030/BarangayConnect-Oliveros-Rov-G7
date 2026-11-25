@@ -10,11 +10,29 @@ export function mountMotion() {
     return () => {};
   }
 
+  const atmosphereControllers = [];
+  const heroHosts = [...document.querySelectorAll(".hero")].filter((el) =>
+    el.querySelector("[data-barangay-atmosphere]")
+  );
+  if (heroHosts.length) {
+    import("./barangay-atmosphere.js")
+      .then(({ mountBarangayAtmosphere }) => {
+        heroHosts.forEach((host) => {
+          if (!host.isConnected) return;
+          const ctrl = mountBarangayAtmosphere(host, { density: 32 });
+          if (ctrl) atmosphereControllers.push(ctrl);
+        });
+      })
+      .catch(() => {});
+  }
+
   const media = gsap.matchMedia();
   media.add("(prefers-reduced-motion: no-preference)", () => {
     const cleanups = [];
     const progress = document.querySelector("[data-scroll-progress]");
-    if (progress) {
+    const supportsScrollTimeline =
+      typeof CSS !== "undefined" && typeof CSS.supports === "function" && CSS.supports("animation-timeline: scroll()");
+    if (progress && !supportsScrollTimeline) {
       gsap.to(progress, {
         scaleX: 1,
         ease: "none",
@@ -72,5 +90,8 @@ export function mountMotion() {
   });
 
   document.documentElement.dataset.motionReady = "true";
-  return () => media.revert();
+  return () => {
+    media.revert();
+    atmosphereControllers.forEach((ctrl) => ctrl.destroy());
+  };
 }

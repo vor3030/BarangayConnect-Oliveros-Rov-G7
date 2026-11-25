@@ -79,12 +79,43 @@ const STAFF_QUEUE_SAMPLES = [
   { ref: "REQ-2026-0110", doc: "Certificate of Indigency", resident: "Elena Reyes", status: "pending", copies: "1 copy" },
 ];
 
+const BARANGAY_HOTSPOTS = [
+  {
+    id: "hall",
+    label: "Barangay Hall Desk",
+    subtitle: "Window 2 — Document Release",
+    detail: "Mon–Fri, 8:00 AM to 5:00 PM. Bring one valid government or school ID when claiming Approved certificates.",
+    cta: "Request Barangay Clearance",
+    docIndex: 0,
+  },
+  {
+    id: "plaza",
+    label: "Community Plaza",
+    subtitle: "Purok 1 to Purok 5 Coverage",
+    detail: "Residents across all five barangay puroks can file requests online and track verification without waiting in line.",
+    cta: "Request Certificate of Residency",
+    docIndex: 2,
+  },
+  {
+    id: "assistance",
+    label: "Assistance & Jobseeker Desk",
+    subtitle: "Indigency & RA 11261 Waiver",
+    detail: "Apply online for Medical/Scholarship Indigency or First-Time Jobseeker Certificates with real-time staff remarks.",
+    cta: "Request Indigency Certificate",
+    docIndex: 1,
+  },
+];
+
 Alpine.data("landingPortal", () => ({
   services: LANDING_SERVICES,
   serviceIndex: 0,
   selectedType: LANDING_SERVICES[0].title,
   purposeInput: "",
   helpOpen: false,
+  mood: "twilight",
+  atmospherePaused: false,
+  hotspots: BARANGAY_HOTSPOTS,
+  activeHotspotId: null,
   trackingIndex: 1,
   trackingStages: TRACKING_STAGES,
   staffFilter: "all",
@@ -93,7 +124,10 @@ Alpine.data("landingPortal", () => ({
   init() {
     this.$watch("selectedType", (value) => {
       const idx = this.services.findIndex((item) => item.title === value);
-      if (idx !== -1) this.serviceIndex = idx;
+      if (idx !== -1 && idx !== this.serviceIndex) {
+        this.serviceIndex = idx;
+        window.dispatchEvent(new CustomEvent("barangay:service-change", { detail: { index: idx } }));
+      }
     });
   },
 
@@ -105,6 +139,10 @@ Alpine.data("landingPortal", () => ({
     const params = new URLSearchParams({ document_type: this.activeService.title });
     if (this.purposeInput.trim()) params.set("purpose", this.purposeInput.trim());
     return `/requests/new/?${params.toString()}`;
+  },
+
+  get activeHotspot() {
+    return this.hotspots.find((h) => h.id === this.activeHotspotId) || null;
   },
 
   get activeTrackingStage() {
@@ -119,23 +157,48 @@ Alpine.data("landingPortal", () => ({
   nextService() {
     this.serviceIndex = (this.serviceIndex + 1) % this.services.length;
     this.selectedType = this.activeService.title;
+    window.dispatchEvent(new CustomEvent("barangay:service-change", { detail: { index: this.serviceIndex } }));
   },
 
   prevService() {
     this.serviceIndex = (this.serviceIndex - 1 + this.services.length) % this.services.length;
     this.selectedType = this.activeService.title;
+    window.dispatchEvent(new CustomEvent("barangay:service-change", { detail: { index: this.serviceIndex } }));
   },
 
   selectService(index) {
     if (index >= 0 && index < this.services.length) {
       this.serviceIndex = index;
       this.selectedType = this.activeService.title;
+      window.dispatchEvent(new CustomEvent("barangay:service-change", { detail: { index } }));
     }
   },
 
   quickFill(index) {
     this.selectService(index);
     this.purposeInput = this.activeService.samplePurpose;
+  },
+
+  setMood(nextMood) {
+    this.mood = nextMood;
+    window.dispatchEvent(new CustomEvent("barangay:mood-change", { detail: { mood: nextMood } }));
+  },
+
+  toggleAtmosphere() {
+    this.atmospherePaused = !this.atmospherePaused;
+    window.dispatchEvent(
+      new CustomEvent("barangay:atmosphere-toggle", { detail: { paused: this.atmospherePaused } })
+    );
+  },
+
+  toggleHotspot(id) {
+    this.activeHotspotId = this.activeHotspotId === id ? null : id;
+  },
+
+  applyHotspot(hotspot) {
+    if (!hotspot) return;
+    this.quickFill(hotspot.docIndex);
+    this.activeHotspotId = null;
   },
 
   nextTrackingStage() {

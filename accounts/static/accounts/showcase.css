@@ -26,7 +26,7 @@
   color: var(--bc-champagne);
 }
 
-/* 1. Full-Bleed Framed Twilight Sanctuary Hero */
+/* 1. Full-Bleed Framed Twilight Philippine Barangay Hall Hero */
 .sanctuary-hero-outer {
   position: relative;
   isolation: isolate;
@@ -39,25 +39,40 @@
 }
 .sanctuary-backdrop {
   position: absolute;
-  inset: -3%;
+  inset: -4%;
   z-index: 0;
   background-color: var(--bc-night, #0d1518);
   background-image:
-    linear-gradient(180deg, rgba(10, 17, 21, 0.5) 0%, rgba(13, 24, 29, 0.14) 45%, rgba(10, 17, 21, 0.72) 100%),
-    radial-gradient(ellipse 60% 50% at 62% 56%, rgba(229, 154, 60, 0.14) 0%, rgba(10, 17, 21, 0) 70%),
-    url("./hero-sanctuary.jpg?v=2");
-  background-position: center 45%;
+    linear-gradient(180deg, rgba(9, 17, 24, 0.52) 0%, rgba(12, 23, 30, 0.14) 44%, rgba(9, 16, 21, 0.74) 100%),
+    radial-gradient(ellipse 55% 48% at 68% 55%, rgba(229, 154, 60, 0.16) 0%, rgba(10, 17, 21, 0) 70%),
+    url("./hero-barangay-hall.jpg?v=3");
+  background-position: center 48%;
   background-size: cover;
   background-repeat: no-repeat;
-  transform: translate3d(var(--hero-px, 0px), var(--hero-py, 0px), 0) scale(1.04);
+  transform: translate3d(var(--hero-px, 0px), var(--hero-py, 0px), 0) scale(1.05);
+  transition: filter .45s ease-out;
   will-change: transform;
+  pointer-events: none;
+}
+.sanctuary-hero-outer[data-mood="golden"] .sanctuary-backdrop {
+  filter: sepia(0.2) saturate(1.22) brightness(1.06) hue-rotate(-8deg);
+}
+.sanctuary-hero-outer[data-mood="night"] .sanctuary-backdrop {
+  filter: saturate(1.05) brightness(0.76) contrast(1.12);
+}
+.barangay-atmosphere-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
   pointer-events: none;
 }
 
 /* Translucent Architectural Glass Rim Frame */
 .sanctuary-frame {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   flex: 1;
   width: min(86rem, 100%);
   margin-inline: auto;
@@ -66,9 +81,106 @@
   justify-content: space-between;
   border-radius: var(--bc-frame-radius, 1.75rem);
   border: 1.5px solid rgba(235, 244, 246, 0.36);
-  background: linear-gradient(180deg, rgba(10, 18, 22, 0.28) 0%, rgba(10, 18, 22, 0.02) 45%, rgba(10, 18, 22, 0.42) 100%);
+  background: linear-gradient(180deg, rgba(10, 18, 22, 0.24) 0%, rgba(10, 18, 22, 0.02) 45%, rgba(10, 18, 22, 0.42) 100%);
   box-shadow: 0 32px 72px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.14);
   padding: clamp(1rem, 2.2vw, 1.75rem) clamp(1.25rem, 3vw, 2.75rem) clamp(3.5rem, 5.5vw, 4.5rem);
+}
+
+/* Interactive Atmosphere Mood & Hotspot Bar inside Framed Barangay Hero */
+.sanctuary-scene-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem 1rem;
+  margin-top: .85rem;
+}
+.sanctuary-mood-group,
+.barangay-hotspot-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+}
+.mood-pill,
+.barangay-hotspot {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-height: 2.75rem;
+  padding: .35rem .85rem;
+  border-radius: var(--bc-pill-radius);
+  border: 1px solid rgba(235, 244, 246, 0.24);
+  background: rgba(11, 20, 24, 0.56);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(245, 248, 248, 0.9);
+  font-size: .78rem;
+  font-weight: 600;
+  transition: background-color .16s ease-out, border-color .16s ease-out, color .16s ease-out;
+}
+.mood-pill:hover,
+.barangay-hotspot:hover {
+  background: rgba(231, 212, 181, 0.2);
+  border-color: var(--bc-champagne);
+  color: #ffffff;
+}
+.mood-pill[aria-pressed="true"],
+.barangay-hotspot[aria-expanded="true"] {
+  background: var(--bc-champagne);
+  border-color: var(--bc-champagne);
+  color: var(--bc-night);
+}
+@keyframes hotspot-ping {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 154, 60, 0.65); }
+  50% { box-shadow: 0 0 0 6px rgba(229, 154, 60, 0); }
+}
+.hotspot-dot {
+  width: .52rem;
+  height: .52rem;
+  border-radius: 50%;
+  background: var(--bc-amber);
+  animation: hotspot-ping 2.4s ease-in-out infinite;
+  flex: none;
+}
+.barangay-hotspot[aria-expanded="true"] .hotspot-dot {
+  background: var(--bc-night);
+  animation: none;
+}
+.hotspot-callout {
+  margin-top: .85rem;
+  max-width: 34rem;
+  padding: 1rem 1.2rem;
+  border-radius: 1rem;
+  background: rgba(11, 20, 24, 0.86);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(231, 212, 181, 0.32);
+  color: var(--bc-on-dark);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+}
+.hotspot-callout-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .4rem;
+}
+.hotspot-callout-top strong {
+  color: var(--bc-champagne);
+  font-size: .88rem;
+}
+.hotspot-callout p {
+  margin: 0 0 .75rem;
+  font-size: .84rem;
+  line-height: 1.6;
+  color: var(--bc-on-dark-muted);
+}
+.hotspot-callout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
 }
 
 /* Integrated Transparent Header Bar inside Framed Hero */
@@ -250,11 +362,10 @@
   border: 1px solid var(--bc-glass-border);
   background: var(--bc-glass-field);
   color: var(--bc-champagne);
-  transition: background-color .15s ease-out, transform .15s ease-out;
+  transition: background-color .15s ease-out;
 }
 .smoked-card-cycle:hover {
   background: rgba(255, 255, 255, 0.18);
-  transform: scale(1.06);
 }
 .smoked-card-fields {
   display: grid;
@@ -410,13 +521,12 @@
   color: rgba(245, 248, 248, 0.92);
   font-size: .8rem;
   font-weight: 600;
-  transition: background-color .16s ease-out, border-color .16s ease-out, color .16s ease-out, transform .16s ease-out;
+  transition: background-color .16s ease-out, border-color .16s ease-out, color .16s ease-out;
 }
 .launcher-quick-chip:hover {
   background: rgba(231, 212, 181, 0.2);
   border-color: var(--bc-champagne);
   color: #ffffff;
-  transform: translateY(-1px);
 }
 .launcher-quick-chip[aria-pressed="true"] {
   background: var(--bc-champagne);
@@ -776,7 +886,7 @@ button.workflow-visual-row[aria-pressed="true"] span:first-child { color: #fffff
   background-color: var(--bc-night, #0d1518);
   background-image:
     linear-gradient(120deg, rgba(11, 20, 24, 0.8) 0%, rgba(20, 39, 44, 0.62) 100%),
-    url("./hero-dashboard-mist.jpg?v=2");
+    url("./hero-barangay-plaza.jpg?v=3");
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;

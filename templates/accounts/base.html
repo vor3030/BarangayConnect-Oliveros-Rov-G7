@@ -7,16 +7,16 @@
   <meta name="theme-color" content="{% if is_showcase %}#0d1518{% else %}#f2f5f4{% endif %}">
   <meta name="description" content="{% block meta_description %}Barangay Connect lets residents request official clearances and certificates online, track approvals in real time, and manage household details.{% endblock %}">
   {% if user.is_authenticated and not is_showcase %}<meta name="robots" content="noindex, nofollow">{% endif %}
-  <link rel="icon" type="image/svg+xml" href="{% static 'accounts/favicon.svg' %}?v=20261125c">
+  <link rel="icon" type="image/svg+xml" href="{% static 'accounts/favicon.svg' %}?v=20261125d">
   <title>{% block title %}Barangay Connect{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'accounts/ui/portal.css' %}?v=20261125c">
-  <link rel="stylesheet" href="{% static 'accounts/theme.css' %}?v=20261125c">
-  <link rel="stylesheet" href="{% static 'accounts/site.css' %}?v=20261125c">
-  <link rel="stylesheet" href="{% static 'accounts/resident.css' %}?v=20261125c">
-  <link rel="stylesheet" href="{% static 'documents/documents.css' %}?v=20261125c">
-  <link rel="stylesheet" href="{% static 'accounts/site-motion.css' %}?v=20261125c">
+  <link rel="stylesheet" href="{% static 'accounts/ui/portal.css' %}?v=20261125d">
+  <link rel="stylesheet" href="{% static 'accounts/theme.css' %}?v=20261125d">
+  <link rel="stylesheet" href="{% static 'accounts/site.css' %}?v=20261125d">
+  <link rel="stylesheet" href="{% static 'accounts/resident.css' %}?v=20261125d">
+  <link rel="stylesheet" href="{% static 'documents/documents.css' %}?v=20261125d">
+  <link rel="stylesheet" href="{% static 'accounts/site-motion.css' %}?v=20261125d">
   {% block extra_head %}{% endblock %}
-  <script type="module" src="{% static 'accounts/ui/portal.js' %}?v=20261125c"></script>
+  <script type="module" src="{% static 'accounts/ui/portal.js' %}?v=20261125d"></script>
 </head>
 <body class="{% if user.is_authenticated and not is_showcase %}is-portal{% else %}is-public{% endif %}{% if is_showcase %} is-showcase{% endif %}">
   <div class="page-scroll-progress" aria-hidden="true"><span data-scroll-progress></span></div>

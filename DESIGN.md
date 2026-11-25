@@ -84,7 +84,7 @@ Barangay Connect balances atmospheric calm with crisp operational clarity for Ph
 
 ## 5. Component Grammar & Interaction Patterns
 
-1. **Framed Atmospheric Hero (`.sanctuary-frame`, `.hero`):** Full-bleed twilight photography (`hero-sanctuary.jpg` on landing/auth, `hero-dashboard-mist.jpg` on dashboards/profile) bounded by an inset translucent glass rim (`::after`).
+1. **Framed Atmospheric Hero (`.sanctuary-frame`, `.hero`):** Full-bleed Philippine barangay twilight photography (`hero-barangay-hall.jpg` on landing/auth, `hero-barangay-plaza.jpg` on dashboards/profile) bounded by an inset translucent glass rim (`::after`), enhanced by an interactive Three.js WebGL lantern particle canvas (`barangay-atmosphere.js`), live mood switching, Framer Motion spring pills, Anime.js staggered transitions and KPI roll-ups, and GSAP ScrollTrigger depth parallax.
 2. **Floating White Service Launcher (`.floating-launcher`):** Real `GET` form on `/` submitting `document_type`, `purpose`, and `copies` directly into `/requests/new/` with automatic pre-population, linked bidirectionally via Alpine.js (`landingPortal`) with the smoked-glass certificate preview card.
 3. **Smoked-Glass Action Panel (`.smoked-service-card`, `.hero-glass-panel`):** Dark frosted glass container hosting live metrics or interactive certificate previews with 5 clickable indicator dots, `aria-live="polite"` feedback, and a high-contrast pure-white pill CTA.
 4. **Real-Time Status Stepper (`.doc-stepper`):** Explicit semantic colors — `Pending` (amber), `Approved` (pine accent), `Completed` (verified pine), `Rejected` (crimson) — backed by `aria-current="step"` and screen-reader state prefixes so status never relies on color alone.

@@ -2,6 +2,7 @@
 {% block title %}Resident dashboard | Barangay Connect{% endblock %}
 {% block content %}
 <section class="hero" x-data="motionScene">
+  <canvas class="barangay-atmosphere-canvas" data-barangay-atmosphere aria-hidden="true"></canvas>
   <div class="hero-copy">
     <span class="hero-status-pill"><span class="hero-status-dot" aria-hidden="true"></span>Resident portal</span>
     <h1>Good to see you, <strong>{{ user.get_full_name }}.</strong></h1>
@@ -17,27 +18,27 @@
 </section>
 
 <section class="account-stats" aria-label="Your account overview">
-  <article><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><p>Document requests</p><strong>{{ request_counts.total_requests }} <small>({{ request_counts.pending_requests }} pending)</small></strong></div></article>
-  <article><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='user' %}</span><div><p>Profile details</p><strong>{{ profile_completed_fields }} <small>of 4 complete</small></strong></div></article>
+  <article><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><p>Document requests</p><strong><span data-count-up="{{ request_counts.total_requests }}">{{ request_counts.total_requests }}</span> <small>({{ request_counts.pending_requests }} pending)</small></strong></div></article>
+  <article><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='user' %}</span><div><p>Profile details</p><strong><span data-count-up="{{ profile_completed_fields }}">{{ profile_completed_fields }}</span> <small>of 4 complete</small></strong></div></article>
   <article><span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='phone' %}</span><div><p>Contact number</p><strong class="stat-label">{% if user.contact_number %}Added to your profile{% else %}Ready to add{% endif %}</strong></div></article>
 </section>
 
 <section aria-labelledby="quick-actions-title">
   <h2 id="quick-actions-title" class="sr-only">Quick actions</h2>
   <div class="quick-links">
-    <a class="quick-link" href="{% url 'documents:create' %}"><span class="quick-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><h3>Request a barangay document</h3><p>Submit a clearance, indigency, or residency request online.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
-    <a class="quick-link" href="{% url 'documents:list' %}"><span class="quick-icon clay">{% include 'accounts/ui_icon.html' with name='clock' %}</span><div><h3>Track my requests</h3><p>Check live statuses, edit pending details, or view history.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
-    <a class="quick-link" href="{% url 'edit_profile' %}"><span class="quick-icon sand">{% include 'accounts/ui_icon.html' with name='edit' %}</span><div><h3>Keep my details current</h3><p>Update your email, contact number, or profile photo.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+    <a class="quick-link" data-spring-card href="{% url 'documents:create' %}"><span class="quick-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><h3>Request a barangay document</h3><p>Submit a clearance, indigency, or residency request online.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+    <a class="quick-link" data-spring-card href="{% url 'documents:list' %}"><span class="quick-icon clay">{% include 'accounts/ui_icon.html' with name='clock' %}</span><div><h3>Track my requests</h3><p>Check live statuses, edit pending details, or view history.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+    <a class="quick-link" data-spring-card href="{% url 'edit_profile' %}"><span class="quick-icon sand">{% include 'accounts/ui_icon.html' with name='edit' %}</span><div><h3>Keep my details current</h3><p>Update your email, contact number, or profile photo.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
   </div>
 </section>
 
 <nav class="quick-doc-strip" aria-label="Quick certificate shortcuts">
   <span class="quick-doc-label">Quick request:</span>
-  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=Barangay+Clearance">Barangay Clearance</a>
-  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=Certificate+of+Indigency">Indigency</a>
-  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=Certificate+of+Residency">Residency</a>
-  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=Barangay+Business+Clearance">Business Clearance</a>
-  <a class="quick-doc-chip" href="{% url 'documents:create' %}?document_type=First-Time+Jobseeker+Certificate">First-Time Jobseeker</a>
+  <a class="quick-doc-chip" data-spring-pill href="{% url 'documents:create' %}?document_type=Barangay+Clearance">Barangay Clearance</a>
+  <a class="quick-doc-chip" data-spring-pill href="{% url 'documents:create' %}?document_type=Certificate+of+Indigency">Indigency</a>
+  <a class="quick-doc-chip" data-spring-pill href="{% url 'documents:create' %}?document_type=Certificate+of+Residency">Residency</a>
+  <a class="quick-doc-chip" data-spring-pill href="{% url 'documents:create' %}?document_type=Barangay+Business+Clearance">Business Clearance</a>
+  <a class="quick-doc-chip" data-spring-pill href="{% url 'documents:create' %}?document_type=First-Time+Jobseeker+Certificate">First-Time Jobseeker</a>
 </nav>
 
 <section class="card doc-dashboard-card" x-data="dashboardFilter">

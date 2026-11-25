@@ -6,17 +6,18 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Barangay Connect | Online Barangay Services">
 <meta property="og:description" content="Request official barangay clearances, indigency, and residency certificates online and track every approval step in real time.">
-<meta property="og:image" content="{% static 'accounts/hero-sanctuary.jpg' %}">
+<meta property="og:image" content="{% static 'accounts/hero-barangay-hall.jpg' %}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="{{ request.build_absolute_uri }}">
-<link rel="stylesheet" href="{% static 'accounts/showcase.css' %}?v=20261125c">
+<link rel="stylesheet" href="{% static 'accounts/showcase.css' %}?v=20261125d">
 {% endblock %}
 {% block content %}
 <div class="showcase" data-showcase x-data="landingPortal">
 
-  <!-- 1. Full-Bleed Framed Twilight Sanctuary Hero -->
-  <section class="sanctuary-hero-outer" aria-labelledby="hero-title">
+  <!-- 1. Full-Bleed Framed Twilight Philippine Barangay Hall Hero -->
+  <section class="sanctuary-hero-outer" x-bind:data-mood="mood" data-mood="twilight" aria-labelledby="hero-title">
     <div class="sanctuary-backdrop" aria-hidden="true"></div>
+    <canvas class="barangay-atmosphere-canvas" data-barangay-atmosphere aria-hidden="true"></canvas>
     <div class="sanctuary-frame">
       <header class="sanctuary-header">
         {% include 'accounts/brand.html' %}
@@ -33,6 +34,41 @@
           <a class="button button-white sanctuary-portal-btn" href="{% url 'dashboard' %}">Open portal</a>
         </div>
       </header>
+
+      <!-- Interactive Barangay Hall Hotspots & Lighting Mood Controls -->
+      <div class="sanctuary-scene-bar">
+        <div class="barangay-hotspot-group" role="group" aria-label="Explore barangay hall services">
+          <template x-for="spot in hotspots" x-bind:key="spot.id">
+            <button
+              type="button"
+              class="barangay-hotspot"
+              data-spring-pill
+              x-on:click="toggleHotspot(spot.id)"
+              x-bind:aria-expanded="String(activeHotspotId === spot.id)"
+            >
+              <span class="hotspot-dot" aria-hidden="true"></span>
+              <span x-text="spot.label"></span>
+            </button>
+          </template>
+        </div>
+        <div class="sanctuary-mood-group" role="group" aria-label="Barangay lighting atmosphere">
+          <button type="button" class="mood-pill" data-spring-pill x-on:click="setMood('twilight')" x-bind:aria-pressed="String(mood === 'twilight')" aria-pressed="true">Twilight</button>
+          <button type="button" class="mood-pill" data-spring-pill x-on:click="setMood('golden')" x-bind:aria-pressed="String(mood === 'golden')" aria-pressed="false">Golden dusk</button>
+          <button type="button" class="mood-pill" data-spring-pill x-on:click="setMood('night')" x-bind:aria-pressed="String(mood === 'night')" aria-pressed="false">Night watch</button>
+          <button type="button" class="mood-pill" data-spring-pill x-on:click="toggleAtmosphere()" x-bind:aria-pressed="String(atmospherePaused)" x-text="atmospherePaused ? 'Resume lanterns' : 'Pause lanterns'">Pause lanterns</button>
+        </div>
+      </div>
+
+      <div class="hotspot-callout" x-show="activeHotspot" x-cloak role="region" aria-live="polite" aria-label="Barangay service location details">
+        <div class="hotspot-callout-top">
+          <strong x-text="activeHotspot ? `${activeHotspot.label} — ${activeHotspot.subtitle}` : ''"></strong>
+          <button type="button" class="mood-pill" x-on:click="activeHotspotId = null" aria-label="Close location note">Close</button>
+        </div>
+        <p x-text="activeHotspot ? activeHotspot.detail : ''"></p>
+        <div class="hotspot-callout-actions">
+          <button type="button" class="button button-champagne button-sm" x-on:click="applyHotspot(activeHotspot)" x-text="activeHotspot ? activeHotspot.cta : ''"></button>
+        </div>
+      </div>
 
       <div class="sanctuary-hero-grid">
         <div class="sanctuary-headline-col">
@@ -60,6 +96,7 @@
             <div class="smoked-card-nav">
               <button
                 class="smoked-card-cycle"
+                data-spring-pill
                 type="button"
                 x-on:click="prevService()"
                 aria-label="Preview previous barangay document"
@@ -69,6 +106,7 @@
               </button>
               <button
                 class="smoked-card-cycle"
+                data-spring-pill
                 type="button"
                 x-on:click="nextService()"
                 aria-label="Preview next barangay document"
@@ -151,11 +189,11 @@
         </form>
         <div class="launcher-quick-row" role="group" aria-label="Quick-fill common request purposes">
           <span class="launcher-quick-label">Quick fill:</span>
-          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(0)" x-bind:aria-pressed="String(serviceIndex === 0 && purposeInput === services[0].samplePurpose)">Local employment</button>
-          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(1)" x-bind:aria-pressed="String(serviceIndex === 1 && purposeInput === services[1].samplePurpose)">Medical assistance</button>
-          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(2)" x-bind:aria-pressed="String(serviceIndex === 2 && purposeInput === services[2].samplePurpose)">Bank &amp; school proof</button>
-          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(3)" x-bind:aria-pressed="String(serviceIndex === 3 && purposeInput === services[3].samplePurpose)">Business renewal</button>
-          <button type="button" class="launcher-quick-chip" x-on:click="quickFill(4)" x-bind:aria-pressed="String(serviceIndex === 4 && purposeInput === services[4].samplePurpose)">First-time jobseeker</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(0)" x-bind:aria-pressed="String(serviceIndex === 0 && purposeInput === services[0].samplePurpose)">Local employment</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(1)" x-bind:aria-pressed="String(serviceIndex === 1 && purposeInput === services[1].samplePurpose)">Medical assistance</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(2)" x-bind:aria-pressed="String(serviceIndex === 2 && purposeInput === services[2].samplePurpose)">Bank &amp; school proof</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(3)" x-bind:aria-pressed="String(serviceIndex === 3 && purposeInput === services[3].samplePurpose)">Business renewal</button>
+          <button type="button" class="launcher-quick-chip" data-spring-pill x-on:click="quickFill(4)" x-bind:aria-pressed="String(serviceIndex === 4 && purposeInput === services[4].samplePurpose)">First-time jobseeker</button>
         </div>
       </div>
     </div>
@@ -176,7 +214,7 @@
         </div>
       </div>
 
-      <div class="workflow-panel-shell" data-preview-window>
+      <div class="workflow-panel-shell" data-preview-window data-gsap-lift>
         <section class="workflow-panel" id="preview-request" data-preview-panel="request">
           <div class="workflow-panel-copy">
             <h3>Submit verified requests in minutes</h3>
@@ -307,7 +345,7 @@
         </div>
       </div>
 
-      <div class="chart-frame">
+      <div class="chart-frame" data-gsap-lift>
         <div class="three-chart-stage" data-three-chart-stage>
           <canvas class="three-chart-canvas" data-three-chart></canvas>
           <noscript><p class="chart-fallback-note">Enable JavaScript to explore the interactive 3D purok overview.</p></noscript>

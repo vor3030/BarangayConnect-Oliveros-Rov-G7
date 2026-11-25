@@ -86,7 +86,7 @@ function makeNeighborhood() {
 }
 
 export function mountNeighborhood(panel, reducedMotion) {
-  const canvas = panel.querySelector("canvas");
+  const canvas = panel.querySelector(".neighborhood-canvas");
   let renderer;
   try {
     renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });

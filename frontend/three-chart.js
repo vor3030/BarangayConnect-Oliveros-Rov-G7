@@ -136,10 +136,33 @@ export function mountThreeChart(root) {
     const item = PUROK_ITEMS[selectedIndex] || PUROK_ITEMS[0];
     if (detailTitle) detailTitle.textContent = item.name;
     if (detailNote) detailNote.textContent = item.note;
-    if (detailPrimary) detailPrimary.textContent = String(item.primary);
     if (detailPrimaryLabel) detailPrimaryLabel.textContent = item.primaryLabel;
-    if (detailSecondary) detailSecondary.textContent = String(item.secondary);
     if (detailSecondaryLabel) detailSecondaryLabel.textContent = item.secondaryLabel;
+
+    if (animateSwap && !reducedMotion.matches && detailPrimary && detailSecondary) {
+      const fromP = Number.parseInt(detailPrimary.textContent || "0", 10) || 0;
+      const fromS = Number.parseInt(detailSecondary.textContent || "0", 10) || 0;
+      const numState = { p: fromP, s: fromS };
+      trackAnim(
+        animate(numState, {
+          p: item.primary,
+          s: item.secondary,
+          duration: 320,
+          ease: "outExpo",
+          onUpdate: () => {
+            detailPrimary.textContent = String(Math.round(numState.p));
+            detailSecondary.textContent = String(Math.round(numState.s));
+          },
+          onComplete: () => {
+            detailPrimary.textContent = String(item.primary);
+            detailSecondary.textContent = String(item.secondary);
+          },
+        })
+      );
+    } else {
+      if (detailPrimary) detailPrimary.textContent = String(item.primary);
+      if (detailSecondary) detailSecondary.textContent = String(item.secondary);
+    }
 
     if (pillContainer) {
       pillContainer.querySelectorAll("button").forEach((btn, idx) => {
