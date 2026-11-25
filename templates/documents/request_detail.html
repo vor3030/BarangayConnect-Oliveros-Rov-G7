@@ -2,9 +2,9 @@
 {% block title %}{{ doc_request.reference_code }} | Barangay Connect{% endblock %}
 {% block breadcrumb %}{{ doc_request.reference_code }}{% endblock %}
 {% block content %}
-<a class="doc-back-link" href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'documents:list' %}{% endif %}">
+<a class="doc-back-link" href="{% if user.is_staff %}{% url 'documents:manage_list' %}{% else %}{% url 'documents:list' %}{% endif %}">
   {% include 'accounts/ui_icon.html' with name='arrow-left' %}
-  {% if user.is_staff %}Back to admin dashboard{% else %}Back to document requests{% endif %}
+  {% if user.is_staff %}Back to request queue{% else %}Back to document requests{% endif %}
 </a>
 
 <div class="doc-page-header" data-reveal>
@@ -14,7 +14,9 @@
   </div>
   <div class="actions">
     <span class="status-badge status-{{ doc_request.status_slug }}">{{ doc_request.status }}</span>
-    {% if not user.is_staff and doc_request.is_editable_by_resident %}
+    {% if user.is_staff %}
+      <a class="button button-sm" href="{% url 'documents:review' doc_request.pk %}">Review &amp; update status</a>
+    {% elif doc_request.is_editable_by_resident %}
       <a class="button button-secondary button-sm" href="{% url 'documents:update' doc_request.pk %}">Edit request</a>
       <a class="button button-danger button-sm" href="{% url 'documents:delete' doc_request.pk %}">Cancel request</a>
     {% endif %}

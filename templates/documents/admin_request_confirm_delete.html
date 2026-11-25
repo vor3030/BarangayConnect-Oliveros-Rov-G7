@@ -1,0 +1,35 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Remove {{ doc_request.reference_code }} | Barangay Connect{% endblock %}
+{% block breadcrumb %}Remove {{ doc_request.reference_code }}{% endblock %}
+{% block content %}
+<a class="doc-back-link" href="{% url 'documents:review' doc_request.pk %}">
+  {% include 'accounts/ui_icon.html' with name='arrow-left' %}
+  Back to review {{ doc_request.reference_code }}
+</a>
+
+<section class="card doc-confirm-card" data-reveal>
+  <h1>Remove rejected request?</h1>
+  <p class="muted">Removing this rejected request permanently deletes the record and its status log from the database. Approved and completed records remain protected.</p>
+
+  <div class="doc-confirm-summary">
+    <div class="detail-row"><span>Reference code</span><strong class="doc-ref">{{ doc_request.reference_code }}</strong></div>
+    <div class="detail-row"><span>Resident</span><strong>{{ doc_request.user.get_full_name }} ({{ doc_request.user.email }})</strong></div>
+    <div class="detail-row"><span>Document type</span><strong>{{ doc_request.document_type }}</strong></div>
+    <div class="detail-row"><span>Status</span><strong>{{ doc_request.status }}</strong></div>
+    {% if doc_request.staff_remarks %}
+      <div class="detail-row"><span>Rejection remarks</span><strong>{{ doc_request.staff_remarks }}</strong></div>
+    {% endif %}
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="actions">
+      <button class="button button-danger-solid" type="submit">
+        {% include 'accounts/ui_icon.html' with name='trash' %}
+        Yes, remove record
+      </button>
+      <a class="button button-secondary" href="{% url 'documents:review' doc_request.pk %}">Keep record</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

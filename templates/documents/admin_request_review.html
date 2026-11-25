@@ -1,0 +1,112 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Review {{ doc_request.reference_code }} | Barangay Connect{% endblock %}
+{% block breadcrumb %}Review {{ doc_request.reference_code }}{% endblock %}
+{% block content %}
+<a class="doc-back-link" href="{% url 'documents:manage_list' %}">
+  {% include 'accounts/ui_icon.html' with name='arrow-left' %}
+  Back to request queue
+</a>
+
+<div class="doc-page-header" data-reveal>
+  <div>
+    <h1>Review {{ doc_request.reference_code }}</h1>
+    <p>{{ doc_request.document_type }} requested by <strong>{{ doc_request.user.get_full_name }}</strong> · {{ doc_request.created_at|date:"M j, Y · g:i A" }}</p>
+  </div>
+  <span class="status-badge status-{{ doc_request.status_slug }}">{{ doc_request.status }}</span>
+</div>
+
+<section class="card doc-tracker-card" aria-label="Request workflow progress" data-reveal>
+  <div class="doc-tracker-header">
+    <h2>Workflow progress</h2>
+    <span class="doc-meta-date">Last updated {{ doc_request.updated_at|date:"M j, Y · g:i A" }}</span>
+  </div>
+  <ol class="doc-stepper">
+    {% for step in status_steps %}
+      <li class="doc-step doc-step-{{ step.state }}">
+        <span class="doc-step-label">
+          <span class="doc-step-dot" aria-hidden="true"></span>
+          {{ step.label }}
+        </span>
+        <p>{{ step.detail }}</p>
+      </li>
+    {% endfor %}
+  </ol>
+</section>
+
+<div class="doc-split-layout">
+  <div style="display: grid; gap: 1.5rem;">
+    <section class="card" data-reveal>
+      <h2>Resident &amp; request details</h2>
+      <div class="detail-row"><span>Reference code</span><strong class="doc-ref">{{ doc_request.reference_code }}</strong></div>
+      <div class="detail-row"><span>Resident name</span><strong>{{ doc_request.user.get_full_name }}</strong></div>
+      <div class="detail-row"><span>Email address</span><strong>{{ doc_request.user.email }}</strong></div>
+      <div class="detail-row"><span>Contact number</span><strong>{{ doc_request.user.contact_number|default:"Not provided" }}</strong></div>
+      <div class="detail-row"><span>Document type</span><strong>{{ doc_request.document_type }}</strong></div>
+      <div class="detail-row"><span>Copies requested</span><strong>{{ doc_request.copies }}</strong></div>
+      <div class="detail-row"><span>Purpose</span><strong>{{ doc_request.purpose }}</strong></div>
+      {% if doc_request.notes %}
+        <div class="detail-row"><span>Resident notes</span><strong>{{ doc_request.notes }}</strong></div>
+      {% endif %}
+      {% if doc_request.reviewed_by %}
+        <div class="detail-row"><span>Last reviewed by</span><strong>{{ doc_request.reviewed_by.get_full_name }}</strong></div>
+      {% endif %}
+      {% if doc_request.processed_at %}
+        <div class="detail-row"><span>Processed at</span><strong>{{ doc_request.processed_at|date:"M j, Y · g:i A" }}</strong></div>
+      {% endif %}
+      {% if doc_request.staff_remarks %}
+        <div class="doc-remarks-box{% if doc_request.status == 'Rejected' %} is-rejected{% endif %}">
+          <h3>Current staff remarks</h3>
+          <p>{{ doc_request.staff_remarks }}</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="card" data-reveal>
+      <h2>Activity history</h2>
+      {% if status_logs %}
+        <ol class="doc-timeline">
+          {% for entry in status_logs %}
+            <li>
+              <div class="doc-timeline-top">
+                <span class="status-badge status-{{ entry.new_status|lower }}">{{ entry.new_status }}</span>
+                <time datetime="{{ entry.changed_at|date:'c' }}">{{ entry.changed_at|date:"M j, Y · g:i A" }}</time>
+              </div>
+              {% if entry.note %}<p>{{ entry.note }}</p>{% endif %}
+              {% if entry.changed_by %}
+                <div class="doc-timeline-actor">{{ entry.changed_by.get_full_name }} · {{ entry.changed_by.role_label }}</div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      {% else %}
+        <p class="muted">No status changes logged yet.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside class="card" data-reveal>
+    <h2>Update request status</h2>
+    {% if can_transition %}
+      <p class="muted">Status changes are logged with your staff account and immediately visible to the resident.</p>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% include 'accounts/form_fields.html' %}
+        <div class="actions">
+          <button class="button" type="submit">Update status</button>
+          <a class="button button-secondary" href="{% url 'documents:manage_list' %}">Cancel</a>
+        </div>
+      </form>
+    {% else %}
+      <p class="muted">This request is already marked <strong>{{ doc_request.status }}</strong>. Completed and rejected requests are closed and cannot return to Pending.</p>
+      {% if doc_request.is_deletable_by_staff %}
+        <div class="card-actions">
+          <a class="button button-danger" href="{% url 'documents:admin_delete' doc_request.pk %}">
+            {% include 'accounts/ui_icon.html' with name='trash' %}
+            Remove rejected record
+          </a>
+        </div>
+      {% endif %}
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Document request queue | Barangay Connect{% endblock %}
+{% block breadcrumb %}Request queue{% endblock %}
+{% block content %}
+<div class="doc-page-header" data-reveal>
+  <div>
+    <h1>Document request queue</h1>
+    <p>Review resident document applications, verify purposes, and update processing statuses from Pending to Approved, Completed, or Rejected.</p>
+  </div>
+  <a class="button button-secondary" href="{% url 'admin_dashboard' %}">Back to overview</a>
+</div>
+
+<section class="doc-summary-strip" aria-label="Document request queue summary" data-reveal>
+  <article class="doc-summary-item">
+    <span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='clock' %}</span>
+    <div>
+      <p>Pending review</p>
+      <strong>{{ counts.pending_requests }}</strong>
+    </div>
+  </article>
+  <article class="doc-summary-item">
+    <span class="stat-icon">{% include 'accounts/ui_icon.html' with name='check' %}</span>
+    <div>
+      <p>Approved</p>
+      <strong>{{ counts.approved_requests }}</strong>
+    </div>
+  </article>
+  <article class="doc-summary-item">
+    <span class="stat-icon">{% include 'accounts/ui_icon.html' with name='shield' %}</span>
+    <div>
+      <p>Completed</p>
+      <strong>{{ counts.completed_requests }}</strong>
+    </div>
+  </article>
+  <article class="doc-summary-item">
+    <span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='alert' %}</span>
+    <div>
+      <p>Rejected</p>
+      <strong>{{ counts.rejected_requests }}</strong>
+    </div>
+  </article>
+</section>
+
+<section class="doc-toolbar" aria-label="Filter and search document requests" data-reveal>
+  <div class="doc-filter-pills" role="navigation" aria-label="Filter queue by status">
+    <a class="doc-filter-pill" href="{% url 'documents:manage_list' %}{% if selected_type or search_query %}?document_type={{ selected_type|urlencode }}&amp;q={{ search_query|urlencode }}{% endif %}"{% if not selected_status %} aria-current="true"{% endif %}>
+      All <span>({{ counts.total_requests }})</span>
+    </a>
+    <a class="doc-filter-pill" href="{% url 'documents:manage_list' %}?status=Pending{% if selected_type %}&amp;document_type={{ selected_type|urlencode }}{% endif %}{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Pending' %} aria-current="true"{% endif %}>
+      Pending <span>({{ counts.pending_requests }})</span>
+    </a>
+    <a class="doc-filter-pill" href="{% url 'documents:manage_list' %}?status=Approved{% if selected_type %}&amp;document_type={{ selected_type|urlencode }}{% endif %}{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Approved' %} aria-current="true"{% endif %}>
+      Approved <span>({{ counts.approved_requests }})</span>
+    </a>
+    <a class="doc-filter-pill" href="{% url 'documents:manage_list' %}?status=Completed{% if selected_type %}&amp;document_type={{ selected_type|urlencode }}{% endif %}{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Completed' %} aria-current="true"{% endif %}>
+      Completed <span>({{ counts.completed_requests }})</span>
+    </a>
+    <a class="doc-filter-pill" href="{% url 'documents:manage_list' %}?status=Rejected{% if selected_type %}&amp;document_type={{ selected_type|urlencode }}{% endif %}{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Rejected' %} aria-current="true"{% endif %}>
+      Rejected <span>({{ counts.rejected_requests }})</span>
+    </a>
+  </div>
+  <form class="doc-search-form" method="get" action="{% url 'documents:manage_list' %}">
+    {% if selected_status %}<input type="hidden" name="status" value="{{ selected_status }}">{% endif %}
+    <label class="skip-link" for="queue-type">Filter by document type</label>
+    <select id="queue-type" name="document_type" aria-label="Filter by document type">
+      <option value="">All document types</option>
+      {% for value, label in document_types %}
+        <option value="{{ value }}"{% if selected_type == value %} selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <label class="skip-link" for="queue-search">Search resident or request</label>
+    <input id="queue-search" type="search" name="q" value="{{ search_query }}" placeholder="Search resident, purpose, or REQ ID">
+    <button class="button button-secondary button-sm" type="submit">Apply</button>
+    {% if selected_status or selected_type or search_query %}
+      <a class="button button-secondary button-sm" href="{% url 'documents:manage_list' %}">Reset</a>
+    {% endif %}
+  </form>
+</section>
+
+<section class="card doc-table-card" data-reveal>
+  {% if requests %}
+    <table class="doc-table">
+      <thead>
+        <tr>
+          <th scope="col">Reference</th>
+          <th scope="col">Resident</th>
+          <th scope="col">Document &amp; purpose</th>
+          <th scope="col">Copies</th>
+          <th scope="col">Status</th>
+          <th scope="col">Submitted</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in requests %}
+          <tr>
+            <td class="doc-ref" data-label="Reference">{{ item.reference_code }}</td>
+            <td class="doc-title-cell" data-label="Resident">
+              <strong>{{ item.user.get_full_name }}</strong>
+              <span>{{ item.user.email }}</span>
+            </td>
+            <td class="doc-title-cell">
+              <strong>{{ item.document_type }}</strong>
+              <span>{{ item.purpose }}</span>
+            </td>
+            <td data-label="Copies">{{ item.copies }}</td>
+            <td data-label="Status">
+              <span class="status-badge status-{{ item.status_slug }}">{{ item.status }}</span>
+            </td>
+            <td class="doc-meta-date" data-label="Submitted">{{ item.created_at|date:"M j, Y · g:i A" }}</td>
+            <td>
+              <div class="doc-row-actions">
+                <a class="button button-sm" href="{% url 'documents:review' item.pk %}">Review</a>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% elif selected_status or selected_type or search_query %}
+    <div class="doc-empty-state">
+      <span class="doc-empty-icon">{% include 'accounts/ui_icon.html' with name='search' %}</span>
+      <h2>No matching requests</h2>
+      <p>No resident requests match the selected filters. Reset the filters to view the full queue.</p>
+      <a class="button button-secondary" href="{% url 'documents:manage_list' %}">Reset filters</a>
+    </div>
+  {% else %}
+    <div class="doc-empty-state">
+      <span class="doc-empty-icon">{% include 'accounts/ui_icon.html' with name='clipboard' %}</span>
+      <h2>The request queue is empty</h2>
+      <p>When residents submit online document requests, they will appear here for staff verification and release.</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
