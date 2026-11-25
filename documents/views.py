@@ -4,12 +4,14 @@ from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods, require_safe
 
-from .forms import DocumentRequestForm
+from .forms import DocumentRequestForm, DocumentRequestReviewForm
 from .models import DocumentRequest, DocumentRequestLog
 
 VALID_STATUSES = {choice for choice, _ in DocumentRequest.Status.choices}
+VALID_DOCUMENT_TYPES = {choice for choice, _ in DocumentRequest.DocumentType.choices}
 
 
 def summarize_requests(queryset):
@@ -122,7 +124,7 @@ def _save_resident_request(form, user, is_create):
 @require_safe
 def request_list(request):
     if request.user.is_staff:
-        return redirect("admin_dashboard")
+        return redirect("documents:manage_list")
 
     base_qs = DocumentRequest.objects.filter(user=request.user).select_related("reviewed_by")
     counts = summarize_requests(base_qs)
@@ -292,5 +294,192 @@ def request_delete(request, pk):
     return render(
         request,
         "documents/request_confirm_delete.html",
+        {"doc_request": doc_request},
+    )
+
+
+@login_required
+@require_safe
+def admin_request_list(request):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    base_qs = DocumentRequest.objects.select_related("user", "reviewed_by")
+    counts = summarize_requests(base_qs)
+
+    selected_status = request.GET.get("status", "").strip()
+    selected_type = request.GET.get("document_type", "").strip()
+    search_query = request.GET.get("q", "").strip()
+
+    filtered_qs = base_qs
+    if selected_status in VALID_STATUSES:
+        filtered_qs = filtered_qs.filter(status=selected_status)
+    else:
+        selected_status = ""
+
+    if selected_type in VALID_DOCUMENT_TYPES:
+        filtered_qs = filtered_qs.filter(document_type=selected_type)
+    else:
+        selected_type = ""
+
+    if search_query:
+        query_filter = (
+            Q(document_type__icontains=search_query)
+            | Q(purpose__icontains=search_query)
+            | Q(user__full_name__icontains=search_query)
+            | Q(user__email__icontains=search_query)
+            | Q(user__username__icontains=search_query)
+        )
+        digits = "".join(ch for ch in search_query if ch.isdigit())
+        if digits and (search_query.isdigit() or search_query.upper().startswith("REQ")):
+            try:
+                query_filter |= Q(
+                    pk=int(digits[-4:] if search_query.upper().startswith("REQ") else digits)
+                )
+            except ValueError:
+                pass
+        filtered_qs = filtered_qs.filter(query_filter)
+
+    return render(
+        request,
+        "documents/admin_request_list.html",
+        {
+            "requests": filtered_qs,
+            "counts": counts,
+            "selected_status": selected_status,
+            "selected_type": selected_type,
+            "search_query": search_query,
+            "document_types": DocumentRequest.DocumentType.choices,
+            "status_choices": DocumentRequest.Status.choices,
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "HEAD", "POST"])
+def admin_request_review(request, pk):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    doc_request = get_object_or_404(
+        DocumentRequest.objects.select_related("user", "reviewed_by").prefetch_related(
+            "status_logs__changed_by"
+        ),
+        pk=pk,
+    )
+    can_transition = bool(doc_request.allowed_next_statuses)
+    form = (
+        DocumentRequestReviewForm(
+            request.POST if request.method == "POST" else None,
+            instance=doc_request,
+        )
+        if can_transition
+        else None
+    )
+
+    if request.method == "POST":
+        if not can_transition:
+            messages.error(
+                request,
+                f"Request {doc_request.reference_code} is already {doc_request.status} and cannot be transitioned further.",
+            )
+            return redirect("documents:review", pk=doc_request.pk)
+
+        if form.is_valid():
+            new_status = form.cleaned_data["status"]
+            remarks = form.cleaned_data["staff_remarks"]
+            with transaction.atomic():
+                locked = get_object_or_404(
+                    DocumentRequest.objects.select_for_update(),
+                    pk=doc_request.pk,
+                )
+                if not locked.can_transition_to(new_status):
+                    messages.error(
+                        request,
+                        f"Request {locked.reference_code} is currently {locked.status} and cannot change to {new_status}.",
+                    )
+                    return redirect("documents:review", pk=locked.pk)
+
+                previous_status = locked.status
+                locked.status = new_status
+                locked.staff_remarks = remarks
+                locked.reviewed_by = request.user
+                locked.processed_at = timezone.now()
+                locked.save(
+                    update_fields=[
+                        "status",
+                        "staff_remarks",
+                        "reviewed_by",
+                        "processed_at",
+                        "updated_at",
+                    ]
+                )
+                DocumentRequestLog.objects.create(
+                    request=locked,
+                    changed_by=request.user,
+                    previous_status=previous_status,
+                    new_status=new_status,
+                    note=remarks or f"Status updated to {new_status} by barangay staff.",
+                )
+            messages.success(
+                request,
+                f"Request {doc_request.reference_code} status updated to {new_status}.",
+            )
+            return redirect("documents:review", pk=doc_request.pk)
+
+    return render(
+        request,
+        "documents/admin_request_review.html",
+        {
+            "doc_request": doc_request,
+            "form": form,
+            "can_transition": can_transition,
+            "status_steps": build_status_steps(doc_request),
+            "status_logs": doc_request.status_logs.all(),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "HEAD", "POST"])
+def admin_request_delete(request, pk):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    doc_request = get_object_or_404(
+        DocumentRequest.objects.select_related("user"),
+        pk=pk,
+    )
+    if not doc_request.is_deletable_by_staff:
+        messages.error(
+            request,
+            f"Only Rejected requests can be removed by staff. Request {doc_request.reference_code} is {doc_request.status}.",
+        )
+        return redirect("documents:review", pk=doc_request.pk)
+
+    if request.method == "POST":
+        with transaction.atomic():
+            locked = get_object_or_404(
+                DocumentRequest.objects.select_for_update(),
+                pk=doc_request.pk,
+            )
+            if not locked.is_deletable_by_staff:
+                messages.error(
+                    request,
+                    f"Only Rejected requests can be removed by staff. Request {locked.reference_code} is {locked.status}.",
+                )
+                return redirect("documents:review", pk=locked.pk)
+            reference_code = locked.reference_code
+            document_type = locked.document_type
+            locked.delete()
+        messages.success(
+            request,
+            f"Rejected request {reference_code} ({document_type}) was permanently removed.",
+        )
+        return redirect("documents:manage_list")
+
+    return render(
+        request,
+        "documents/admin_request_confirm_delete.html",
         {"doc_request": doc_request},
     )
