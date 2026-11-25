@@ -2,6 +2,7 @@ import { animate, stagger } from "animejs";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { animate as motionAnimate } from "motion";
+import { isReducedMotion, subscribeMotionChange } from "./motion-pref.js";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -9,7 +10,6 @@ export function mountShowcase() {
   const root = document.querySelector("[data-showcase]");
   if (!root) return;
 
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const tabs = [...root.querySelectorAll("[data-preview-tab]")];
   const panels = [...root.querySelectorAll("[data-preview-panel]")];
   const scrollProgress = document.querySelector("[data-scroll-progress]");
@@ -19,6 +19,7 @@ export function mountShowcase() {
   let panelAnim;
   let chartController = null;
   let atmosphereController = null;
+  let gsapCtx = null;
   let maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
 
   function listen(target, event, callback, options) {
@@ -53,12 +54,12 @@ export function mountShowcase() {
       const selected = panel.dataset.previewPanel === name;
       panel.hidden = !selected;
       clearInlineVisualProps(panel);
-      if (selected && shouldAnimate && !reducedMotion.matches) {
+      if (selected && shouldAnimate && !isReducedMotion()) {
         panelAnim = track(
           animate(panel, {
-            opacity: [0.76, 1],
-            translateY: [6, 0],
-            duration: 200,
+            opacity: [0.74, 1],
+            translateY: [8, 0],
+            duration: 240,
             ease: "outCubic",
             onComplete: () => {
               clearInlineVisualProps(panel);
@@ -99,7 +100,7 @@ export function mountShowcase() {
 
   let rafPending = false;
   function updateScrollProgress() {
-    if (!scrollProgress || rafPending || reducedMotion.matches || supportsScrollTimeline) return;
+    if (!scrollProgress || rafPending || isReducedMotion() || supportsScrollTimeline) return;
     rafPending = true;
     requestAnimationFrame(() => {
       rafPending = false;
@@ -117,15 +118,144 @@ export function mountShowcase() {
     listen(window, "scroll", updateScrollProgress, { passive: true });
   }
 
+  function setupScrollChoreography() {
+    gsapCtx?.revert();
+    gsapCtx = null;
+    if (isReducedMotion()) return;
+
+    const heroOuter = root.querySelector(".sanctuary-hero-outer");
+    const heroBackdrop = root.querySelector(".sanctuary-backdrop");
+    const heroHeadline = root.querySelector(".sanctuary-headline-col");
+    const heroCard = root.querySelector(".smoked-service-card");
+    const heroLauncher = root.querySelector(".floating-launcher-wrap");
+
+    gsapCtx = gsap.context(() => {
+      // Multi-layer scrubbed depth parallax across the Barangay Hall hero on scroll
+      if (heroOuter && heroBackdrop) {
+        gsap.to(heroBackdrop, {
+          yPercent: 14,
+          scale: 1.15,
+          ease: "none",
+          scrollTrigger: {
+            trigger: heroOuter,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.45,
+          },
+        });
+      }
+      if (heroOuter && heroHeadline) {
+        gsap.to(heroHeadline, {
+          y: -36,
+          opacity: 0.45,
+          ease: "none",
+          scrollTrigger: {
+            trigger: heroOuter,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.35,
+          },
+        });
+      }
+      if (heroOuter && heroCard) {
+        gsap.to(heroCard, {
+          y: -18,
+          ease: "none",
+          scrollTrigger: {
+            trigger: heroOuter,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.35,
+          },
+        });
+      }
+      if (heroOuter && heroLauncher) {
+        gsap.to(heroLauncher, {
+          y: 12,
+          ease: "none",
+          scrollTrigger: {
+            trigger: heroOuter,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.35,
+          },
+        });
+      }
+
+      // Self-drawing SVG path + staggered scroll-triggered journey steps
+      const journeyBand = root.querySelector("[data-journey-band]");
+      const journeyLine = root.querySelector("[data-journey-line]");
+      if (journeyBand && journeyLine && typeof journeyLine.getTotalLength === "function") {
+        const len = journeyLine.getTotalLength();
+        gsap.set(journeyLine, { strokeDasharray: len, strokeDashoffset: len });
+        gsap.to(journeyLine, {
+          strokeDashoffset: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: journeyBand,
+            start: "top 82%",
+            end: "bottom 58%",
+            scrub: 0.5,
+          },
+        });
+      }
+
+      const journeyCards = [...root.querySelectorAll("[data-journey-step]")];
+      if (journeyBand && journeyCards.length) {
+        gsap.fromTo(
+          journeyCards,
+          { y: 26, scale: 0.97 },
+          {
+            y: 0,
+            scale: 1,
+            duration: 0.55,
+            stagger: 0.11,
+            ease: "power3.out",
+            clearProps: "transform",
+            scrollTrigger: {
+              trigger: journeyBand,
+              start: "top 80%",
+              once: true,
+            },
+          }
+        );
+      }
+
+      // Smooth architectural lift on lower interactive frames
+      root.querySelectorAll("[data-gsap-lift]").forEach((section) => {
+        gsap.fromTo(
+          section,
+          { y: 28, scale: 0.985 },
+          {
+            y: 0,
+            scale: 1,
+            duration: 0.55,
+            ease: "power3.out",
+            clearProps: "transform",
+            scrollTrigger: {
+              trigger: section,
+              start: "top 85%",
+              once: true,
+            },
+          }
+        );
+      });
+    }, root);
+  }
+
   function syncMotionPreference() {
-    document.documentElement.dataset.pageMotion = reducedMotion.matches ? "reduced" : "full";
-    if (reducedMotion.matches) {
+    document.documentElement.dataset.pageMotion = isReducedMotion() ? "reduced" : "full";
+    if (isReducedMotion()) {
       activeAnims.forEach((anim) => anim.pause?.());
       activeAnims.clear();
+      gsapCtx?.revert();
+      gsapCtx = null;
       root.querySelectorAll("[data-hero-item], [data-preview-panel]").forEach(clearInlineVisualProps);
+    } else {
+      setupScrollChoreography();
     }
   }
-  listen(reducedMotion, "change", syncMotionPreference);
+  const unsubMotion = subscribeMotionChange(syncMotionPreference);
 
   const initialTab = tabs[0]?.dataset.previewTab || "request";
   selectTab(initialTab, false);
@@ -137,13 +267,13 @@ export function mountShowcase() {
 
   // 1. Anime.js staggered hero entrance on load
   const heroItems = [...root.querySelectorAll("[data-hero-item]")];
-  if (heroItems.length && !reducedMotion.matches) {
+  if (heroItems.length && !isReducedMotion()) {
     track(
       animate(heroItems, {
         opacity: [0.85, 1],
-        translateY: [10, 0],
-        duration: 320,
-        delay: stagger(45),
+        translateY: [14, 0],
+        duration: 340,
+        delay: stagger(55),
         ease: "outCubic",
         onComplete: () => {
           heroItems.forEach(clearInlineVisualProps);
@@ -155,17 +285,17 @@ export function mountShowcase() {
     root.dataset.showcaseSettled = "true";
   }
 
-  // 2. Anime.js + Framer Motion feedback when switching certificates or lighting moods
+  // 2. Anime.js + Framer Motion feedback when switching certificates or moods
   listen(window, "barangay:service-change", () => {
-    if (reducedMotion.matches) return;
+    if (isReducedMotion()) return;
     const fields = [...root.querySelectorAll(".smoked-field")];
     if (fields.length) {
       track(
         animate(fields, {
-          opacity: [0.72, 1],
-          translateY: [4, 0],
-          duration: 210,
-          delay: stagger(25),
+          opacity: [0.68, 1],
+          translateY: [6, 0],
+          duration: 240,
+          delay: stagger(30),
           ease: "outCubic",
           onComplete: () => fields.forEach(clearInlineVisualProps),
         })
@@ -173,7 +303,7 @@ export function mountShowcase() {
     }
     const launcher = root.querySelector(".floating-launcher");
     if (launcher) {
-      motionAnimate(launcher, { scale: [1, 1.01, 1] }, { duration: 0.24 });
+      motionAnimate(launcher, { scale: [1, 1.015, 1] }, { duration: 0.26 });
     }
   });
 
@@ -187,43 +317,9 @@ export function mountShowcase() {
     atmosphereController?.setPaused(Boolean(event.detail?.paused));
   });
 
-  // 3. GSAP ScrollTrigger scrubbed depth parallax on the barangay hall hero backdrop
+  // 3. Compositor-only mouse-reactive depth on the barangay hall photography
   const heroOuter = root.querySelector(".sanctuary-hero-outer");
   const heroBackdrop = root.querySelector(".sanctuary-backdrop");
-  const gsapCtx = gsap.context(() => {
-    if (reducedMotion.matches) return;
-    if (heroOuter && heroBackdrop) {
-      gsap.to(heroBackdrop, {
-        yPercent: 9,
-        ease: "none",
-        scrollTrigger: {
-          trigger: heroOuter,
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
-    }
-    root.querySelectorAll("[data-gsap-lift]").forEach((section) => {
-      gsap.fromTo(
-        section,
-        { y: 16 },
-        {
-          y: 0,
-          duration: 0.45,
-          ease: "power2.out",
-          clearProps: "transform",
-          scrollTrigger: {
-            trigger: section,
-            start: "top 88%",
-            once: true,
-          },
-        }
-      );
-    });
-  }, root);
-
-  // 4. Compositor-only mouse-reactive depth on the barangay hall photography
   let heroRect = heroOuter ? heroOuter.getBoundingClientRect() : null;
   let parallaxRaf = 0;
   let targetPx = 0;
@@ -233,7 +329,7 @@ export function mountShowcase() {
 
   function tickParallax() {
     parallaxRaf = 0;
-    if (!heroBackdrop || reducedMotion.matches) return;
+    if (!heroBackdrop || isReducedMotion()) return;
     currentPx += (targetPx - currentPx) * 0.09;
     currentPy += (targetPy - currentPy) * 0.09;
     heroBackdrop.style.setProperty("--hero-px", `${currentPx.toFixed(2)}px`);
@@ -245,34 +341,32 @@ export function mountShowcase() {
 
   if (heroOuter && heroBackdrop) {
     listen(heroOuter, "pointermove", (event) => {
-      if (reducedMotion.matches || !heroRect || !heroRect.width || !heroRect.height) return;
-      targetPx = -((event.clientX - heroRect.left) / heroRect.width - 0.5) * 22;
-      targetPy = -((event.clientY - heroRect.top) / heroRect.height - 0.5) * 14;
+      if (isReducedMotion() || !heroRect || !heroRect.width || !heroRect.height) return;
+      targetPx = -((event.clientX - heroRect.left) / heroRect.width - 0.5) * 26;
+      targetPy = -((event.clientY - heroRect.top) / heroRect.height - 0.5) * 16;
       if (!parallaxRaf) parallaxRaf = requestAnimationFrame(tickParallax);
     });
     listen(heroOuter, "pointerleave", () => {
       targetPx = 0;
       targetPy = 0;
-      if (!parallaxRaf && !reducedMotion.matches) parallaxRaf = requestAnimationFrame(tickParallax);
+      if (!parallaxRaf && !isReducedMotion()) parallaxRaf = requestAnimationFrame(tickParallax);
     });
     listen(window, "resize", () => {
       heroRect = heroOuter.getBoundingClientRect();
     }, { passive: true });
   }
 
-  // 5. Three.js Interactive Barangay Twilight Lantern Particle Atmosphere
+  // 4. Three.js Interactive Barangay Lantern & Constellation WebGL Field
   if (heroOuter && heroOuter.querySelector("[data-barangay-atmosphere]")) {
     import("./barangay-atmosphere.js")
       .then(({ mountBarangayAtmosphere }) => {
         if (!root.isConnected) return;
-        atmosphereController = mountBarangayAtmosphere(heroOuter, { density: 56 });
+        atmosphereController = mountBarangayAtmosphere(heroOuter, { density: 68, constellations: true });
       })
-      .catch(() => {
-        // Photography remains crisp even when WebGL is unavailable.
-      });
+      .catch(() => {});
   }
 
-  // 6. Three.js Interactive 3D Purok Coverage Chart
+  // 5. Three.js Interactive 3D Purok Coverage Chart
   const chartSection = root.querySelector("[data-three-chart-section]");
   if (chartSection) {
     import("./three-chart.js")
@@ -280,14 +374,13 @@ export function mountShowcase() {
         if (!root.isConnected) return;
         chartController = mountThreeChart(chartSection);
       })
-      .catch(() => {
-        // Fallback text stays available if WebGL cannot start.
-      });
+      .catch(() => {});
   }
 
   return () => {
+    unsubMotion();
     cancelAnimationFrame(parallaxRaf);
-    gsapCtx.revert();
+    gsapCtx?.revert();
     bodyResizeObserver.disconnect();
     activeAnims.forEach((anim) => anim.pause?.());
     activeAnims.clear();

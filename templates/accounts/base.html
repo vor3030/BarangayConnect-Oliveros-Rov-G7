@@ -7,18 +7,18 @@
   <meta name="theme-color" content="{% if is_showcase %}#0d1518{% else %}#f2f5f4{% endif %}">
   <meta name="description" content="{% block meta_description %}Barangay Connect lets residents request official clearances and certificates online, track approvals in real time, and manage household details.{% endblock %}">
   {% if user.is_authenticated and not is_showcase %}<meta name="robots" content="noindex, nofollow">{% endif %}
-  <link rel="icon" type="image/svg+xml" href="{% static 'accounts/favicon.svg' %}?v=20261125d">
+  <link rel="icon" type="image/svg+xml" href="{% static 'accounts/favicon.svg' %}?v=20261125e">
   <title>{% block title %}Barangay Connect{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'accounts/ui/portal.css' %}?v=20261125d">
-  <link rel="stylesheet" href="{% static 'accounts/theme.css' %}?v=20261125d">
-  <link rel="stylesheet" href="{% static 'accounts/site.css' %}?v=20261125d">
-  <link rel="stylesheet" href="{% static 'accounts/resident.css' %}?v=20261125d">
-  <link rel="stylesheet" href="{% static 'documents/documents.css' %}?v=20261125d">
-  <link rel="stylesheet" href="{% static 'accounts/site-motion.css' %}?v=20261125d">
+  <link rel="stylesheet" href="{% static 'accounts/ui/portal.css' %}?v=20261125e">
+  <link rel="stylesheet" href="{% static 'accounts/theme.css' %}?v=20261125e">
+  <link rel="stylesheet" href="{% static 'accounts/site.css' %}?v=20261125e">
+  <link rel="stylesheet" href="{% static 'accounts/resident.css' %}?v=20261125e">
+  <link rel="stylesheet" href="{% static 'documents/documents.css' %}?v=20261125e">
+  <link rel="stylesheet" href="{% static 'accounts/site-motion.css' %}?v=20261125e">
   {% block extra_head %}{% endblock %}
-  <script type="module" src="{% static 'accounts/ui/portal.js' %}?v=20261125d"></script>
+  <script type="module" src="{% static 'accounts/ui/portal.js' %}?v=20261125e"></script>
 </head>
-<body class="{% if user.is_authenticated and not is_showcase %}is-portal{% else %}is-public{% endif %}{% if is_showcase %} is-showcase{% endif %}">
+<body class="{% if user.is_authenticated and not is_showcase %}is-portal{% else %}is-public{% endif %}{% if is_showcase %} is-showcase{% endif %}{% block body_class %}{% endblock %}">
   <div class="page-scroll-progress" aria-hidden="true"><span data-scroll-progress></span></div>
   <a class="skip-link" href="#main-content">Skip to content</a>
   {% if user.is_authenticated and not is_showcase %}
@@ -71,9 +71,9 @@
     </div>
   </header>
   {% endif %}
-  <main class="{% if not is_showcase %}shell{% endif %}" id="main-content" tabindex="-1">
+  <main class="{% block main_class %}{% if not is_showcase %}shell{% endif %}{% endblock %}" id="main-content" tabindex="-1">
     {% if messages %}
-      <div class="{% if is_showcase %}landing-shell{% endif %}">
+      <div class="{% block notice_wrap_class %}{% if is_showcase %}landing-shell{% endif %}{% endblock %}">
         {% for message in messages %}
           <p class="notice{% if message.tags %} notice-{{ message.tags }}{% endif %}" role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}">{{ message }}</p>
         {% endfor %}

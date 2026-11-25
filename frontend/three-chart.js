@@ -16,6 +16,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { animate } from "animejs";
+import { isReducedMotion, subscribeMotionChange } from "./motion-pref.js";
 
 const PUROK_ITEMS = [
   {
@@ -85,8 +86,6 @@ export function mountThreeChart(root) {
 
   if (!stage || !canvas) return null;
 
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
   let selectedIndex = 1;
   let hoveredIndex = -1;
   let visible = false;
@@ -139,7 +138,7 @@ export function mountThreeChart(root) {
     if (detailPrimaryLabel) detailPrimaryLabel.textContent = item.primaryLabel;
     if (detailSecondaryLabel) detailSecondaryLabel.textContent = item.secondaryLabel;
 
-    if (animateSwap && !reducedMotion.matches && detailPrimary && detailSecondary) {
+    if (animateSwap && !isReducedMotion() && detailPrimary && detailSecondary) {
       const fromP = Number.parseInt(detailPrimary.textContent || "0", 10) || 0;
       const fromS = Number.parseInt(detailSecondary.textContent || "0", 10) || 0;
       const numState = { p: fromP, s: fromS };
@@ -170,7 +169,7 @@ export function mountThreeChart(root) {
       });
     }
 
-    if (animateSwap && detailCard && !reducedMotion.matches) {
+    if (animateSwap && detailCard && !isReducedMotion()) {
       trackAnim(
         animate(detailCard, {
           opacity: [0.84, 1],
@@ -352,7 +351,7 @@ export function mountThreeChart(root) {
     if (!renderer || !scene || !camera || destroyed) return;
     applyBarGeometry();
     const radius = 10.2;
-    const drift = reducedMotion.matches || userPaused ? 0 : Math.sin(elapsed * 0.24) * 0.14;
+    const drift = isReducedMotion() || userPaused ? 0 : Math.sin(elapsed * 0.24) * 0.14;
     const angle = orbitAzimuth + drift + smoothTilt.x * 0.18;
     const elev = MathUtils.clamp(orbitPolar + smoothTilt.y * -0.08, 0.25, 0.85);
     camera.position.set(
@@ -368,7 +367,7 @@ export function mountThreeChart(root) {
     selectedIndex = MathUtils.clamp(index, 0, PUROK_ITEMS.length - 1);
     updateDetailPanel(animateSwap);
     if (!renderer) return;
-    if (reducedMotion.matches) {
+    if (isReducedMotion()) {
       barPairs.forEach((pair) => {
         pair.lift = pair.index === selectedIndex ? 0.16 : 0;
       });
@@ -434,7 +433,7 @@ export function mountThreeChart(root) {
     if (!event || isDragging || destroyed) return;
     if (!stageRect.width || !stageRect.height) return;
 
-    if (!reducedMotion.matches && !userPaused) {
+    if (!isReducedMotion() && !userPaused) {
       pointerTilt.set(
         ((event.clientX - stageRect.left) / stageRect.width - 0.5) * 2,
         ((event.clientY - stageRect.top) / stageRect.height - 0.5) * 2
@@ -538,13 +537,13 @@ export function mountThreeChart(root) {
 
   function syncToggleUI() {
     if (!motionToggle) return;
-    motionToggle.hidden = reducedMotion.matches;
+    motionToggle.hidden = isReducedMotion();
     motionToggle.setAttribute("aria-pressed", String(userPaused));
     motionToggle.textContent = userPaused ? "Resume 3D drift" : "Pause 3D drift";
   }
 
   function syncRunning() {
-    const running = !destroyed && Boolean(renderer) && visible && !document.hidden && !reducedMotion.matches && !userPaused;
+    const running = !destroyed && Boolean(renderer) && visible && !document.hidden && !isReducedMotion() && !userPaused;
     if (running && !rafId) {
       lastTime = 0;
       rafId = requestAnimationFrame(tick);
@@ -591,7 +590,7 @@ export function mountThreeChart(root) {
   );
   intersectionObserver.observe(stage);
   document.addEventListener("visibilitychange", syncRunning);
-  reducedMotion.addEventListener("change", syncRunning);
+  const unsubMotion = subscribeMotionChange(syncRunning);
 
   root.querySelectorAll("[data-chart-controls]").forEach((el) => {
     el.hidden = false;
@@ -610,8 +609,8 @@ export function mountThreeChart(root) {
       cancelAnimationFrame(hoverRafId);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
+      unsubMotion();
       document.removeEventListener("visibilitychange", syncRunning);
-      reducedMotion.removeEventListener("change", syncRunning);
       motionToggle?.removeEventListener("click", onMotionToggle);
       if (renderer) {
         canvas.removeEventListener("pointerdown", onPointerDown);

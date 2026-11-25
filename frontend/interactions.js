@@ -1,17 +1,42 @@
 import { animate as motionAnimate, hover, press } from "motion";
-import { animate as animeAnimate } from "animejs";
+import { animate as animeAnimate, stagger } from "animejs";
+import { isReducedMotion, mountMotionOverrideBanner, subscribeMotionChange } from "./motion-pref.js";
 
 export function mountInteractions() {
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mountMotionOverrideBanner();
+
   const cleanups = [];
   const activeMotion = new Map();
   const activeAnime = new Set();
 
-  const spring = { type: "spring", stiffness: 420, damping: 28 };
+  const spring = { type: "spring", stiffness: 420, damping: 26 };
   const runSpring = (el, values) => {
     activeMotion.get(el)?.stop();
     activeMotion.set(el, motionAnimate(el, values, spring));
   };
+
+  function bindSpotlightCards() {
+    document.querySelectorAll("[data-spotlight-card]").forEach((card) => {
+      const onMove = (event) => {
+        const rect = card.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty("--card-mx", `${x.toFixed(1)}%`);
+        card.style.setProperty("--card-my", `${y.toFixed(1)}%`);
+        card.style.setProperty("--card-glow", "1");
+      };
+      const onLeave = () => {
+        card.style.setProperty("--card-glow", "0");
+      };
+      card.addEventListener("pointermove", onMove);
+      card.addEventListener("pointerleave", onLeave);
+      cleanups.push(() => {
+        card.removeEventListener("pointermove", onMove);
+        card.removeEventListener("pointerleave", onLeave);
+      });
+    });
+  }
 
   function bindMotionPhysics() {
     while (cleanups.length) cleanups.pop()();
@@ -21,33 +46,61 @@ export function mountInteractions() {
     });
     activeMotion.clear();
 
-    if (reduced.matches) return;
+    bindSpotlightCards();
+    if (isReducedMotion()) return;
 
-    // Framer Motion spring hover + tactile press on dedicated spring-enabled controls
+    // Framer Motion spring hover + tactile press physics
     cleanups.push(
       hover("[data-spring-pill]", (el) => {
-        runSpring(el, { y: -2, scale: 1.03 });
+        runSpring(el, { y: -2.5, scale: 1.035 });
         return () => runSpring(el, { y: 0, scale: 1 });
       })
     );
     cleanups.push(
       press("[data-spring-pill]", (el) => {
-        runSpring(el, { scale: 0.95 });
+        runSpring(el, { scale: 0.94 });
         return () => runSpring(el, { scale: 1 });
       })
     );
     cleanups.push(
       hover("[data-spring-card]", (el) => {
-        runSpring(el, { y: -4 });
-        return () => runSpring(el, { y: 0 });
+        runSpring(el, { y: -5, scale: 1.01 });
+        return () => runSpring(el, { y: 0, scale: 1 });
+      })
+    );
+    cleanups.push(
+      press("[data-spring-card]", (el) => {
+        runSpring(el, { scale: 0.985 });
+        return () => runSpring(el, { scale: 1 });
       })
     );
   }
 
-  // Anime.js smooth numeric roll-up on dashboard KPI counters
-  function mountCounters() {
+  // Anime.js staggered auth form field entrance + smooth KPI roll-ups
+  function mountAnimeChoreography() {
+    if (isReducedMotion()) return;
+
+    const authItems = [...document.querySelectorAll(".auth-form .form-field, .auth-form h1, .auth-form .form-description, .auth-form .button, .portal-benefits article")];
+    if (authItems.length) {
+      const anim = animeAnimate(authItems, {
+        opacity: [0.78, 1],
+        translateY: [10, 0],
+        duration: 320,
+        delay: stagger(35),
+        ease: "outCubic",
+        onComplete: () => {
+          authItems.forEach((el) => {
+            el.style.removeProperty("opacity");
+            el.style.removeProperty("transform");
+          });
+          activeAnime.delete(anim);
+        },
+      });
+      activeAnime.add(anim);
+    }
+
     const counters = [...document.querySelectorAll("[data-count-up]")];
-    if (!counters.length || reduced.matches) return;
+    if (!counters.length) return;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -59,7 +112,7 @@ export function mountInteractions() {
           const state = { value: 0 };
           const anim = animeAnimate(state, {
             value: target,
-            duration: 620,
+            duration: 680,
             ease: "outExpo",
             onUpdate: () => {
               el.textContent = String(Math.round(state.value));
@@ -72,7 +125,7 @@ export function mountInteractions() {
           activeAnime.add(anim);
         });
       },
-      { threshold: 0.25 }
+      { threshold: 0.2 }
     );
     counters.forEach((el) => observer.observe(el));
     cleanups.push(() => observer.disconnect());
@@ -112,14 +165,17 @@ export function mountInteractions() {
 
   document.querySelector("[data-error-summary]")?.focus({ preventScroll: false });
   bindMotionPhysics();
-  mountCounters();
-  reduced.addEventListener("change", bindMotionPhysics);
+  mountAnimeChoreography();
+  const unsub = subscribeMotionChange(() => {
+    bindMotionPhysics();
+    mountAnimeChoreography();
+  });
   document.documentElement.dataset.interactionsReady = "true";
 
   return () => {
+    unsub();
     while (cleanups.length) cleanups.pop()();
     activeMotion.forEach((anim) => anim.stop());
     activeAnime.forEach((anim) => anim.pause?.());
-    reduced.removeEventListener("change", bindMotionPhysics);
   };
 }

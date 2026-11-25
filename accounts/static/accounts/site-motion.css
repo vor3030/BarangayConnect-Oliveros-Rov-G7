@@ -30,7 +30,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-scroll-progress {
+  html:not([data-motion-override="full"]) .page-scroll-progress {
     display: none;
   }
 }

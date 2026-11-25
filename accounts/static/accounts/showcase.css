@@ -37,6 +37,21 @@
   overflow: hidden;
   background-color: var(--bc-night, #0d1518);
 }
+.sanctuary-hero-outer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--spot-opacity, 0);
+  background: radial-gradient(
+    36rem circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(245, 192, 107, 0.2),
+    rgba(124, 201, 182, 0.08) 40%,
+    transparent 70%
+  );
+  transition: opacity .3s ease-out;
+}
 .sanctuary-backdrop {
   position: absolute;
   inset: -4%;
@@ -535,6 +550,93 @@
 }
 
 /* Below-the-Fold Sections (Alternating Crisp Daylight & Deep Twilight Bands) */
+.journey-band {
+  position: relative;
+  background: linear-gradient(180deg, #0d1518 0%, #122127 100%);
+  color: var(--bc-on-dark);
+  padding: 4.5rem 1.5rem;
+  padding-block: clamp(3.75rem, 6.5vw, 5.5rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.journey-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin-bottom: 2.25rem;
+}
+.journey-head h2 {
+  font-size: clamp(1.85rem, 3vw, 2.55rem);
+  font-weight: 650;
+  color: #ffffff;
+}
+.journey-head p {
+  margin: .45rem 0 0;
+  max-width: 52ch;
+  color: var(--bc-on-dark-muted);
+  font-size: .95rem;
+}
+.journey-track-wrap {
+  position: relative;
+}
+.journey-svg {
+  display: block;
+  width: 100%;
+  height: 3.25rem;
+  margin-bottom: 1.25rem;
+  overflow: visible;
+}
+.journey-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.journey-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  border-radius: var(--bc-card-radius);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(235, 244, 246, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--bc-on-dark);
+}
+.journey-step-num {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  align-self: flex-start;
+  padding: .28rem .72rem;
+  margin-bottom: 1rem;
+  border-radius: var(--bc-pill-radius);
+  background: rgba(231, 212, 181, 0.14);
+  border: 1px solid rgba(231, 212, 181, 0.32);
+  color: var(--bc-champagne);
+  font-size: .78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.journey-card h3 {
+  font-size: 1.18rem;
+  font-weight: 650;
+  color: #ffffff;
+  margin-bottom: .5rem;
+}
+.journey-card p {
+  margin: 0;
+  font-size: .88rem;
+  line-height: 1.65;
+  color: var(--bc-on-dark-muted);
+}
+@media (max-width: 56rem) {
+  .journey-grid { grid-template-columns: 1fr; }
+  .journey-svg { display: none; }
+}
+
 .landing-band-light {
   background: var(--bc-background);
   color: var(--bc-ink);

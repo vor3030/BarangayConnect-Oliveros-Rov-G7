@@ -4,6 +4,7 @@ import {
   OrthographicCamera, Scene, SphereGeometry, Vector2, WebGLRenderer,
 } from "three";
 import { gsap } from "gsap";
+import { isReducedMotion, subscribeMotionChange } from "./motion-pref.js";
 
 function makeNeighborhood() {
   const model = new Group();
@@ -85,7 +86,7 @@ function makeNeighborhood() {
   return model;
 }
 
-export function mountNeighborhood(panel, reducedMotion) {
+export function mountNeighborhood(panel) {
   const canvas = panel.querySelector(".neighborhood-canvas");
   let renderer;
   try {
@@ -152,7 +153,7 @@ export function mountNeighborhood(panel, reducedMotion) {
   }
 
   function syncMotion() {
-    const running = !paused && visible && !reducedMotion.matches && display.matches && !document.hidden;
+    const running = !paused && visible && !isReducedMotion() && display.matches && !document.hidden;
     if (running && !frame) frame = requestAnimationFrame(tick);
     if (!running && frame) {
       cancelAnimationFrame(frame);
@@ -182,7 +183,7 @@ export function mountNeighborhood(panel, reducedMotion) {
   window.addEventListener("scroll", updateBounds, { passive: true });
   document.addEventListener("visibilitychange", syncMotion);
   display.addEventListener("change", syncMotion);
-  reducedMotion.addEventListener("change", syncMotion);
+  const unsubMotion = subscribeMotionChange(syncMotion);
   observer.observe(panel);
   sizeObserver.observe(panel);
   resize();
@@ -198,7 +199,7 @@ export function mountNeighborhood(panel, reducedMotion) {
       const target = name === "aerial" ? { x: 1.4, y: 14.5, z: 7.2 } : { x: 8.8, y: 10.4, z: 11 };
       panel.dataset.sceneView = name;
       cameraTween?.kill();
-      if (reducedMotion.matches || paused) {
+      if (isReducedMotion() || paused) {
         camera.position.set(target.x, target.y, target.z);
         render();
         return;
@@ -210,12 +211,12 @@ export function mountNeighborhood(panel, reducedMotion) {
       cameraTween?.kill();
       observer.disconnect();
       sizeObserver.disconnect();
+      unsubMotion();
       panel.removeEventListener("pointermove", aim);
       panel.removeEventListener("pointerleave", resetPointer);
       window.removeEventListener("scroll", updateBounds);
       document.removeEventListener("visibilitychange", syncMotion);
       display.removeEventListener("change", syncMotion);
-      reducedMotion.removeEventListener("change", syncMotion);
       renderer.dispose();
     },
   };

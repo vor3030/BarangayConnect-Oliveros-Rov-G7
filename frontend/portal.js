@@ -1,7 +1,6 @@
 import Alpine from "alpinejs";
 import "./fonts.css";
-
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+import { isReducedMotion, subscribeMotionChange } from "./motion-pref.js";
 
 const LANDING_SERVICES = [
   {
@@ -284,6 +283,14 @@ Alpine.data("reviewPresets", () => ({
   },
 }));
 
+Alpine.data("authMood", () => ({
+  mood: "twilight",
+  setMood(next) {
+    this.mood = next;
+    window.dispatchEvent(new CustomEvent("barangay:mood-change", { detail: { mood: next } }));
+  },
+}));
+
 Alpine.data("motionScene", () => ({
   paused: false,
   view: "neighborhood",
@@ -291,23 +298,24 @@ Alpine.data("motionScene", () => ({
   controller: null,
   display: null,
   preferenceChanged: null,
+  unsubMotion: null,
   loading: false,
 
   init() {
     this.display = window.matchMedia("(min-width: 47rem)");
     this.preferenceChanged = () => this.mount();
     this.display.addEventListener("change", this.preferenceChanged);
-    reducedMotion.addEventListener("change", this.preferenceChanged);
+    this.unsubMotion = subscribeMotionChange(this.preferenceChanged);
     this.mount();
   },
 
   async mount() {
-    if (this.loading || this.controller || reducedMotion.matches || !this.display.matches) return;
+    if (this.loading || this.controller || isReducedMotion() || !this.display.matches) return;
     this.loading = true;
     try {
       const { mountNeighborhood } = await import("./neighborhood.js");
-      if (!this.$root.isConnected || reducedMotion.matches || !this.display.matches) return;
-      this.controller = mountNeighborhood(this.$root, reducedMotion);
+      if (!this.$root.isConnected || isReducedMotion() || !this.display.matches) return;
+      this.controller = mountNeighborhood(this.$root);
       this.ready = Boolean(this.controller);
       this.$root.dispatchEvent(new CustomEvent("scene:ready"));
     } catch {
@@ -331,12 +339,21 @@ Alpine.data("motionScene", () => ({
 
   destroy() {
     this.display?.removeEventListener("change", this.preferenceChanged);
-    reducedMotion.removeEventListener("change", this.preferenceChanged);
+    this.unsubMotion?.();
     this.controller?.destroy();
   },
 }));
 
 Alpine.start();
+
+const motionAdapter = {
+  get matches() {
+    return isReducedMotion();
+  },
+  addEventListener(_event, fn) {
+    subscribeMotionChange(fn);
+  },
+};
 
 import("./interactions.js").then(({ mountInteractions }) => mountInteractions()).catch(() => {});
 
@@ -345,10 +362,10 @@ import("./motion.js").then(({ mountMotion }) => mountMotion()).catch(() => {
 });
 
 if (document.querySelector("[data-icon-animation]")) {
-  import("./icons.js").then(({ mountIcons }) => mountIcons(reducedMotion)).catch(() => {});
+  import("./icons.js").then(({ mountIcons }) => mountIcons(motionAdapter)).catch(() => {});
 }
 if (document.querySelector("[data-account-chart]")) {
-  import("./account-chart.js").then(({ mountAccountChart }) => mountAccountChart(reducedMotion)).catch(() => {});
+  import("./account-chart.js").then(({ mountAccountChart }) => mountAccountChart(motionAdapter)).catch(() => {});
 }
 if (document.querySelector("[data-showcase]")) {
   import("./showcase.js").then(({ mountShowcase }) => mountShowcase()).catch(() => {});

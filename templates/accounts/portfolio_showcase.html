@@ -9,7 +9,7 @@
 <meta property="og:image" content="{% static 'accounts/hero-barangay-hall.jpg' %}">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="{{ request.build_absolute_uri }}">
-<link rel="stylesheet" href="{% static 'accounts/showcase.css' %}?v=20261125d">
+<link rel="stylesheet" href="{% static 'accounts/showcase.css' %}?v=20261125e">
 {% endblock %}
 {% block content %}
 <div class="showcase" data-showcase x-data="landingPortal">
@@ -199,7 +199,45 @@
     </div>
   </section>
 
-  <!-- 2. Interactive Service Workflow Section -->
+  <!-- 2. Scroll-Driven Barangay Document Journey (GSAP ScrollTrigger + SVG Draw + Framer Motion) -->
+  <section class="journey-band" data-journey-band aria-labelledby="journey-title">
+    <div class="landing-shell">
+      <div class="journey-head">
+        <div>
+          <h2 id="journey-title">Three calm steps from home to Window 2.</h2>
+          <p>Scroll through how every online barangay request moves from submission to verified release with zero manual logbooks.</p>
+        </div>
+      </div>
+      <div class="journey-track-wrap">
+        <svg class="journey-svg" viewBox="0 0 1200 72" fill="none" aria-hidden="true">
+          <path d="M40 36 C 260 6, 400 66, 600 36 S 940 6, 1160 36" stroke="rgba(235, 244, 246, 0.14)" stroke-width="2" stroke-dasharray="6 8"/>
+          <path data-journey-line d="M40 36 C 260 6, 400 66, 600 36 S 940 6, 1160 36" stroke="#e7d4b5" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="40" cy="36" r="7" fill="#e59a3c"/>
+          <circle cx="600" cy="36" r="7" fill="#7cc9b6"/>
+          <circle cx="1160" cy="36" r="7" fill="#e7d4b5"/>
+        </svg>
+        <div class="journey-grid">
+          <article class="journey-card" data-journey-step data-spotlight-card data-spring-card>
+            <span class="journey-step-num">01 &middot; Online filing</span>
+            <h3>Pick your certificate &amp; purpose</h3>
+            <p>Choose from five official barangay documents, state your purpose and copies, and get an instant tracking code from phone or desktop.</p>
+          </article>
+          <article class="journey-card" data-journey-step data-spotlight-card data-spring-card>
+            <span class="journey-step-num">02 &middot; Live verification</span>
+            <h3>Barangay staff verify in order</h3>
+            <p>Officials review oldest Pending requests first, record pickup window instructions, and log every status change straight to your timeline.</p>
+          </article>
+          <article class="journey-card" data-journey-step data-spotlight-card data-spring-card>
+            <span class="journey-step-num">03 &middot; Ready for pickup</span>
+            <h3>Walk in once with your valid ID</h3>
+            <p>Arrive only when your tracker reads Approved. Claim your signed barangay certificate at Window 2 without repeat trips or waiting lines.</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Interactive Service Workflow Section -->
   <section class="landing-band-light" id="services" aria-labelledby="services-title">
     <div class="landing-shell">
       <div class="section-bar">
@@ -214,7 +252,7 @@
         </div>
       </div>
 
-      <div class="workflow-panel-shell" data-preview-window data-gsap-lift>
+      <div class="workflow-panel-shell" data-preview-window data-gsap-lift data-spotlight-card>
         <section class="workflow-panel" id="preview-request" data-preview-panel="request">
           <div class="workflow-panel-copy">
             <h3>Submit verified requests in minutes</h3>
@@ -345,7 +383,7 @@
         </div>
       </div>
 
-      <div class="chart-frame" data-gsap-lift>
+      <div class="chart-frame" data-gsap-lift data-spotlight-card>
         <div class="three-chart-stage" data-three-chart-stage>
           <canvas class="three-chart-canvas" data-three-chart></canvas>
           <noscript><p class="chart-fallback-note">Enable JavaScript to explore the interactive 3D purok overview.</p></noscript>
