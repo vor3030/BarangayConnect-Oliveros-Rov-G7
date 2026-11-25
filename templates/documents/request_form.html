@@ -7,7 +7,7 @@
   {% if is_edit %}Back to request {{ doc_request.reference_code }}{% else %}Back to document requests{% endif %}
 </a>
 
-<div class="doc-page-header" data-reveal>
+<div class="doc-page-header">
   <div>
     <h1>{% if is_edit %}Edit request {{ doc_request.reference_code }}{% else %}Request a barangay document{% endif %}</h1>
     <p>{% if is_edit %}Update your details while this request is still Pending review.{% else %}Fill out the form below to submit an online request. New requests start as Pending and are reviewed by barangay staff.{% endif %}</p>
@@ -15,7 +15,7 @@
 </div>
 
 <div class="doc-split-layout">
-  <section class="card" data-reveal>
+  <section class="card">
     <form method="post" novalidate>
       {% csrf_token %}
       {% include 'accounts/form_fields.html' %}
@@ -26,7 +26,7 @@
     </form>
   </section>
 
-  <aside class="card doc-guide-card" data-reveal>
+  <aside class="card doc-guide-card">
     <h2>Before you submit</h2>
     <ul class="doc-guide-list">
       <li>All new requests start in <strong>Pending</strong> status until verified by barangay staff.</li>

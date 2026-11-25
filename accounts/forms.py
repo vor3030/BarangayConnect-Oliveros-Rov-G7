@@ -21,6 +21,13 @@ class RegistrationForm(UniqueEmailMixin, BaseUserCreationForm):
         model = User
         fields = ("full_name", "username", "email", "contact_number")
 
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label_suffix", "")
+        super().__init__(*args, **kwargs)
+        self.fields["username"].help_text = "Letters, numbers, or @ . + - _ only."
+        self.fields["password1"].help_text = "Use at least 8 characters and avoid common or all-numeric passwords."
+        self.fields["password2"].help_text = "Re-enter the same password to confirm."
+
     def clean_username(self):
         username = self.cleaned_data["username"]
         if User.objects.filter(username__iexact=username).exists():
@@ -41,6 +48,10 @@ class LoginForm(AuthenticationForm):
         "inactive": "This account is inactive.",
     }
 
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label_suffix", "")
+        super().__init__(*args, **kwargs)
+
 
 class ProfileForm(UniqueEmailMixin, ModelForm):
     photo = forms.FileField(
@@ -51,6 +62,10 @@ class ProfileForm(UniqueEmailMixin, ModelForm):
         ),
         help_text="Choose a JPG, PNG, or WebP image up to 5 MB.",
     )
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("label_suffix", "")
+        super().__init__(*args, **kwargs)
 
     def clean_photo(self):
         upload = self.cleaned_data["photo"]

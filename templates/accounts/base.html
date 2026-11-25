@@ -1,9 +1,13 @@
 {% load static %}
 <!doctype html>
-<html lang="en" data-type="software">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="{% if is_showcase %}#0d1518{% else %}#f2f5f4{% endif %}">
+  <meta name="description" content="{% block meta_description %}Barangay Connect lets residents request official clearances and certificates online, track approvals in real time, and manage household details.{% endblock %}">
+  {% if user.is_authenticated and not is_showcase %}<meta name="robots" content="noindex, nofollow">{% endif %}
+  <link rel="icon" type="image/svg+xml" href="{% static 'accounts/favicon.svg' %}">
   <title>{% block title %}Barangay Connect{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'accounts/ui/portal.css' %}">
   <link rel="stylesheet" href="{% static 'accounts/site.css' %}">
@@ -11,23 +15,14 @@
   <link rel="stylesheet" href="{% static 'documents/documents.css' %}">
   <link rel="stylesheet" href="{% static 'accounts/site-motion.css' %}">
   {% block extra_head %}{% endblock %}
-  <meta name="page-type" content="software">
-  <meta name="site-kind" content="software">
   <script type="module" src="{% static 'accounts/ui/portal.js' %}"></script>
 </head>
 <body class="{% if user.is_authenticated and not is_showcase %}is-portal{% else %}is-public{% endif %}{% if is_showcase %} is-showcase{% endif %}">
-  {% if is_showcase %}
-  <div class="showcase-backdrop" data-showcase-bg aria-hidden="true">
-    <canvas class="showcase-bg-canvas" data-showcase-bg-canvas></canvas>
-    <div class="showcase-bg-wash"></div>
-  </div>
-  {% endif %}
   <div class="page-scroll-progress" aria-hidden="true"><span data-scroll-progress></span></div>
   <a class="skip-link" href="#main-content">Skip to content</a>
   {% if user.is_authenticated and not is_showcase %}
   <aside class="portal-sidebar" aria-label="Community portal">
     {% include 'accounts/brand.html' %}
-    <p class="sidebar-caption">Your community space</p>
     <nav class="sidebar-nav" aria-label="Portal navigation">
       <a href="{% url 'dashboard' %}"{% if 'dashboard' in request.resolver_match.url_name %} aria-current="page"{% endif %}>{% include 'accounts/ui_icon.html' with name='home' %}<span>Overview</span></a>
       {% if user.is_staff %}
@@ -36,34 +31,37 @@
       <a href="{% url 'documents:list' %}"{% if request.resolver_match.app_name == 'documents' %} aria-current="page"{% endif %}>{% include 'accounts/ui_icon.html' with name='document' %}<span>Document requests</span></a>
       {% endif %}
       <a href="{% url 'profile' %}"{% if 'profile' in request.resolver_match.url_name %} aria-current="page"{% endif %}>{% include 'accounts/ui_icon.html' with name='user' %}<span>My profile</span></a>
-      <a href="#portal-help">{% include 'accounts/ui_icon.html' with name='help' %}<span>A little help</span></a>
-      <a href="{% url 'portfolio_showcase' %}">{% include 'accounts/ui_icon.html' with name='leaf' %}<span>Interface showcase</span></a>
+      <a href="{% url 'dashboard' %}#portal-help">{% include 'accounts/ui_icon.html' with name='help' %}<span>Help desk</span></a>
       {% if user.is_superuser %}<a href="{% url 'admin:accounts_user_changelist' %}">{% include 'accounts/ui_icon.html' with name='people' %}<span>Manage residents</span></a>{% endif %}
     </nav>
-    <div class="sidebar-note">{% include 'accounts/ui_icon.html' with name='leaf' %}<p>Good communities<br>start with <em>connection.</em></p><span>Glad to have you here.</span></div>
-    <div class="sidebar-account"><span class="account-monogram" aria-hidden="true">{{ user.full_name|first|upper }}</span><div><strong>{{ user.get_full_name }}</strong><span>{{ user.role_label }} account</span></div></div>
-    <form method="post" action="{% url 'logout' %}" class="sidebar-logout">{% csrf_token %}<button type="submit">{% include 'accounts/animated_icon.html' with icon='log-out' only %}Sign out</button></form>
+    <div class="sidebar-footer">
+      <div class="sidebar-account">
+        {% if user.profile_photo %}
+          <img class="account-monogram" src="{% url 'profile_photo' %}" alt="" width="40" height="40">
+        {% else %}
+          <span class="account-monogram" aria-hidden="true">{{ user.full_name|default:user.username|first|upper }}</span>
+        {% endif %}
+        <div><strong>{{ user.get_full_name }}</strong><span>{{ user.role_label }} account</span></div>
+      </div>
+      <form method="post" action="{% url 'logout' %}" class="sidebar-logout">{% csrf_token %}<button type="submit">{% include 'accounts/animated_icon.html' with icon='log-out' only %}Sign out</button></form>
+    </div>
   </aside>
   {% endif %}
+  {% if not is_showcase %}
   <header class="site-header">
     <div class="shell header-inner">
       <div class="header-brand">{% include 'accounts/brand.html' %}</div>
-      {% if user.is_authenticated and not is_showcase %}<div class="portal-breadcrumb">Your barangay <span>/</span> {% block breadcrumb %}{% if 'profile' in request.resolver_match.url_name %}My profile{% elif request.resolver_match.app_name == 'documents' %}Document requests{% else %}Overview{% endif %}{% endblock %}</div><div class="header-date"><time datetime="{% now 'Y-m-d' %}">{% now "D, M j, Y" %}</time><span class="account-role">{% include 'accounts/ui_icon.html' with name='shield' %}{{ user.role_label }} portal</span></div>{% elif not is_showcase %}<span class="header-tagline">A little closer. A lot more connected.</span>{% endif %}
+      {% if user.is_authenticated %}<nav class="portal-breadcrumb" aria-label="Breadcrumb">Barangay Connect <span aria-hidden="true">/</span> <strong>{% block breadcrumb %}{% if 'profile' in request.resolver_match.url_name %}My profile{% elif request.resolver_match.app_name == 'documents' %}Document requests{% else %}Overview{% endif %}{% endblock %}</strong></nav><div class="header-date"><time datetime="{% now 'Y-m-d' %}">{% now "D, M j, Y" %}</time><span class="account-role">{% include 'accounts/ui_icon.html' with name='shield' %}{{ user.role_label }} portal</span></div>{% else %}<span class="header-tagline">Online barangay services and document tracking</span>{% endif %}
       <nav class="site-nav" aria-label="Main navigation">
-        {% if is_showcase %}
-          <a href="#interface-lab">Preview</a><a href="#community-pulse">Overview</a><a href="{% url 'login' %}">Sign in</a><a href="{% url 'dashboard' %}">Open portal</a>
-        {% elif user.is_authenticated %}
-          <a href="{% url 'dashboard' %}"{% if 'dashboard' in request.resolver_match.url_name %} aria-current="page"{% endif %}>{% include 'accounts/animated_icon.html' with icon='home' only %}Dashboard</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}"{% if 'dashboard' in request.resolver_match.url_name %} aria-current="page"{% endif %}>{% include 'accounts/animated_icon.html' with icon='home' only %}Overview</a>
           {% if user.is_staff %}
-          <a href="{% url 'documents:manage_list' %}"{% if request.resolver_match.app_name == 'documents' %} aria-current="page"{% endif %}>{% include 'accounts/ui_icon.html' with name='clipboard' %}Requests</a>
+          <a href="{% url 'documents:manage_list' %}"{% if request.resolver_match.app_name == 'documents' %} aria-current="page"{% endif %}>{% include 'accounts/ui_icon.html' with name='clipboard' %}Queue</a>
           {% else %}
           <a href="{% url 'documents:list' %}"{% if request.resolver_match.app_name == 'documents' %} aria-current="page"{% endif %}>{% include 'accounts/ui_icon.html' with name='document' %}Requests</a>
           {% endif %}
           <a href="{% url 'profile' %}"{% if 'profile' in request.resolver_match.url_name %} aria-current="page"{% endif %}>{% include 'accounts/animated_icon.html' with icon='user' only %}Profile</a>
-          <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button class="nav-button" type="submit">{% include 'accounts/animated_icon.html' with icon='log-out' only %}Sign out</button>
-          </form>
+          <a href="{% url 'dashboard' %}#portal-help">{% include 'accounts/ui_icon.html' with name='help' %}Help</a>
         {% else %}
           <a href="{% url 'login' %}"{% if request.resolver_match.url_name == 'login' %} aria-current="page"{% endif %}>{% include 'accounts/animated_icon.html' with icon='log-in' only %}Sign in</a>
           <a href="{% url 'register' %}"{% if request.resolver_match.url_name == 'register' %} aria-current="page"{% endif %}>{% include 'accounts/animated_icon.html' with icon='user-plus' only %}Register</a>
@@ -71,13 +69,25 @@
       </nav>
     </div>
   </header>
-  <main class="shell" id="main-content" tabindex="-1">
-    {% for message in messages %}
-      <p class="notice{% if message.tags %} notice-{{ message.tags }}{% endif %}" role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}">{{ message }}</p>
-    {% endfor %}
+  {% endif %}
+  <main class="{% if not is_showcase %}shell{% endif %}" id="main-content" tabindex="-1">
+    {% if messages %}
+      <div class="{% if is_showcase %}landing-shell{% endif %}">
+        {% for message in messages %}
+          <p class="notice{% if message.tags %} notice-{{ message.tags }}{% endif %}" role="{% if 'error' in message.tags %}alert{% else %}status{% endif %}">{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
     {% block content %}{% endblock %}
-    {% if user.is_authenticated and not is_showcase %}{% include 'accounts/portal_help.html' %}{% endif %}
+    {% if user.is_authenticated and not is_showcase and 'dashboard' in request.resolver_match.url_name %}{% include 'accounts/portal_help.html' %}{% endif %}
   </main>
-  <footer class="site-footer shell"><p>With care, for our community.</p><a href="{% url 'portfolio_showcase' %}">Interface showcase</a><span>Barangay Connect <span aria-hidden="true">/</span> A place for everyone</span></footer>
+  <footer class="site-footer shell">
+    <p>Barangay Connect — Online resident services and real-time document tracking.</p>
+    {% if user.is_authenticated and not is_showcase %}
+      <a href="{% url 'home' %}">Public home</a>
+    {% else %}
+      <a href="{% url 'dashboard' %}">Open portal</a>
+    {% endif %}
+  </footer>
 </body>
 </html>

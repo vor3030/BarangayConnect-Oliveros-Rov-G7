@@ -8,17 +8,23 @@ import { gsap } from "gsap";
 function makeNeighborhood() {
   const model = new Group();
   const shades = {
-    lawn: new MeshStandardMaterial({ color: 0x99bf85, roughness: .85 }),
-    street: new MeshStandardMaterial({ color: 0xe3e5ca }),
-    walls: new MeshStandardMaterial({ color: 0xfff3d9 }),
-    roof: new MeshStandardMaterial({ color: 0x347964 }),
-    clay: new MeshStandardMaterial({ color: 0xcf9c75 }),
-    civic: new MeshStandardMaterial({ color: 0x328374 }),
-    leaves: new MeshStandardMaterial({ color: 0x73ac73 }),
-    trunks: new MeshStandardMaterial({ color: 0x8a674c }),
-    base: new MeshStandardMaterial({ color: 0x315f47 }),
-    glass: new MeshStandardMaterial({ color: 0x9ed5d3, metalness: .2, roughness: .25 }),
-    flag: new MeshStandardMaterial({ color: 0xecc978 }),
+    lawn: new MeshStandardMaterial({ color: 0x1c3a37, roughness: .88 }),
+    street: new MeshStandardMaterial({ color: 0x2d444d, roughness: .75 }),
+    walls: new MeshStandardMaterial({ color: 0xd9e1df, roughness: .72 }),
+    roof: new MeshStandardMaterial({ color: 0x173832, roughness: .65 }),
+    clay: new MeshStandardMaterial({ color: 0x87563a, roughness: .68 }),
+    civic: new MeshStandardMaterial({ color: 0x1f524a, roughness: .58 }),
+    leaves: new MeshStandardMaterial({ color: 0x244f44, roughness: .85 }),
+    trunks: new MeshStandardMaterial({ color: 0x5d4332, roughness: .9 }),
+    base: new MeshStandardMaterial({ color: 0x0f1c21, roughness: .8 }),
+    glass: new MeshStandardMaterial({
+      color: 0xffcf7d,
+      emissive: 0xe59a3c,
+      emissiveIntensity: .85,
+      metalness: .1,
+      roughness: .22,
+    }),
+    flag: new MeshStandardMaterial({ color: 0xe7d4b5, roughness: .45 }),
   };
   const treeTop = new SphereGeometry(.33, 9, 7);
   const treeTrunk = new CylinderGeometry(.065, .09, .55, 7);
@@ -40,7 +46,7 @@ function makeNeighborhood() {
   box(8.7, .015, .85, shades.street, 0, -.045, .3);
   box(.66, .015, 7.4, shades.street, -.68, -.043, 0);
   for (let x = -3.8; x < 4; x += .65) {
-    box(.28, .02, .045, shades.walls, x, -.025, .3);
+    box(.28, .02, .045, shades.flag, x, -.025, .3);
   }
   for (const [x, z, roof] of [
     [-2.85, -1.8, shades.clay],
@@ -91,7 +97,7 @@ export function mountNeighborhood(panel, reducedMotion) {
   const scene = new Scene();
   const camera = new OrthographicCamera(-6, 6, 4, -4, .1, 60);
   const model = makeNeighborhood();
-  const sun = new DirectionalLight(0xfff5d8, 2);
+  const sun = new DirectionalLight(0xf6dfba, 1.5);
   const pointer = new Vector2();
   const display = window.matchMedia("(min-width: 47rem)");
   let paused = false;
@@ -100,18 +106,23 @@ export function mountNeighborhood(panel, reducedMotion) {
   let elapsed = 0;
   let previousTime = 0;
   let cameraTween;
+  let panelBounds = panel.getBoundingClientRect();
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   model.rotation.y = -.18;
   sun.position.set(-3, 8, 6);
   camera.position.set(8.8, 10.4, 11);
   camera.lookAt(0, 0, 0);
-  scene.add(model, sun, new AmbientLight(0xffffff, .35));
-  scene.add(new HemisphereLight(new Color(0xf2fffa), new Color(0xa5bdad), 2));
+  scene.add(model, sun, new AmbientLight(0x9bc0cc, .38));
+  scene.add(new HemisphereLight(new Color(0x96c0cf), new Color(0x0d1518), 1.45));
 
   function render() {
     camera.lookAt(0, 0, 0);
     renderer.render(scene, camera);
+  }
+
+  function updateBounds() {
+    panelBounds = panel.getBoundingClientRect();
   }
 
   function resize() {
@@ -125,6 +136,7 @@ export function mountNeighborhood(panel, reducedMotion) {
     camera.bottom = -halfHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height, false);
+    updateBounds();
     render();
   }
 
@@ -151,10 +163,10 @@ export function mountNeighborhood(panel, reducedMotion) {
   }
 
   function aim(event) {
-    const bounds = panel.getBoundingClientRect();
+    if (!panelBounds.width || !panelBounds.height) return;
     pointer.set(
-      ((event.clientX - bounds.left) / bounds.width - .5) * 2,
-      ((event.clientY - bounds.top) / bounds.height - .5) * 2,
+      ((event.clientX - panelBounds.left) / panelBounds.width - .5) * 2,
+      ((event.clientY - panelBounds.top) / panelBounds.height - .5) * 2,
     );
   }
 
@@ -167,48 +179,43 @@ export function mountNeighborhood(panel, reducedMotion) {
 
   panel.addEventListener("pointermove", aim);
   panel.addEventListener("pointerleave", resetPointer);
+  window.addEventListener("scroll", updateBounds, { passive: true });
   document.addEventListener("visibilitychange", syncMotion);
-  reducedMotion.addEventListener("change", syncMotion);
   display.addEventListener("change", syncMotion);
+  reducedMotion.addEventListener("change", syncMotion);
   observer.observe(panel);
-  sizeObserver.observe(canvas);
-  panel.dataset.sceneReady = "true";
+  sizeObserver.observe(panel);
   resize();
+  panel.dataset.sceneReady = "true";
   syncMotion();
 
   return {
     setPaused(value) {
       paused = value;
-      if (paused) cameraTween?.progress(1);
       syncMotion();
     },
-    setView(value) {
+    setView(name) {
+      const target = name === "aerial" ? { x: 1.4, y: 14.5, z: 7.2 } : { x: 8.8, y: 10.4, z: 11 };
+      panel.dataset.sceneView = name;
       cameraTween?.kill();
-      cameraTween = gsap.to(camera.position, {
-        x: value === "aerial" ? .3 : 8.8,
-        y: value === "aerial" ? 19 : 10.4,
-        z: value === "aerial" ? 5 : 11,
-        duration: paused || reducedMotion.matches ? 0 : 1.1,
-        ease: "power3.inOut", onUpdate: render,
-      });
-      panel.dataset.sceneView = value;
+      if (reducedMotion.matches || paused) {
+        camera.position.set(target.x, target.y, target.z);
+        render();
+        return;
+      }
+      cameraTween = gsap.to(camera.position, { ...target, duration: .9, ease: "power2.out", onUpdate: render });
     },
     destroy() {
-      cameraTween?.kill();
       cancelAnimationFrame(frame);
+      cameraTween?.kill();
       observer.disconnect();
       sizeObserver.disconnect();
       panel.removeEventListener("pointermove", aim);
       panel.removeEventListener("pointerleave", resetPointer);
+      window.removeEventListener("scroll", updateBounds);
       document.removeEventListener("visibilitychange", syncMotion);
-      reducedMotion.removeEventListener("change", syncMotion);
       display.removeEventListener("change", syncMotion);
-      const materials = new Set();
-      model.traverse((object) => {
-        object.geometry?.dispose();
-        if (object.material) materials.add(object.material);
-      });
-      for (const material of materials) material.dispose();
+      reducedMotion.removeEventListener("change", syncMotion);
       renderer.dispose();
     },
   };

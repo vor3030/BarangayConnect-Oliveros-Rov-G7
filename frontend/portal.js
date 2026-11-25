@@ -3,6 +3,146 @@ import "./fonts.css";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
+const LANDING_SERVICES = [
+  {
+    title: "Barangay Clearance",
+    use: "Employment & ID",
+    copies: "1 to 5 copies",
+    badge: "Most requested",
+  },
+  {
+    title: "Certificate of Indigency",
+    use: "Medical & scholarship",
+    copies: "1 to 5 copies",
+    badge: "Assistance",
+  },
+  {
+    title: "Certificate of Residency",
+    use: "School & bank proof",
+    copies: "1 to 5 copies",
+    badge: "Address proof",
+  },
+  {
+    title: "Barangay Business Clearance",
+    use: "Local permit renewal",
+    copies: "1 to 5 copies",
+    badge: "Business",
+  },
+  {
+    title: "First-Time Jobseeker Certificate",
+    use: "RA 11261 fee waiver",
+    copies: "1 to 5 copies",
+    badge: "Jobseeker",
+  },
+];
+
+Alpine.data("landingPortal", () => ({
+  services: LANDING_SERVICES,
+  serviceIndex: 0,
+  selectedType: LANDING_SERVICES[0].title,
+  helpOpen: false,
+
+  init() {
+    this.$watch("selectedType", (value) => {
+      const idx = this.services.findIndex((item) => item.title === value);
+      if (idx !== -1) this.serviceIndex = idx;
+    });
+  },
+
+  get activeService() {
+    return this.services[this.serviceIndex] || this.services[0];
+  },
+
+  get activeServiceUrl() {
+    return `/requests/new/?document_type=${encodeURIComponent(this.activeService.title)}`;
+  },
+
+  nextService() {
+    this.serviceIndex = (this.serviceIndex + 1) % this.services.length;
+    this.selectedType = this.activeService.title;
+  },
+
+  prevService() {
+    this.serviceIndex = (this.serviceIndex - 1 + this.services.length) % this.services.length;
+    this.selectedType = this.activeService.title;
+  },
+
+  selectService(index) {
+    if (index >= 0 && index < this.services.length) {
+      this.serviceIndex = index;
+      this.selectedType = this.activeService.title;
+    }
+  },
+
+  openHelp() {
+    this.helpOpen = true;
+    this.$nextTick(() => this.$refs.helpClose?.focus());
+  },
+
+  closeHelp(returnFocus = false) {
+    if (!this.helpOpen) return;
+    this.helpOpen = false;
+    if (returnFocus) {
+      this.$nextTick(() => this.$refs.helpTrigger?.focus());
+    }
+  },
+
+  toggleHelp() {
+    if (this.helpOpen) this.closeHelp(true);
+    else this.openHelp();
+  },
+}));
+
+Alpine.data("dashboardFilter", () => ({
+  status: "all",
+  query: "",
+  visibleCount: 0,
+
+  init() {
+    this.$nextTick(() => this.syncCount());
+    this.$watch("status", () => this.$nextTick(() => this.syncCount()));
+    this.$watch("query", () => this.$nextTick(() => this.syncCount()));
+  },
+
+  matches(itemStatus, searchText) {
+    if (this.status !== "all" && itemStatus !== this.status) return false;
+    const term = this.query.trim().toLowerCase();
+    if (!term) return true;
+    return String(searchText || "").toLowerCase().includes(term);
+  },
+
+  syncCount() {
+    const items = this.$root.querySelectorAll("[data-filter-item]");
+    let count = 0;
+    items.forEach((el) => {
+      if (this.matches(el.dataset.filterStatus || "", el.dataset.filterSearch || "")) {
+        count += 1;
+      }
+    });
+    this.visibleCount = count;
+  },
+
+  reset() {
+    this.status = "all";
+    this.query = "";
+  },
+}));
+
+Alpine.data("reviewPresets", () => ({
+  applyPreset(statusValue, remarkText) {
+    const statusSelect = this.$root.querySelector("select[name='status']");
+    const remarksField = this.$root.querySelector("textarea[name='staff_remarks']");
+    if (statusSelect && statusValue) {
+      const hasOption = [...statusSelect.options].some((opt) => opt.value === statusValue);
+      if (hasOption) statusSelect.value = statusValue;
+    }
+    if (remarksField) {
+      remarksField.value = remarkText;
+      remarksField.focus();
+    }
+  },
+}));
+
 Alpine.data("motionScene", () => ({
   paused: false,
   view: "neighborhood",
@@ -30,7 +170,7 @@ Alpine.data("motionScene", () => ({
       this.ready = Boolean(this.controller);
       this.$root.dispatchEvent(new CustomEvent("scene:ready"));
     } catch {
-      // The illustrated background remains available when WebGL cannot start.
+      // Static neighborhood illustration remains available when WebGL cannot start.
     } finally {
       this.loading = false;
     }
@@ -60,7 +200,7 @@ Alpine.start();
 import("./interactions.js").then(({ mountInteractions }) => mountInteractions()).catch(() => {});
 
 import("./motion.js").then(({ mountMotion }) => mountMotion()).catch(() => {
-  // Content is visible and usable even when animation enhancements are unavailable.
+  // Content remains visible and usable even when animation enhancements are unavailable.
 });
 
 if (document.querySelector("[data-icon-animation]")) {

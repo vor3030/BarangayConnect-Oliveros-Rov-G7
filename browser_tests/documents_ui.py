@@ -133,7 +133,16 @@ class DocumentRequestsBrowserTests(StaticLiveServerTestCase):
 
         # Verify mobile viewport layout has no horizontal overflow
         page.set_viewport_size({"width": 390, "height": 844})
-        self.assertFalse(page.evaluate("document.documentElement.scrollWidth > window.innerWidth"))
+        overflow = page.evaluate("""() => {
+            const diff = document.documentElement.scrollWidth - window.innerWidth;
+            if (diff <= 0) return null;
+            const offenders = [...document.querySelectorAll('*')]
+              .filter(el => el.getBoundingClientRect().right > window.innerWidth + 1)
+              .slice(0, 5)
+              .map(el => `${el.tagName}.${el.className}@${Math.round(el.getBoundingClientRect().right)}`);
+            return { diff, offenders };
+        }""")
+        self.assertIsNone(overflow, f"Mobile horizontal overflow: {overflow}")
         page.set_viewport_size({"width": 1366, "height": 900})
 
         # Sign out resident
@@ -148,7 +157,7 @@ class DocumentRequestsBrowserTests(StaticLiveServerTestCase):
         expect(page.get_by_text(first_ref)).to_be_visible()
         self.capture(page, "07-admin-dashboard-queue")
 
-        page.get_by_role("link", name="Open full request queue").click()
+        page.get_by_role("link", name="Open full request queue").first.click()
         expect(page).to_have_url(self.live_server_url + "/requests/manage/")
         self.capture(page, "08-admin-request-queue")
 

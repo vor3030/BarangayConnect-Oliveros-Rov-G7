@@ -1,25 +1,38 @@
 {% extends 'accounts/base.html' %}
 {% block title %}Your profile | Barangay Connect{% endblock %}
+{% block breadcrumb %}My profile{% endblock %}
 {% block content %}
 <div class="profile-layout">
-<aside class="profile-identity" data-reveal>{% include 'accounts/profile_avatar.html' %}<h2>{{ user.get_full_name }}</h2><p>@{{ user.username }}</p><span class="identity-badge">{% include 'accounts/ui_icon.html' with name='shield' %}{{ user.role_label }} account</span><div class="identity-art">{% include 'accounts/community_art.html' %}</div><p class="identity-caption">A familiar face.<br>A part of our community.</p></aside>
-<section class="card profile-details" data-reveal>
-  <p class="eyebrow">Your community identity</p>
-  <div class="profile-heading">
-    <div>
+  <aside class="profile-identity">
+    {% include 'accounts/profile_avatar.html' %}
+    <p class="profile-identity-name">{{ user.get_full_name }}</p>
+    <p class="profile-identity-handle">@{{ user.username }}</p>
+    <span class="identity-badge">{% include 'accounts/ui_icon.html' with name='shield' %}{{ user.role_label }} account</span>
+    <a class="profile-photo-link" href="{% url 'edit_profile' %}#id_photo">
+      {% include 'accounts/ui_icon.html' with name='photo' %}
+      {% if has_profile_photo %}Change photo{% else %}Add photo{% endif %}
+    </a>
+  </aside>
+  <section class="card profile-details">
+    <div class="profile-heading">
       <h1>Your profile</h1>
-      <a href="{% url 'edit_profile' %}#id_photo">{% if has_profile_photo %}Change photo{% else %}Add photo{% endif %}</a>
     </div>
-  </div>
-  <p class="muted">Your information, kept together. Review your details or give them a little update.</p>
-  <dl class="profile-data">
-    <div><dt>Full name</dt><dd>{{ user.full_name }}</dd></div>
-    <div><dt>Username</dt><dd>{{ user.username }}</dd></div>
-    <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
-    <div><dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd></div>
-    <div><dt>Role</dt><dd>{{ user.role_label }}</dd></div>
-  </dl>
-  <a class="button" href="{% url 'edit_profile' %}">Edit profile</a>
-</section>
+    <p class="muted">Review your contact information or update your name, email, phone number, and photo anytime.</p>
+    <dl class="profile-data">
+      <div><dt>Full name</dt><dd>{{ user.full_name }}</dd></div>
+      <div><dt>Username</dt><dd>{{ user.username }}</dd></div>
+      <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+      <div><dt>Contact number</dt><dd>{{ user.contact_number|default:"Not provided" }}</dd></div>
+      <div><dt>Role</dt><dd>{{ user.role_label }}</dd></div>
+      <div><dt>Account status</dt><dd>{% if user.is_active %}Active{% else %}Inactive{% endif %}</dd></div>
+    </dl>
+    <div class="profile-actions">
+      <a class="button" href="{% url 'edit_profile' %}">Edit profile</a>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="button button-secondary" type="submit">Sign out</button>
+      </form>
+    </div>
+  </section>
 </div>
 {% endblock %}

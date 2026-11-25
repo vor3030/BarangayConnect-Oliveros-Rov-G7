@@ -1,10 +1,24 @@
 <section id="portal-help" class="portal-help" aria-labelledby="help-title">
-  <div><p class="eyebrow">We're here to make things easier</p><h2 id="help-title">A little help,<br><em>when you need it.</em></h2><p>Getting comfortable with your community portal? Start here.</p></div>
+  <div>
+    <h2 id="help-title">Help desk</h2>
+    {% if user.is_staff %}
+      <p>Quick answers on reviewing resident submissions, updating request statuses, and managing your staff account.</p>
+    {% else %}
+      <p>Quick answers on submitting barangay document requests, tracking updates, and managing your account.</p>
+    {% endif %}
+  </div>
   <div class="faq-list">
-    <details><summary>How do I request a barangay document?<span aria-hidden="true">+</span></summary><p>Open <a href="{% url 'documents:list' %}">Document requests</a>, choose your certificate type, state your purpose and number of copies, and submit. Your request starts as Pending and updates live as staff review it.</p></details>
-    <details><summary>Can I edit or cancel a submitted request?<span aria-hidden="true">+</span></summary><p>Yes, while a request is still Pending you can edit its details or cancel it from the request tracking page. Once Approved, Completed, or Rejected, the request is locked.</p></details>
-    <details><summary>How do I update my details?<span aria-hidden="true">+</span></summary><p>Open <a href="{% url 'edit_profile' %}">Edit profile</a> to update your name, email, or contact number. Select Save changes when you're done.</p></details>
-    <details><summary>Can I sign in with my username?<span aria-hidden="true">+</span></summary><p>Yes. Use your email address or username with the same password. Capitalization doesn't matter.</p></details>
-    <details><summary>How do I add a profile photo?<span aria-hidden="true">+</span></summary><p>Choose <a href="{% url 'edit_profile' %}#id_photo">Profile photo</a>, upload a JPG, PNG, or WebP image up to 5 MB, and save your changes.</p></details>
+    {% if user.is_staff %}
+      <details><summary>How do I review and approve a document request?<span aria-hidden="true">+</span></summary><p>Open <a href="{% url 'documents:manage_list' %}">Request queue</a>, select Review on a Pending application, verify the resident's purpose and copy count, choose Approved or Rejected, and save your remarks.</p></details>
+      <details><summary>When are staff remarks mandatory?<span aria-hidden="true">+</span></summary><p>Clear explanation remarks are always required when marking a request as Rejected so the resident knows what to correct before submitting again.</p></details>
+      <details><summary>Can a Completed or Rejected request be reopened?<span aria-hidden="true">+</span></summary><p>No. Once marked Completed or Rejected, requests stay closed to preserve audit history. Staff may remove rejected test or duplicate records from the review screen if needed.</p></details>
+      <details><summary>How do I update my staff contact details?<span aria-hidden="true">+</span></summary><p>Open <a href="{% url 'edit_profile' %}">Edit profile</a> to update your name, email address, contact number, or profile photo.</p></details>
+    {% else %}
+      <details><summary>How do I request a barangay document?<span aria-hidden="true">+</span></summary><p>Open <a href="{% url 'documents:list' %}">Document requests</a>, choose your certificate type, state your purpose and number of copies, and submit. Your request starts as Pending and updates live as staff review it.</p></details>
+      <details><summary>Can I edit or cancel a submitted request?<span aria-hidden="true">+</span></summary><p>Yes, while a request is still Pending you can edit its details or cancel it from the request tracking page. Once Approved, Completed, or Rejected, the request is locked.</p></details>
+      <details><summary>How do I update my details?<span aria-hidden="true">+</span></summary><p>Open <a href="{% url 'edit_profile' %}">Edit profile</a> to update your name, email, or contact number. Select Save changes when you're done.</p></details>
+      <details><summary>Can I sign in with my username?<span aria-hidden="true">+</span></summary><p>Yes. Use your email address or username with the same password. Capitalization doesn't matter.</p></details>
+      <details><summary>How do I add a profile photo?<span aria-hidden="true">+</span></summary><p>Choose <a href="{% url 'edit_profile' %}#id_photo">Profile photo</a>, upload a JPG, PNG, or WebP image up to 5 MB, and save your changes.</p></details>
+    {% endif %}
   </div>
 </section>

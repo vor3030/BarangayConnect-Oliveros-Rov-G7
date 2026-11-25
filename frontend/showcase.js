@@ -1,20 +1,19 @@
-import { animate, onScroll, stagger, svg } from "animejs";
+import { animate, stagger } from "animejs";
 
 export function mountShowcase() {
   const root = document.querySelector("[data-showcase]");
   if (!root) return;
 
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const tabs = [...root.querySelectorAll("[data-preview-tab]")];
   const panels = [...root.querySelectorAll("[data-preview-panel]")];
-  const previewWindow = root.querySelector("[data-preview-window]");
   const scrollProgress = document.querySelector("[data-scroll-progress]");
 
   const listeners = [];
   const activeAnims = new Set();
-  const scrollObservers = [];
   let panelAnim;
-  let bgController = null;
   let chartController = null;
+  let maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
 
   function listen(target, event, callback, options) {
     if (!target) return;
@@ -48,12 +47,12 @@ export function mountShowcase() {
       const selected = panel.dataset.previewPanel === name;
       panel.hidden = !selected;
       clearInlineVisualProps(panel);
-      if (selected && shouldAnimate) {
+      if (selected && shouldAnimate && !reducedMotion.matches) {
         panelAnim = track(
           animate(panel, {
-            opacity: [0.5, 1],
-            translateY: [8, 0],
-            duration: 300,
+            opacity: [0.72, 1],
+            translateY: [5, 0],
+            duration: 180,
             ease: "outCubic",
             onComplete: () => {
               clearInlineVisualProps(panel);
@@ -69,7 +68,6 @@ export function mountShowcase() {
   tabs.forEach((tab, index) => {
     listen(tab, "click", () => {
       selectTab(tab.dataset.previewTab);
-      bgController?.pulse((index - 1) * 0.45, -0.15);
     });
     listen(tab, "keydown", (event) => {
       let next;
@@ -90,101 +88,56 @@ export function mountShowcase() {
     panel.tabIndex = 0;
   });
 
+  const supportsScrollTimeline =
+    typeof CSS !== "undefined" && typeof CSS.supports === "function" && CSS.supports("animation-timeline: scroll()");
+
+  let rafPending = false;
   function updateScrollProgress() {
-    if (!scrollProgress) return;
-    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    const ratio = Math.min(1, Math.max(0, window.scrollY / maxScroll));
-    scrollProgress.style.transform = `scaleX(${ratio.toFixed(4)})`;
+    if (!scrollProgress || rafPending || reducedMotion.matches || supportsScrollTimeline) return;
+    rafPending = true;
+    requestAnimationFrame(() => {
+      rafPending = false;
+      const ratio = Math.min(1, Math.max(0, window.scrollY / maxScroll));
+      scrollProgress.style.transform = `scaleX(${ratio.toFixed(4)})`;
+    });
   }
 
-  function setupScrollEffects() {
-    // Smooth staggered section reveals with Anime.js onScroll
-    root.querySelectorAll("[data-scroll-section]").forEach((section) => {
-      const items = [...section.querySelectorAll("[data-scroll-reveal]")];
-      if (!items.length) return;
-      const obs = onScroll({
-        target: section,
-        enter: "bottom-=70 top",
-        onEnter: () => {
-          const anim = animate(items, {
-            opacity: [0, 1],
-            translateY: [26, 0],
-            duration: 680,
-            delay: stagger(90),
-            ease: "outCubic",
-            onComplete: () => {
-              items.forEach((item) => {
-                clearInlineVisualProps(item);
-                item.dataset.scrollShown = "true";
-              });
-              activeAnims.delete(anim);
-            },
-          });
-          track(anim);
-        },
-      });
-      scrollObservers.push(obs);
-    });
+  const bodyResizeObserver = new ResizeObserver(() => {
+    maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  });
+  bodyResizeObserver.observe(document.documentElement);
 
-    // Subtle scroll-scrubbed scale lift on the preview window & 3D chart frame
-    [previewWindow, root.querySelector(".chart-frame")].forEach((frame) => {
-      if (!frame) return;
-      const anim = animate(frame, {
-        scale: [0.975, 1],
-        ease: "linear",
-        autoplay: onScroll({
-          target: frame,
-          enter: "bottom top",
-          leave: "center center",
-          sync: 0.35,
-        }),
-      });
-      track(anim);
-    });
+  if (!supportsScrollTimeline) {
+    listen(window, "scroll", updateScrollProgress, { passive: true });
+  }
 
-    // Scroll-drawn horizontal rule across the highlights strip
-    const rulePaths = root.querySelectorAll("[data-scroll-draw]");
-    const ruleSection = root.querySelector(".highlights-section");
-    if (rulePaths.length && ruleSection) {
-      try {
-        const drawables = svg.createDrawable(rulePaths);
-        const drawAnim = animate(drawables, {
-          draw: ["0 0", "0 1"],
-          ease: "linear",
-          autoplay: onScroll({
-            target: ruleSection,
-            enter: "bottom-=40 top",
-            leave: "center top",
-            sync: 0.4,
-          }),
-        });
-        track(drawAnim);
-      } catch {
-        // Keep static rule visible if SVG drawable fails.
-      }
+  function syncMotionPreference() {
+    document.documentElement.dataset.pageMotion = reducedMotion.matches ? "reduced" : "full";
+    if (reducedMotion.matches) {
+      activeAnims.forEach((anim) => anim.pause?.());
+      activeAnims.clear();
+      root.querySelectorAll("[data-hero-item], [data-preview-panel]").forEach(clearInlineVisualProps);
     }
   }
+  listen(reducedMotion, "change", syncMotionPreference);
 
-  listen(window, "scroll", updateScrollProgress, { passive: true });
-
-  // Initial state
-  selectTab("profile", false);
+  const initialTab = tabs[0]?.dataset.previewTab || "request";
+  selectTab(initialTab, false);
   const controls = root.querySelector("[data-showcase-controls]");
   if (controls) controls.hidden = false;
-  document.documentElement.dataset.pageMotion = "full";
+  syncMotionPreference();
   updateScrollProgress();
-  setupScrollEffects();
   root.dataset.showcaseReady = "true";
 
-  // Calm opening Anime.js hero entrance
+  // Single calm hero entrance on load (compositor-only, never animates backdrop-filter surfaces)
   const heroItems = [...root.querySelectorAll("[data-hero-item]")];
-  if (heroItems.length) {
+  if (heroItems.length && !reducedMotion.matches) {
     track(
       animate(heroItems, {
-        opacity: [0, 1],
-        translateY: [18, 0],
-        duration: 680,
-        delay: stagger(95),
+        opacity: [0.86, 1],
+        translateY: [8, 0],
+        duration: 280,
+        delay: stagger(40),
         ease: "outCubic",
         onComplete: () => {
           heroItems.forEach(clearInlineVisualProps);
@@ -196,31 +149,6 @@ export function mountShowcase() {
     root.dataset.showcaseSettled = "true";
   }
 
-  // Gentle breathing pulse on the scroll cue line
-  const cueLine = root.querySelector(".scroll-cue-line");
-  if (cueLine) {
-    track(
-      animate(cueLine, {
-        scaleY: [0.65, 1, 0.65],
-        opacity: [0.45, 1, 0.45],
-        duration: 2400,
-        loop: true,
-        ease: "inOutSine",
-      })
-    );
-  }
-
-  // Mount interactive Three.js background & 3D community chart
-  const bgContainer = document.querySelector("[data-showcase-bg]");
-  if (bgContainer) {
-    import("./showcase-bg.js")
-      .then(({ mountShowcaseBackground }) => {
-        if (!root.isConnected) return;
-        bgController = mountShowcaseBackground(bgContainer);
-      })
-      .catch(() => {});
-  }
-
   const chartSection = root.querySelector("[data-three-chart-section]");
   if (chartSection) {
     import("./three-chart.js")
@@ -228,16 +156,16 @@ export function mountShowcase() {
         if (!root.isConnected) return;
         chartController = mountThreeChart(chartSection);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback text stays available if WebGL cannot start.
+      });
   }
 
   return () => {
-    for (const anim of activeAnims) anim.pause?.();
+    bodyResizeObserver.disconnect();
+    activeAnims.forEach((anim) => anim.pause?.());
     activeAnims.clear();
-    while (scrollObservers.length) scrollObservers.pop().revert?.();
-    bgController?.destroy();
+    listeners.forEach((remove) => remove());
     chartController?.destroy();
-    listeners.forEach((cleanup) => cleanup());
-    document.documentElement.removeAttribute("data-page-motion");
   };
 }

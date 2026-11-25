@@ -7,7 +7,7 @@
   Back to request queue
 </a>
 
-<div class="doc-page-header" data-reveal>
+<div class="doc-page-header">
   <div>
     <h1>Review {{ doc_request.reference_code }}</h1>
     <p>{{ doc_request.document_type }} requested by <strong>{{ doc_request.user.get_full_name }}</strong> · {{ doc_request.created_at|date:"M j, Y · g:i A" }}</p>
@@ -15,14 +15,15 @@
   <span class="status-badge status-{{ doc_request.status_slug }}">{{ doc_request.status }}</span>
 </div>
 
-<section class="card doc-tracker-card" aria-label="Request workflow progress" data-reveal>
+<section class="card doc-tracker-card" aria-label="Request workflow progress">
   <div class="doc-tracker-header">
     <h2>Workflow progress</h2>
     <span class="doc-meta-date">Last updated {{ doc_request.updated_at|date:"M j, Y · g:i A" }}</span>
   </div>
   <ol class="doc-stepper">
     {% for step in status_steps %}
-      <li class="doc-step doc-step-{{ step.state }}">
+      <li class="doc-step doc-step-{{ step.state }} doc-step-tone-{{ step.tone }}"{% if step.state == 'current' %} aria-current="step"{% endif %}>
+        <span class="sr-only">{% if step.state == 'done' %}Completed: {% elif step.state == 'current' %}Current step: {% elif step.state == 'rejected' %}Rejected: {% else %}Upcoming: {% endif %}</span>
         <span class="doc-step-label">
           <span class="doc-step-dot" aria-hidden="true"></span>
           {{ step.label }}
@@ -34,8 +35,8 @@
 </section>
 
 <div class="doc-split-layout">
-  <div style="display: grid; gap: 1.5rem;">
-    <section class="card" data-reveal>
+  <div class="doc-stack">
+    <section class="card">
       <h2>Resident &amp; request details</h2>
       <div class="detail-row"><span>Reference code</span><strong class="doc-ref">{{ doc_request.reference_code }}</strong></div>
       <div class="detail-row"><span>Resident name</span><strong>{{ doc_request.user.get_full_name }}</strong></div>
@@ -61,7 +62,7 @@
       {% endif %}
     </section>
 
-    <section class="card" data-reveal>
+    <section class="card">
       <h2>Activity history</h2>
       {% if status_logs %}
         <ol class="doc-timeline">
@@ -84,10 +85,21 @@
     </section>
   </div>
 
-  <aside class="card" data-reveal>
+  <aside class="card doc-review-aside" x-data="reviewPresets">
     <h2>Update request status</h2>
     {% if can_transition %}
       <p class="muted">Status changes are logged with your staff account and immediately visible to the resident.</p>
+      <div class="doc-presets">
+        <span class="doc-presets-label">Quick remark templates</span>
+        <div class="doc-preset-list">
+          {% if doc_request.status == 'Pending' %}
+            <button type="button" class="doc-preset-chip" x-on:click="applyPreset('Approved', 'Verified residency record. Ready for pickup at Window 2, Mon-Fri 8:00 AM - 5:00 PM (bring a valid ID).')">Approve for Window 2 pickup</button>
+            <button type="button" class="doc-preset-chip" x-on:click="applyPreset('Rejected', 'Please update your purpose details or confirm your barangay residency record before resubmitting.')">Return for clarification</button>
+          {% elif doc_request.status == 'Approved' %}
+            <button type="button" class="doc-preset-chip" x-on:click="applyPreset('Completed', 'Certificate claimed and signed by requester at the barangay hall.')">Mark claimed &amp; released</button>
+          {% endif %}
+        </div>
+      </div>
       <form method="post" novalidate>
         {% csrf_token %}
         {% include 'accounts/form_fields.html' %}

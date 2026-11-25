@@ -1,0 +1,68 @@
+{
+  "name": "Barangay Connect — Twilight Civic Sanctuary",
+  "version": "2.0.0",
+  "font": {
+    "family": "Manrope Variable",
+    "fallback": ["Segoe UI", "system-ui", "-apple-system", "sans-serif"],
+    "weights": [300, 400, 500, 600, 650, 700, 750]
+  },
+  "color": {
+    "twilight": {
+      "night": "#0d1518",
+      "sidebar": "#101b1f",
+      "fjord": "#182930",
+      "pine": "#173832",
+      "glassDark": "rgba(11, 20, 24, 0.78)",
+      "glassField": "rgba(255, 255, 255, 0.08)",
+      "glassBorder": "rgba(235, 244, 246, 0.16)",
+      "glassRim": "rgba(235, 244, 246, 0.28)",
+      "onDark": "#f5f8f8",
+      "onDarkMuted": "#bdd0d6"
+    },
+    "warm": {
+      "champagne": "#e7d4b5",
+      "champagneHover": "#f2e4cb",
+      "champagneInk": "#111c20",
+      "amber": "#e59a3c",
+      "amberInk": "#7d4908"
+    },
+    "daylight": {
+      "background": "#f2f5f4",
+      "surface": "#ffffff",
+      "inset": "#e6eeec",
+      "ink": "#111e22",
+      "muted": "#4b5f66",
+      "accent": "#173b35",
+      "accentHover": "#0f2a26",
+      "accentInk": "#ffffff",
+      "border": "#d5e0de",
+      "controlBorder": "#8da1a6",
+      "fieldBorder": "#687e84",
+      "error": "#a3262a",
+      "errorBg": "#fdf1f1",
+      "errorBorder": "#e1b5b7",
+      "successBg": "#e7f3ee",
+      "successBorder": "#b3d5c7"
+    }
+  },
+  "radii": {
+    "control": "0.75rem",
+    "card": "1.35rem",
+    "frame": "1.75rem",
+    "pill": "999px"
+  },
+  "zIndex": {
+    "base": 1,
+    "sticky": 20,
+    "sidebar": 30,
+    "navMobile": 40,
+    "popover": 50,
+    "progress": 60,
+    "skip": 100
+  },
+  "accessibility": {
+    "minTouchTarget": "44px",
+    "minMicroLabel": "12.5px",
+    "reducedMotion": "transition: none; static WebGL views; pause controls"
+  }
+}

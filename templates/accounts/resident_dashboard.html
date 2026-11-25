@@ -1,35 +1,41 @@
 {% extends 'accounts/base.html' %}
 {% block title %}Resident dashboard | Barangay Connect{% endblock %}
 {% block content %}
-<div class="page-heading dashboard-heading" data-reveal><div><p class="eyebrow">Your community, at a glance</p><h2>Home feels a little closer.</h2></div><span class="welcome-chip">{% include 'accounts/ui_icon.html' with name='leaf' %}It's good to have you here</span></div>
-<section class="hero" x-data="motionScene" data-reveal>
+<section class="hero" x-data="motionScene">
   <div class="hero-copy">
-  <p class="eyebrow">Resident dashboard</p>
-  <h1>Good to see you,<br>{{ user.get_full_name }}<span class="text-accent">.</span></h1>
-  <p>Request barangay clearances online, track processing updates, and keep your community profile current.</p>
-  <div class="hero-actions">
-    <a class="button" href="{% url 'documents:create' %}">Request a document</a>
-    <a class="button button-ghost" href="{% url 'profile' %}">Your resident profile</a>
+    <span class="hero-status-pill"><span class="hero-status-dot" aria-hidden="true"></span>Resident portal</span>
+    <h1>Good to see you, <strong>{{ user.get_full_name }}.</strong></h1>
+    <p>Request barangay clearances online, follow approvals in real time, and keep your household details up to date.</p>
+    <div class="hero-actions">
+      <a class="button button-champagne" href="{% url 'documents:create' %}">Request a document</a>
+      <a class="button button-ghost" href="{% url 'profile' %}">Your resident profile</a>
+    </div>
   </div>
+  <div class="hero-scene-wrap">
+    {% include 'accounts/neighborhood.html' %}
   </div>
-  {% include 'accounts/neighborhood.html' %}
 </section>
+
 <section class="account-stats" aria-label="Your account overview">
-  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><p>Document requests</p><strong>{{ request_counts.total_requests }} <small>({{ request_counts.pending_requests }} pending)</small></strong></div></article>
-  <article data-reveal><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='user' %}</span><div><p>Profile details</p><strong>{{ profile_completed_fields }} <small>of 4 complete</small></strong></div></article>
-  <article data-reveal><span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='phone' %}</span><div><p>Contact number</p><strong class="stat-label">{% if user.contact_number %}Added to your profile{% else %}Ready to add{% endif %}</strong></div></article>
+  <article><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><p>Document requests</p><strong>{{ request_counts.total_requests }} <small>({{ request_counts.pending_requests }} pending)</small></strong></div></article>
+  <article><span class="stat-icon">{% include 'accounts/ui_icon.html' with name='user' %}</span><div><p>Profile details</p><strong>{{ profile_completed_fields }} <small>of 4 complete</small></strong></div></article>
+  <article><span class="stat-icon warm-icon">{% include 'accounts/ui_icon.html' with name='phone' %}</span><div><p>Contact number</p><strong class="stat-label">{% if user.contact_number %}Added to your profile{% else %}Ready to add{% endif %}</strong></div></article>
 </section>
-<div class="section-heading" data-reveal><div><p class="eyebrow">A good place to start</p><h2>What would you like to do?</h2></div><span>Small steps. Better connections.</span></div>
-<div class="quick-links">
-  <a class="quick-link" href="{% url 'documents:create' %}"><span class="quick-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><h3>Request a barangay document</h3><p>Submit a clearance, indigency, or residency request online.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
-  <a class="quick-link" href="{% url 'documents:list' %}"><span class="quick-icon clay">{% include 'accounts/ui_icon.html' with name='clock' %}</span><div><h3>Track my requests</h3><p>Check live statuses, edit pending details, or view history.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
-  <a class="quick-link" href="{% url 'edit_profile' %}"><span class="quick-icon sand">{% include 'accounts/ui_icon.html' with name='edit' %}</span><div><h3>Keep my details current</h3><p>A new email, number, or photo? Update it here.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
-</div>
-<section class="card doc-dashboard-card" data-reveal>
+
+<section aria-labelledby="quick-actions-title">
+  <h2 id="quick-actions-title" class="sr-only">Quick actions</h2>
+  <div class="quick-links">
+    <a class="quick-link" href="{% url 'documents:create' %}"><span class="quick-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span><div><h3>Request a barangay document</h3><p>Submit a clearance, indigency, or residency request online.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+    <a class="quick-link" href="{% url 'documents:list' %}"><span class="quick-icon clay">{% include 'accounts/ui_icon.html' with name='clock' %}</span><div><h3>Track my requests</h3><p>Check live statuses, edit pending details, or view history.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+    <a class="quick-link" href="{% url 'edit_profile' %}"><span class="quick-icon sand">{% include 'accounts/ui_icon.html' with name='edit' %}</span><div><h3>Keep my details current</h3><p>Update your email, contact number, or profile photo.</p></div><span class="link-mark" aria-hidden="true">+</span></a>
+  </div>
+</section>
+
+<section class="card doc-dashboard-card" x-data="dashboardFilter">
   <div class="doc-dashboard-header">
     <div>
       <h2>Recent document requests</h2>
-      <p class="muted" style="margin: .3rem 0 0;">Live status updates for your latest barangay certificate submissions.</p>
+      <p class="muted">Live status updates for your latest barangay certificate submissions.</p>
     </div>
     <div class="actions">
       <a class="button button-secondary button-sm" href="{% url 'documents:list' %}">View all requests</a>
@@ -37,12 +43,29 @@
     </div>
   </div>
   {% if recent_requests %}
+    <div class="doc-dashboard-controls">
+      <div class="doc-filter-pills" role="group" aria-label="Quick filter recent requests">
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="status === 'all'" x-on:click="status = 'all'" aria-pressed="true">All</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="status === 'pending'" x-on:click="status = 'pending'" aria-pressed="false">Pending</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="status === 'approved'" x-on:click="status = 'approved'" aria-pressed="false">Approved</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="status === 'completed'" x-on:click="status = 'completed'" aria-pressed="false">Completed</button>
+        <button type="button" class="doc-filter-pill" x-bind:aria-pressed="status === 'rejected'" x-on:click="status = 'rejected'" aria-pressed="false">Rejected</button>
+      </div>
+      <label class="sr-only" for="resident-quick-search">Filter recent requests</label>
+      <input id="resident-quick-search" type="search" x-model="query" placeholder="Filter by document, purpose, or REQ ID">
+    </div>
     <ul class="doc-mini-list">
       {% for item in recent_requests %}
-        <li class="doc-mini-item">
+        <li
+          class="doc-mini-item"
+          data-filter-item
+          data-filter-status="{{ item.status_slug }}"
+          data-filter-search="{{ item.reference_code }} {{ item.document_type }} {{ item.purpose }}"
+          x-show="matches('{{ item.status_slug }}', '{{ item.reference_code|escapejs }} {{ item.document_type|escapejs }} {{ item.purpose|escapejs }}')"
+        >
           <div class="doc-mini-info">
             <a href="{% url 'documents:detail' item.pk %}">{{ item.document_type }}</a>
-            <span class="doc-mini-meta">{{ item.reference_code }} · {{ item.purpose|truncatechars:70 }} · {{ item.created_at|date:"M j, Y" }}</span>
+            <span class="doc-mini-meta">{{ item.reference_code }} — {{ item.purpose|truncatechars:70 }} ({{ item.created_at|date:"M j, Y" }})</span>
           </div>
           <div class="doc-mini-right">
             <span class="status-badge status-{{ item.status_slug }}">{{ item.status }}</span>
@@ -51,25 +74,47 @@
         </li>
       {% endfor %}
     </ul>
+    <div class="doc-filter-empty" x-show="visibleCount === 0" x-cloak role="status" aria-live="polite">
+      <p>No recent requests match your current filter.</p>
+      <button type="button" class="button button-secondary button-sm" x-on:click="reset()">Clear filter</button>
+    </div>
   {% else %}
-    <p class="muted" style="margin: .75rem 0 0;">You have not submitted any document requests yet. Select <strong>New request</strong> to get started.</p>
+    <p class="muted">You have not submitted any document requests yet. Select <strong>New request</strong> to get started.</p>
   {% endif %}
 </section>
+
 <div class="grid dashboard-grid">
-  <section class="card" data-reveal data-tilt>
-    <div class="card-kicker"><p class="eyebrow">Your resident account</p><span class="benefit-icon">{% include 'accounts/animated_icon.html' with icon='user' only %}</span></div>
-    <div class="profile-snapshot"><span class="snapshot-initial" aria-hidden="true">{{ user.full_name|first|upper }}</span><div><h2>{{ user.get_full_name }}</h2><p>{{ user.email }}</p></div></div>
+  <section class="card">
+    <div class="profile-snapshot">
+      {% if user.profile_photo %}
+        <img class="snapshot-initial" src="{% url 'profile_photo' %}" alt="" width="52" height="52">
+      {% else %}
+        <span class="snapshot-initial" aria-hidden="true">{{ user.full_name|default:user.username|first|upper }}</span>
+      {% endif %}
+      <div>
+        <h2>{{ user.get_full_name }}</h2>
+        <p>{{ user.email }}</p>
+      </div>
+    </div>
     <div class="detail-row"><span>Community role</span><strong>{{ user.role_label }}</strong></div>
-    <div class="detail-row"><span>Contact number</span><strong>{{ user.contact_number|default:"Add your number" }}</strong></div>
-    <div class="card-actions"><a class="button button-secondary" href="{% url 'edit_profile' %}">Update your details</a><a class="button button-secondary" href="{% url 'profile' %}">View profile</a></div>
+    <div class="detail-row"><span>Contact number</span><strong>{{ user.contact_number|default:"Not provided" }}</strong></div>
+    <div class="card-actions">
+      <a class="button button-secondary button-sm" href="{% url 'edit_profile' %}">Update your details</a>
+      <a class="button button-secondary button-sm" href="{% url 'profile' %}">View profile</a>
+    </div>
   </section>
-  <section class="card community-note" data-reveal data-tilt>
-    <div class="card-kicker"><p class="eyebrow">A little care goes a long way</p><span class="completion-label">{{ profile_completion }}%</span></div><h2>Make yourself<br><em>right at home.</em></h2>
-    <p>Your profile helps keep your account information together. You're {{ profile_completed_fields }} of 4 details there.</p>
+
+  <section class="card community-note">
+    <div class="card-kicker">
+      <h2>Profile readiness</h2>
+      <span class="completion-label">{{ profile_completion }}%</span>
+    </div>
+    <p>Keeping your contact number and email current helps barangay staff verify requests faster. {{ profile_completed_fields }} of 4 fields complete.</p>
     <progress class="profile-progress" value="{{ profile_completion }}" max="100" aria-label="Profile details complete">{{ profile_completion }}%</progress>
-    <p class="completion-note">{% if user.contact_number %}Your name, username, email, and contact number are all filled in. Looking good!{% else %}Just one more thing: add a contact number when you're ready.{% endif %}</p>
-    <a href="{% url 'edit_profile' %}">Review your contact details</a>
-    {% include 'accounts/community_art.html' %}
+    <p>{% if user.contact_number %}Your name, username, email, and contact number are all on file.{% else %}Add a contact number so staff can confirm pickup schedules if needed.{% endif %}</p>
+    <div class="card-actions">
+      <a class="button button-sm" href="{% url 'edit_profile' %}">Review contact details</a>
+    </div>
   </section>
 </div>
 {% endblock %}

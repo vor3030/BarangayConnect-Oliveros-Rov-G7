@@ -2,7 +2,7 @@
 {% block title %}Document requests | Barangay Connect{% endblock %}
 {% block breadcrumb %}Document requests{% endblock %}
 {% block content %}
-<div class="doc-page-header" data-reveal>
+<div class="doc-page-header">
   <div>
     <h1>Document requests</h1>
     <p>Request barangay clearances and certificates online, edit pending details, and follow your processing status in real time.</p>
@@ -13,7 +13,7 @@
   </a>
 </div>
 
-<section class="doc-summary-strip" aria-label="Your document request summary" data-reveal>
+<section class="doc-summary-strip" aria-label="Your document request summary">
   <article class="doc-summary-item">
     <span class="stat-icon">{% include 'accounts/ui_icon.html' with name='document' %}</span>
     <div>
@@ -44,8 +44,8 @@
   </article>
 </section>
 
-<section class="doc-toolbar" aria-label="Filter and search document requests" data-reveal>
-  <div class="doc-filter-pills" role="navigation" aria-label="Filter by status">
+<section class="doc-toolbar" aria-label="Filter and search document requests">
+  <nav class="doc-filter-pills" aria-label="Filter by status">
     <a class="doc-filter-pill" href="{% url 'documents:list' %}{% if search_query %}?q={{ search_query|urlencode }}{% endif %}"{% if not selected_status %} aria-current="true"{% endif %}>
       All <span>({{ counts.total_requests }})</span>
     </a>
@@ -61,10 +61,10 @@
     <a class="doc-filter-pill" href="{% url 'documents:list' %}?status=Rejected{% if search_query %}&amp;q={{ search_query|urlencode }}{% endif %}"{% if selected_status == 'Rejected' %} aria-current="true"{% endif %}>
       Rejected <span>({{ counts.rejected_requests }})</span>
     </a>
-  </div>
+  </nav>
   <form class="doc-search-form" method="get" action="{% url 'documents:list' %}">
     {% if selected_status %}<input type="hidden" name="status" value="{{ selected_status }}">{% endif %}
-    <label class="skip-link" for="doc-search">Search requests</label>
+    <label class="sr-only" for="doc-search">Search requests</label>
     <input id="doc-search" type="search" name="q" value="{{ search_query }}" placeholder="Search by document, purpose, or REQ ID">
     <button class="button button-secondary button-sm" type="submit">Search</button>
     {% if selected_status or search_query %}
@@ -73,8 +73,9 @@
   </form>
 </section>
 
-<section class="card doc-table-card" data-reveal>
+<section class="card doc-table-card">
   {% if requests %}
+    <div class="doc-table-scroll">
     <table class="doc-table">
       <thead>
         <tr>
@@ -112,6 +113,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% elif selected_status or search_query %}
     <div class="doc-empty-state">
       <span class="doc-empty-icon">{% include 'accounts/ui_icon.html' with name='search' %}</span>

@@ -36,7 +36,7 @@ const PUROK_ITEMS = [
     secondary: 49,
     primaryLabel: "Active accounts",
     secondaryLabel: "Complete profiles",
-    note: "Highest sample participation — residents keep their details current from mobile.",
+    note: "Highest active participation — residents keep their details current from mobile.",
   },
   {
     id: "purok-3",
@@ -66,15 +66,10 @@ const PUROK_ITEMS = [
     secondary: 25,
     primaryLabel: "Active accounts",
     secondaryLabel: "Complete profiles",
-    note: "A quiet corner of the pilot — clear forms make first-time sign-up approachable.",
+    note: "Clear online forms make first-time sign-up approachable for every household.",
   },
 ];
 
-/**
- * Naturally interactive Three.js 3D community bar chart with Anime.js transitions.
- * Supports smooth gentle drift, direct drag-to-rotate (mouse & touch),
- * hover/tap column inspection, and keyboard-accessible column pills.
- */
 export function mountThreeChart(root) {
   const stage = root.querySelector("[data-three-chart-stage]");
   const canvas = root.querySelector("[data-three-chart]");
@@ -86,18 +81,23 @@ export function mountThreeChart(root) {
   const detailSecondaryLabel = root.querySelector("[data-chart-detail-secondary-label]");
   const detailCard = root.querySelector("[data-chart-detail-card]");
   const pillContainer = root.querySelector("[data-chart-item-pills]");
+  const motionToggle = root.querySelector("[data-chart-motion-toggle]");
 
   if (!stage || !canvas) return null;
 
-  let selectedIndex = 1; // Purok 2 — Rizal
-  let hasEntered = false;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  let selectedIndex = 1;
+  let hoveredIndex = -1;
   let visible = false;
+  let userPaused = false;
   let destroyed = false;
   let rafId = 0;
+  let hoverRafId = 0;
+  let pendingHoverEvent = null;
   let elapsed = 0;
   let lastTime = 0;
 
-  // Interactive camera orbit state (gentle drift + user drag + subtle pointer tilt)
   let orbitAzimuth = 0.62;
   let targetAzimuth = 0.62;
   let orbitPolar = 0.52;
@@ -106,6 +106,9 @@ export function mountThreeChart(root) {
   let dragStartX = 0;
   let dragStartY = 0;
   let dragMoved = false;
+
+  let stageRect = stage.getBoundingClientRect();
+  let canvasRect = canvas.getBoundingClientRect();
 
   let renderer = null;
   let scene = null;
@@ -124,6 +127,11 @@ export function mountThreeChart(root) {
     return anim;
   }
 
+  function updateRects() {
+    stageRect = stage.getBoundingClientRect();
+    canvasRect = canvas.getBoundingClientRect();
+  }
+
   function updateDetailPanel(animateSwap = false) {
     const item = PUROK_ITEMS[selectedIndex] || PUROK_ITEMS[0];
     if (detailTitle) detailTitle.textContent = item.name;
@@ -139,13 +147,17 @@ export function mountThreeChart(root) {
       });
     }
 
-    if (animateSwap && detailCard) {
+    if (animateSwap && detailCard && !reducedMotion.matches) {
       trackAnim(
         animate(detailCard, {
-          opacity: [0.72, 1],
-          translateY: [6, 0],
-          duration: 280,
+          opacity: [0.84, 1],
+          translateY: [4, 0],
+          duration: 180,
           ease: "outCubic",
+          onComplete: () => {
+            detailCard.style.removeProperty("opacity");
+            detailCard.style.removeProperty("transform");
+          },
         })
       );
     }
@@ -178,29 +190,28 @@ export function mountThreeChart(root) {
     canvas.setAttribute("role", "img");
     canvas.setAttribute(
       "aria-label",
-      "Interactive 3D bar chart comparing illustrative resident accounts across sample puroks. Drag to rotate or use the buttons beside it to inspect each column."
+      "3D bar chart comparing active resident accounts and complete profiles across barangay puroks. Drag to rotate or use the purok buttons below to inspect each neighborhood."
     );
 
     scene = new Scene();
     camera = new PerspectiveCamera(36, 16 / 10, 0.1, 60);
     raycaster = new Raycaster();
 
-    const hemi = new HemisphereLight(new Color(0xfffdf8), new Color(0xdcd3be), 1.45);
-    const keyLight = new DirectionalLight(0xfff5e0, 1.4);
+    const hemi = new HemisphereLight(new Color(0xdcebf0), new Color(0x0d1518), 1.5);
+    const keyLight = new DirectionalLight(0xf6e6c8, 1.55);
     keyLight.position.set(7, 12, 8);
-    const rimLight = new DirectionalLight(0xd5decb, 0.65);
+    const rimLight = new DirectionalLight(0x6da6b8, 0.85);
     rimLight.position.set(-8, 6, -6);
-    scene.add(hemi, keyLight, rimLight, new AmbientLight(0xffffff, 0.25));
+    scene.add(hemi, keyLight, rimLight, new AmbientLight(0x9fc2cc, 0.3));
 
     chartGroup = new Group();
     scene.add(chartGroup);
 
-    // Warm architectural sand plinth + forest base trim
     const plinthGeo = new BoxGeometry(9.6, 0.28, 4.4);
     const plinthMat = new MeshStandardMaterial({
-      color: 0xe7dcc8,
-      roughness: 0.85,
-      metalness: 0.02,
+      color: 0x1a2c33,
+      roughness: 0.72,
+      metalness: 0.08,
     });
     const plinth = new Mesh(plinthGeo, plinthMat);
     plinth.position.set(0, -0.14, 0);
@@ -208,14 +219,14 @@ export function mountThreeChart(root) {
     disposables.push(plinthGeo, plinthMat);
 
     const trimGeo = new BoxGeometry(9.8, 0.1, 4.6);
-    const trimMat = new MeshStandardMaterial({ color: 0x244c3c, roughness: 0.72 });
+    const trimMat = new MeshStandardMaterial({ color: 0x0b1317, roughness: 0.68 });
     const trim = new Mesh(trimGeo, trimMat);
     trim.position.set(0, -0.32, 0);
     chartGroup.add(trim);
     disposables.push(trimGeo, trimMat);
 
     const guideGeo = new BoxGeometry(8.8, 0.025, 0.03);
-    const guideMat = new MeshStandardMaterial({ color: 0xcbc2ae, roughness: 0.9 });
+    const guideMat = new MeshStandardMaterial({ color: 0x395561, roughness: 0.85 });
     disposables.push(guideGeo, guideMat);
     for (const h of [1.0, 2.0, 3.0]) {
       const guide = new Mesh(guideGeo, guideMat);
@@ -228,21 +239,22 @@ export function mountThreeChart(root) {
     const padGeo = new BoxGeometry(1.45, 0.06, 2.1);
     disposables.push(barGeo, capGeo, padGeo);
 
+    const maxVal = 62;
     for (let i = 0; i < PUROK_ITEMS.length; i++) {
       const x = (i - 2) * 1.75;
       const group = new Group();
       group.position.set(x, 0, 0);
 
-      const padMat = new MeshStandardMaterial({ color: 0xf6f3ec, roughness: 0.85 });
+      const padMat = new MeshStandardMaterial({ color: 0x132228, roughness: 0.8 });
       const pad = new Mesh(padGeo, padMat);
       pad.position.set(0, 0.03, 0);
       pad.userData = { barIndex: i };
       group.add(pad);
 
       const primaryMat = new MeshStandardMaterial({
-        color: 0x244c3c,
-        roughness: 0.38,
-        metalness: 0.06,
+        color: 0x458e7e,
+        roughness: 0.34,
+        metalness: 0.08,
       });
       const primaryMesh = new Mesh(barGeo, primaryMat);
       primaryMesh.position.set(-0.28, 0.06, 0.18);
@@ -250,9 +262,9 @@ export function mountThreeChart(root) {
       group.add(primaryMesh);
 
       const secondaryMat = new MeshStandardMaterial({
-        color: 0x9e5037,
-        roughness: 0.42,
-        metalness: 0.05,
+        color: 0xd48e37,
+        roughness: 0.38,
+        metalness: 0.08,
       });
       const secondaryMesh = new Mesh(barGeo, secondaryMat);
       secondaryMesh.position.set(0.32, 0.06, -0.28);
@@ -260,7 +272,7 @@ export function mountThreeChart(root) {
       secondaryMesh.userData = { barIndex: i };
       group.add(secondaryMesh);
 
-      const capMat = new MeshStandardMaterial({ color: 0xfbf5e8, roughness: 0.35 });
+      const capMat = new MeshStandardMaterial({ color: 0xe7d4b5, roughness: 0.32 });
       const cap = new Mesh(capGeo, capMat);
       cap.position.set(-0.28, 0.12, 0.18);
       cap.userData = { barIndex: i };
@@ -279,9 +291,9 @@ export function mountThreeChart(root) {
         secondaryMesh,
         secondaryMat,
         cap,
-        primaryH: 0.08,
-        secondaryH: 0.08,
-        lift: 0,
+        primaryH: (PUROK_ITEMS[i].primary / maxVal) * 3.35,
+        secondaryH: (PUROK_ITEMS[i].secondary / maxVal) * 3.0,
+        lift: i === selectedIndex ? 0.16 : 0,
       });
     }
 
@@ -300,15 +312,16 @@ export function mountThreeChart(root) {
       pair.secondaryMesh.position.y = sH * 0.5 + 0.06 + pair.lift * 0.75;
 
       const isSelected = pair.index === selectedIndex;
-      pair.primaryMat.color.setHex(isSelected ? 0x193b2d : 0x244c3c);
-      pair.primaryMat.emissive.setHex(isSelected ? 0x18392c : 0x000000);
-      pair.primaryMat.emissiveIntensity = isSelected ? 0.25 : 0;
+      const isHovered = pair.index === hoveredIndex;
+      pair.primaryMat.color.setHex(isSelected ? 0x7cc9b6 : isHovered ? 0x5fb09d : 0x458e7e);
+      pair.primaryMat.emissive.setHex(isSelected ? 0x266355 : isHovered ? 0x163d34 : 0x000000);
+      pair.primaryMat.emissiveIntensity = isSelected ? 0.32 : isHovered ? 0.18 : 0;
 
-      pair.secondaryMat.color.setHex(isSelected ? 0xb76042 : 0x9e5037);
-      pair.secondaryMat.emissive.setHex(isSelected ? 0x6b2f1c : 0x000000);
-      pair.secondaryMat.emissiveIntensity = isSelected ? 0.22 : 0;
+      pair.secondaryMat.color.setHex(isSelected ? 0xf0b25a : isHovered ? 0xe0a149 : 0xd48e37);
+      pair.secondaryMat.emissive.setHex(isSelected ? 0x7c4810 : 0x000000);
+      pair.secondaryMat.emissiveIntensity = isSelected ? 0.28 : 0;
 
-      pair.padMat.color.setHex(isSelected ? 0xf4e5db : 0xf6f3ec);
+      pair.padMat.color.setHex(isSelected ? 0x28414a : isHovered ? 0x1d3139 : 0x132228);
     }
   }
 
@@ -316,8 +329,9 @@ export function mountThreeChart(root) {
     if (!renderer || !scene || !camera || destroyed) return;
     applyBarGeometry();
     const radius = 10.2;
-    const angle = orbitAzimuth + Math.sin(elapsed * 0.28) * 0.18 + smoothTilt.x * 0.22;
-    const elev = MathUtils.clamp(orbitPolar + smoothTilt.y * -0.1, 0.25, 0.85);
+    const drift = reducedMotion.matches || userPaused ? 0 : Math.sin(elapsed * 0.24) * 0.14;
+    const angle = orbitAzimuth + drift + smoothTilt.x * 0.18;
+    const elev = MathUtils.clamp(orbitPolar + smoothTilt.y * -0.08, 0.25, 0.85);
     camera.position.set(
       Math.sin(angle) * Math.cos(elev) * radius,
       Math.sin(elev) * radius + 1.0,
@@ -327,44 +341,30 @@ export function mountThreeChart(root) {
     renderer.render(scene, camera);
   }
 
-  function animateBarsIn() {
-    const maxVal = 62;
-    barPairs.forEach((pair, idx) => {
-      const item = PUROK_ITEMS[idx] || PUROK_ITEMS[0];
-      const targetP = (item.primary / maxVal) * 3.35;
-      const targetS = (item.secondary / maxVal) * 3.0;
-      const targetLift = idx === selectedIndex ? 0.16 : 0;
-
-      trackAnim(
-        animate(pair, {
-          primaryH: targetP,
-          secondaryH: targetS,
-          lift: targetLift,
-          duration: 780,
-          delay: idx * 80,
-          ease: "outElastic(1, .75)",
-          onUpdate: renderThree,
-        })
-      );
-    });
-  }
-
   function selectBar(index, animateSwap = true) {
     selectedIndex = MathUtils.clamp(index, 0, PUROK_ITEMS.length - 1);
     updateDetailPanel(animateSwap);
     if (!renderer) return;
+    if (reducedMotion.matches) {
+      barPairs.forEach((pair) => {
+        pair.lift = pair.index === selectedIndex ? 0.16 : 0;
+      });
+      renderThree();
+      return;
+    }
     barPairs.forEach((pair) => {
       const targetLift = pair.index === selectedIndex ? 0.16 : 0;
       trackAnim(
         animate(pair, {
           lift: targetLift,
-          duration: 340,
+          duration: 180,
           ease: "outCubic",
-          onUpdate: renderThree,
+          onUpdate: rafId ? undefined : renderThree,
+          onComplete: renderThree,
         })
       );
     });
-    renderThree();
+    if (!rafId) renderThree();
   }
 
   function resize() {
@@ -375,16 +375,16 @@ export function mountThreeChart(root) {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height, false);
+    updateRects();
     renderThree();
   }
 
   function pickBarAt(clientX, clientY) {
     if (!raycaster || !camera || !chartGroup) return -1;
-    const rect = canvas.getBoundingClientRect();
-    if (!rect.width || !rect.height) return -1;
+    if (!canvasRect.width || !canvasRect.height) return -1;
     pointerNdc.set(
-      ((clientX - rect.left) / rect.width) * 2 - 1,
-      -((clientY - rect.top) / rect.height) * 2 + 1
+      ((clientX - canvasRect.left) / canvasRect.width) * 2 - 1,
+      -((clientY - canvasRect.top) / canvasRect.height) * 2 + 1
     );
     raycaster.setFromCamera(pointerNdc, camera);
     const hits = raycaster.intersectObjects(chartGroup.children, true);
@@ -396,6 +396,7 @@ export function mountThreeChart(root) {
   }
 
   function onPointerDown(event) {
+    updateRects();
     isDragging = true;
     dragMoved = false;
     dragStartX = event.clientX;
@@ -403,10 +404,28 @@ export function mountThreeChart(root) {
     canvas.style.cursor = "grabbing";
   }
 
-  function onPointerMove(event) {
-    const rect = stage.getBoundingClientRect();
-    if (!rect.width || !rect.height) return;
+  function flushHover() {
+    hoverRafId = 0;
+    const event = pendingHoverEvent;
+    pendingHoverEvent = null;
+    if (!event || isDragging || destroyed) return;
+    if (!stageRect.width || !stageRect.height) return;
 
+    if (!reducedMotion.matches && !userPaused) {
+      pointerTilt.set(
+        ((event.clientX - stageRect.left) / stageRect.width - 0.5) * 2,
+        ((event.clientY - stageRect.top) / stageRect.height - 0.5) * 2
+      );
+    }
+    const hit = pickBarAt(event.clientX, event.clientY);
+    canvas.style.cursor = hit >= 0 ? "pointer" : "grab";
+    if (hit !== hoveredIndex) {
+      hoveredIndex = hit;
+      if (!rafId) renderThree();
+    }
+  }
+
+  function onPointerMove(event) {
     if (isDragging) {
       const dx = event.clientX - dragStartX;
       const dy = event.clientY - dragStartY;
@@ -415,17 +434,17 @@ export function mountThreeChart(root) {
       targetPolar = MathUtils.clamp(targetPolar + dy * 0.005, 0.25, 0.85);
       dragStartX = event.clientX;
       dragStartY = event.clientY;
+      if (!rafId) {
+        orbitAzimuth = targetAzimuth;
+        orbitPolar = targetPolar;
+        renderThree();
+      }
       return;
     }
 
-    pointerTilt.set(
-      ((event.clientX - rect.left) / rect.width - 0.5) * 2,
-      ((event.clientY - rect.top) / rect.height - 0.5) * 2
-    );
-    const hit = pickBarAt(event.clientX, event.clientY);
-    canvas.style.cursor = hit >= 0 ? "pointer" : "grab";
-    if (hit >= 0 && hit !== selectedIndex) {
-      selectBar(hit, false);
+    pendingHoverEvent = event;
+    if (!hoverRafId) {
+      hoverRafId = requestAnimationFrame(flushHover);
     }
   }
 
@@ -441,6 +460,7 @@ export function mountThreeChart(root) {
   function onTouchStart(event) {
     const t = event.touches?.[0];
     if (!t) return;
+    updateRects();
     isDragging = true;
     dragMoved = false;
     dragStartX = t.clientX;
@@ -457,6 +477,11 @@ export function mountThreeChart(root) {
     targetPolar = MathUtils.clamp(targetPolar + dy * 0.005, 0.25, 0.85);
     dragStartX = t.clientX;
     dragStartY = t.clientY;
+    if (!rafId) {
+      orbitAzimuth = targetAzimuth;
+      orbitPolar = targetPolar;
+      renderThree();
+    }
   }
 
   function onTouchEnd(event) {
@@ -470,7 +495,9 @@ export function mountThreeChart(root) {
 
   function onPointerLeave() {
     pointerTilt.set(0, 0);
+    hoveredIndex = -1;
     if (!isDragging) canvas.style.cursor = "grab";
+    if (!rafId) renderThree();
   }
 
   function tick(now) {
@@ -486,8 +513,15 @@ export function mountThreeChart(root) {
     rafId = requestAnimationFrame(tick);
   }
 
+  function syncToggleUI() {
+    if (!motionToggle) return;
+    motionToggle.hidden = reducedMotion.matches;
+    motionToggle.setAttribute("aria-pressed", String(userPaused));
+    motionToggle.textContent = userPaused ? "Resume 3D drift" : "Pause 3D drift";
+  }
+
   function syncRunning() {
-    const running = !destroyed && Boolean(renderer) && visible && !document.hidden;
+    const running = !destroyed && Boolean(renderer) && visible && !document.hidden && !reducedMotion.matches && !userPaused;
     if (running && !rafId) {
       lastTime = 0;
       rafId = requestAnimationFrame(tick);
@@ -498,6 +532,16 @@ export function mountThreeChart(root) {
       renderThree();
     }
     stage.dataset.chartMotion = running ? "running" : "paused";
+    syncToggleUI();
+  }
+
+  function onMotionToggle() {
+    userPaused = !userPaused;
+    syncRunning();
+  }
+
+  if (motionToggle) {
+    motionToggle.addEventListener("click", onMotionToggle);
   }
 
   if (renderer) {
@@ -506,6 +550,7 @@ export function mountThreeChart(root) {
     canvas.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
     canvas.addEventListener("pointerleave", onPointerLeave);
+    window.addEventListener("scroll", updateRects, { passive: true });
     canvas.addEventListener("touchstart", onTouchStart, { passive: true });
     canvas.addEventListener("touchmove", onTouchMove, { passive: true });
     canvas.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -517,16 +562,13 @@ export function mountThreeChart(root) {
   const intersectionObserver = new IntersectionObserver(
     ([entry]) => {
       visible = entry.isIntersecting;
-      if (visible && !hasEntered) {
-        hasEntered = true;
-        animateBarsIn();
-      }
       syncRunning();
     },
     { threshold: 0.18 }
   );
   intersectionObserver.observe(stage);
   document.addEventListener("visibilitychange", syncRunning);
+  reducedMotion.addEventListener("change", syncRunning);
 
   root.querySelectorAll("[data-chart-controls]").forEach((el) => {
     el.hidden = false;
@@ -542,14 +584,18 @@ export function mountThreeChart(root) {
       for (const anim of activeAnims) anim.pause?.();
       activeAnims.clear();
       cancelAnimationFrame(rafId);
+      cancelAnimationFrame(hoverRafId);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
       document.removeEventListener("visibilitychange", syncRunning);
+      reducedMotion.removeEventListener("change", syncRunning);
+      motionToggle?.removeEventListener("click", onMotionToggle);
       if (renderer) {
         canvas.removeEventListener("pointerdown", onPointerDown);
         canvas.removeEventListener("pointermove", onPointerMove);
         window.removeEventListener("pointerup", onPointerUp);
         canvas.removeEventListener("pointerleave", onPointerLeave);
+        window.removeEventListener("scroll", updateRects);
         canvas.removeEventListener("touchstart", onTouchStart);
         canvas.removeEventListener("touchmove", onTouchMove);
         canvas.removeEventListener("touchend", onTouchEnd);
