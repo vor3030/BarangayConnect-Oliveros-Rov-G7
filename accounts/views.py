@@ -98,7 +98,15 @@ def admin_dashboard(request):
         active_residents=Count("pk", filter=Q(is_active=True)),
         inactive_residents=Count("pk", filter=Q(is_active=False)),
     )
-    return render(request, "accounts/admin_dashboard.html", counts)
+    all_requests = DocumentRequest.objects.select_related("user")
+    context = {
+        **counts,
+        "request_counts": summarize_requests(all_requests),
+        "pending_queue": all_requests.filter(status=DocumentRequest.Status.PENDING).order_by(
+            "created_at", "id"
+        )[:5],
+    }
+    return render(request, "accounts/admin_dashboard.html", context)
 
 
 @login_required

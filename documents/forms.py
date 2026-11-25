@@ -92,3 +92,56 @@ class DocumentRequestForm(forms.ModelForm):
                     "Edit your existing request or wait for barangay staff to process it.",
                 )
         return cleaned_data
+
+
+class DocumentRequestReviewForm(forms.ModelForm):
+    class Meta:
+        model = DocumentRequest
+        fields = ("status", "staff_remarks")
+        labels = {
+            "status": "New status",
+            "staff_remarks": "Staff remarks",
+        }
+        help_texts = {
+            "status": "Choose the next processing stage allowed for this request.",
+            "staff_remarks": "Required when rejecting a request. Include pickup schedules or verification notes for the resident.",
+        }
+        widgets = {
+            "status": forms.Select(),
+            "staff_remarks": forms.Textarea(
+                attrs={
+                    "rows": 4,
+                    "placeholder": "e.g., Ready for pickup at Window 2, Mon-Fri 8:00 AM - 5:00 PM (bring a valid ID).",
+                    "maxlength": "1000",
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        allowed = self.instance.allowed_next_statuses if self.instance and self.instance.pk else ()
+        self.fields["status"].choices = [
+            ("", "Select next status"),
+            *[(value, value) for value in allowed],
+        ]
+
+    def clean_staff_remarks(self):
+        return self.cleaned_data["staff_remarks"].strip()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_status = cleaned_data.get("status")
+        remarks = cleaned_data.get("staff_remarks", "")
+
+        if self.instance.pk and new_status:
+            if not self.instance.can_transition_to(new_status):
+                self.add_error(
+                    "status",
+                    f"Cannot change status from {self.instance.status} to {new_status}.",
+                )
+            if new_status == DocumentRequest.Status.REJECTED and len(remarks) < 5:
+                self.add_error(
+                    "staff_remarks",
+                    "Provide a clear reason (at least 5 characters) when rejecting a document request.",
+                )
+        return cleaned_data

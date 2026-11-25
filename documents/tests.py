@@ -277,3 +277,203 @@ class ResidentDocumentRequestTests(TestCase):
             self.client.get(reverse("documents:detail", args=[doc_request.pk])).status_code,
             200,
         )
+
+
+@override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
+class AdminDocumentRequestTests(TestCase):
+    password = "Test-password-barangay-1!"
+
+    def make_user(self, username, staff=False):
+        return User.objects.create_user(
+            username=username,
+            email=f"{username}@example.com",
+            full_name=f"{username.title()} User",
+            password=self.password,
+            is_staff=staff,
+        )
+
+    def make_request(self, user, **overrides):
+        defaults = {
+            "document_type": DocumentRequest.DocumentType.BARANGAY_CLEARANCE,
+            "purpose": "Local employment requirement",
+            "copies": 1,
+            "notes": "Purok 3",
+            "status": DocumentRequest.Status.PENDING,
+        }
+        return DocumentRequest.objects.create(user=user, **(defaults | overrides))
+
+    def test_residents_are_blocked_from_admin_management_routes(self):
+        resident = self.make_user("maria")
+        doc_request = self.make_request(resident, status=DocumentRequest.Status.REJECTED)
+        self.client.force_login(resident)
+
+        self.assertEqual(self.client.get(reverse("documents:manage_list")).status_code, 403)
+        self.assertEqual(
+            self.client.get(reverse("documents:review", args=[doc_request.pk])).status_code,
+            403,
+        )
+        self.assertEqual(
+            self.client.post(
+                reverse("documents:review", args=[doc_request.pk]),
+                {"status": DocumentRequest.Status.APPROVED, "staff_remarks": "Trying to self-approve"},
+            ).status_code,
+            403,
+        )
+        self.assertEqual(
+            self.client.get(reverse("documents:admin_delete", args=[doc_request.pk])).status_code,
+            403,
+        )
+
+    def test_staff_queue_lists_all_residents_and_supports_filters(self):
+        maria = self.make_user("maria")
+        jose = self.make_user("jose")
+        staff = self.make_user("staff", staff=True)
+
+        req1 = self.make_request(
+            maria,
+            document_type=DocumentRequest.DocumentType.BARANGAY_CLEARANCE,
+            purpose="Maria employment clearance",
+            status=DocumentRequest.Status.PENDING,
+        )
+        req2 = self.make_request(
+            jose,
+            document_type=DocumentRequest.DocumentType.INDIGENCY,
+            purpose="Jose medical assistance",
+            status=DocumentRequest.Status.APPROVED,
+        )
+
+        self.client.force_login(staff)
+        self.assertRedirects(
+            self.client.get(reverse("documents:list")),
+            reverse("documents:manage_list"),
+        )
+
+        all_res = self.client.get(reverse("documents:manage_list"))
+        self.assertContains(all_res, req1.reference_code)
+        self.assertContains(all_res, req2.reference_code)
+
+        by_status = self.client.get(reverse("documents:manage_list"), {"status": "Pending"})
+        self.assertContains(by_status, "Maria employment clearance")
+        self.assertNotContains(by_status, "Jose medical assistance")
+
+        by_type = self.client.get(
+            reverse("documents:manage_list"),
+            {"document_type": DocumentRequest.DocumentType.INDIGENCY},
+        )
+        self.assertContains(by_type, "Jose medical assistance")
+        self.assertNotContains(by_type, "Maria employment clearance")
+
+        by_search = self.client.get(reverse("documents:manage_list"), {"q": "jose@example.com"})
+        self.assertContains(by_search, "Jose medical assistance")
+        self.assertNotContains(by_search, "Maria employment clearance")
+
+    def test_staff_status_transitions_and_audit_logging(self):
+        resident = self.make_user("maria")
+        staff = self.make_user("staff", staff=True)
+        doc_request = self.make_request(resident)
+        self.client.force_login(staff)
+
+        approve_res = self.client.post(
+            reverse("documents:review", args=[doc_request.pk]),
+            {
+                "status": DocumentRequest.Status.APPROVED,
+                "staff_remarks": "Ready for pickup at Window 2.",
+            },
+            follow=True,
+        )
+        self.assertRedirects(approve_res, reverse("documents:review", args=[doc_request.pk]))
+        self.assertContains(approve_res, "status updated to Approved")
+        doc_request.refresh_from_db()
+        self.assertEqual(doc_request.status, DocumentRequest.Status.APPROVED)
+        self.assertEqual(doc_request.reviewed_by, staff)
+        self.assertIsNotNone(doc_request.processed_at)
+        self.assertEqual(doc_request.staff_remarks, "Ready for pickup at Window 2.")
+
+        complete_res = self.client.post(
+            reverse("documents:review", args=[doc_request.pk]),
+            {
+                "status": DocumentRequest.Status.COMPLETED,
+                "staff_remarks": "Claimed with valid government ID.",
+            },
+            follow=True,
+        )
+        self.assertRedirects(complete_res, reverse("documents:review", args=[doc_request.pk]))
+        doc_request.refresh_from_db()
+        self.assertEqual(doc_request.status, DocumentRequest.Status.COMPLETED)
+        self.assertEqual(doc_request.status_logs.count(), 2)
+
+        revert_res = self.client.post(
+            reverse("documents:review", args=[doc_request.pk]),
+            {
+                "status": DocumentRequest.Status.PENDING,
+                "staff_remarks": "Try reverting",
+            },
+            follow=True,
+        )
+        self.assertContains(revert_res, "cannot be transitioned further")
+        doc_request.refresh_from_db()
+        self.assertEqual(doc_request.status, DocumentRequest.Status.COMPLETED)
+
+    def test_rejection_requires_staff_remarks_and_allows_admin_removal(self):
+        resident = self.make_user("maria")
+        staff = self.make_user("staff", staff=True)
+        doc_request = self.make_request(resident)
+        self.client.force_login(staff)
+
+        missing_remarks = self.client.post(
+            reverse("documents:review", args=[doc_request.pk]),
+            {"status": DocumentRequest.Status.REJECTED, "staff_remarks": "no"},
+        )
+        self.assertEqual(missing_remarks.status_code, 200)
+        self.assertFormError(
+            missing_remarks.context["form"],
+            "staff_remarks",
+            "Provide a clear reason (at least 5 characters) when rejecting a document request.",
+        )
+
+        # Cannot remove while still Pending
+        blocked_remove = self.client.post(
+            reverse("documents:admin_delete", args=[doc_request.pk]),
+            follow=True,
+        )
+        self.assertContains(blocked_remove, "Only Rejected requests can be removed")
+        self.assertTrue(DocumentRequest.objects.filter(pk=doc_request.pk).exists())
+
+        # Reject with valid reason
+        self.client.post(
+            reverse("documents:review", args=[doc_request.pk]),
+            {
+                "status": DocumentRequest.Status.REJECTED,
+                "staff_remarks": "Address outside pilot barangay coverage.",
+            },
+        )
+        doc_request.refresh_from_db()
+        self.assertEqual(doc_request.status, DocumentRequest.Status.REJECTED)
+
+        # Staff can now delete Rejected record
+        confirm_page = self.client.get(reverse("documents:admin_delete", args=[doc_request.pk]))
+        self.assertContains(confirm_page, "Remove rejected request?")
+        deleted = self.client.post(
+            reverse("documents:admin_delete", args=[doc_request.pk]),
+            follow=True,
+        )
+        self.assertRedirects(deleted, reverse("documents:manage_list"))
+        self.assertContains(deleted, "was permanently removed")
+        self.assertFalse(DocumentRequest.objects.filter(pk=doc_request.pk).exists())
+
+    def test_admin_dashboard_shows_pending_queue_and_counts(self):
+        resident = self.make_user("maria")
+        staff = self.make_user("staff", staff=True)
+        pending = self.make_request(resident, purpose="Pending clearance review")
+        self.make_request(
+            resident,
+            document_type=DocumentRequest.DocumentType.RESIDENCY,
+            status=DocumentRequest.Status.COMPLETED,
+        )
+
+        self.client.force_login(staff)
+        response = self.client.get(reverse("admin_dashboard"))
+        self.assertEqual(response.context["request_counts"]["pending_requests"], 1)
+        self.assertEqual(response.context["request_counts"]["total_requests"], 2)
+        self.assertContains(response, pending.reference_code)
+        self.assertContains(response, "Pending clearance review")
