@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: barangay-connect
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: POSTGRES_SSLMODE
+        value: require
