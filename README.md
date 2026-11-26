@@ -96,3 +96,18 @@ For end-to-end Playwright browser tests (build the frontend assets first):
 ```
 
 To use an installed Microsoft Edge instead of downloading Chromium, set `$env:PLAYWRIGHT_CHANNEL = 'msedge'`.
+
+## Deploying to Render
+
+This repository includes a two-stage [Dockerfile](Dockerfile) (Node.js frontend build + Python 3.14 / Gunicorn / WhiteNoise runtime) and a [render.yaml](render.yaml) Blueprint for Render.
+
+1. Push your branch (or merge into `main`) on GitHub.
+2. In Render, create a new **Web Service** with **Runtime: Docker** (or create a **Blueprint** using `render.yaml`).
+3. Configure Environment Variables in Render:
+   - `DJANGO_DEBUG`: `False`
+   - `DJANGO_SECRET_KEY`: a fresh random secret key (do not reuse your local `.env` key)
+   - `DATABASE_URL`: your staging PostgreSQL connection URL (for **Supabase**, use the IPv4 **Session Pooler** connection string on port `5432`, not the IPv6-only direct host), **or** set `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`
+   - `POSTGRES_SSLMODE`: `require`
+   - `DJANGO_ALLOWED_HOSTS` / `DJANGO_CSRF_TRUSTED_ORIGINS`: optional for Render's default `*.onrender.com` URL (auto-configured from `RENDER_EXTERNAL_HOSTNAME`); set them if you attach a custom domain.
+4. Deploy. On startup, the container runs `python manage.py migrate --noinput` and starts Gunicorn on `$PORT`.
+5. Create an Admin superuser once against your staging database (Render's free plan does not include an interactive Shell tab, so run `manage.py createsuperuser` from your machine pointed temporarily at the staging `DATABASE_URL`).
